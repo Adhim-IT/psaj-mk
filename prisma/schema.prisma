@@ -1,0 +1,676 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Auth.js / NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// Existing models
+model article_categories {
+  id                     String                   @id @db.Char(36)
+  name                   String                   @db.VarChar(255)
+  slug                   String                   @unique(map: "article_categories_slug_unique") @db.VarChar(255)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  article_category_pivot article_category_pivot[]
+}
+
+model article_category_pivot {
+  id                  BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  article_id          String             @db.Char(36)
+  article_category_id String             @db.Char(36)
+  deleted_at          DateTime?          @db.Timestamp(0)
+  created_at          DateTime?          @db.Timestamp(0)
+  updated_at          DateTime?          @db.Timestamp(0)
+  article_categories  article_categories @relation(fields: [article_category_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_category_pivot_article_category_id_foreign")
+  articles            articles           @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_category_pivot_article_id_foreign")
+
+  @@index([article_category_id], map: "article_category_pivot_article_category_id_foreign")
+  @@index([article_id], map: "article_category_pivot_article_id_foreign")
+}
+
+model article_comments {
+  id                     String             @id @db.Char(36)
+  parent_id              String?            @db.Char(36)
+  article_id             String             @db.Char(36)
+  name                   String             @db.VarChar(255)
+  email                  String             @db.VarChar(255)
+  comment                String             @db.Text
+  is_approved            Boolean            @default(false)
+  deleted_at             DateTime?          @db.Timestamp(0)
+  created_at             DateTime?          @db.Timestamp(0)
+  updated_at             DateTime?          @db.Timestamp(0)
+  articles               articles           @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_comments_article_id_foreign")
+  article_comments       article_comments?  @relation("article_commentsToarticle_comments", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_comments_parent_id_foreign")
+  other_article_comments article_comments[] @relation("article_commentsToarticle_comments")
+
+  @@index([article_id], map: "article_comments_article_id_foreign")
+  @@index([parent_id], map: "article_comments_parent_id_foreign")
+}
+
+model article_tag_pivot {
+  id             BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  article_id     String       @db.Char(36)
+  article_tag_id String       @db.Char(36)
+  deleted_at     DateTime?    @db.Timestamp(0)
+  created_at     DateTime?    @db.Timestamp(0)
+  updated_at     DateTime?    @db.Timestamp(0)
+  articles       articles     @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_tag_pivot_article_id_foreign")
+  article_tags   article_tags @relation(fields: [article_tag_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_tag_pivot_article_tag_id_foreign")
+
+  @@index([article_id], map: "article_tag_pivot_article_id_foreign")
+  @@index([article_tag_id], map: "article_tag_pivot_article_tag_id_foreign")
+}
+
+model article_tags {
+  id                String              @id @db.Char(36)
+  name              String              @db.VarChar(255)
+  slug              String              @unique(map: "article_tags_slug_unique") @db.VarChar(255)
+  deleted_at        DateTime?           @db.Timestamp(0)
+  created_at        DateTime?           @db.Timestamp(0)
+  updated_at        DateTime?           @db.Timestamp(0)
+  article_tag_pivot article_tag_pivot[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model article_visitors {
+  id         Int       @id
+  visitor_ip String    @db.VarChar(255)
+  article_id String    @db.Char(36)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  articles   articles  @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "article_visitors_article_id_foreign")
+
+  @@index([article_id], map: "article_visitors_article_id_foreign")
+  @@ignore
+}
+
+model articles {
+  id                     String                   @id @db.Char(36)
+  thumbnail              String                   @db.VarChar(255)
+  title                  String                   @db.VarChar(255)
+  content                String                   @db.Text
+  slug                   String                   @unique(map: "articles_slug_unique") @db.VarChar(255)
+  writer_id              String                   @db.Char(36)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  article_category_pivot article_category_pivot[]
+  article_comments       article_comments[]
+  article_tag_pivot      article_tag_pivot[]
+  article_visitors       article_visitors[] @ignore
+  writers                writers                  @relation(fields: [writer_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "articles_writer_id_foreign")
+
+  @@index([writer_id], map: "articles_writer_id_foreign")
+}
+
+model course_categories {
+  id                    String                  @id @db.Char(36)
+  name                  String                  @db.VarChar(255)
+  slug                  String                  @unique(map: "course_categories_slug_unique") @db.VarChar(255)
+  deleted_at            DateTime?               @db.Timestamp(0)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  course_category_pivot course_category_pivot[]
+}
+
+model course_category_pivot {
+  course_id          String            @db.Char(36)
+  course_category_id String            @db.Char(36)
+  course_categories  course_categories @relation(fields: [course_category_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_category_pivot_course_category_id_foreign")
+  courses            courses           @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_category_pivot_course_id_foreign")
+
+  @@id([course_id, course_category_id])
+  @@index([course_category_id], map: "course_category_pivot_course_category_id_foreign")
+}
+
+model course_reviews {
+  id          String    @id @db.Char(36)
+  course_id   String    @db.Char(36)
+  student_id  String    @db.Char(36)
+  rating      Int
+  review      String    @db.VarChar(255)
+  is_approved Boolean   @default(false)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  courses     courses   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_reviews_course_id_foreign")
+  students    students  @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_reviews_student_id_foreign")
+
+  @@index([course_id], map: "course_reviews_course_id_foreign")
+  @@index([student_id], map: "course_reviews_student_id_foreign")
+}
+
+model course_student_groups {
+  id              String            @id @db.Char(36)
+  course_type_id  String            @db.Char(36)
+  mentor_id       String            @db.Char(36)
+  name            String            @db.VarChar(255)
+  remarks         String?           @db.Text
+  start_date      DateTime          @db.Date
+  end_date        DateTime          @db.Date
+  total_meeting   Int
+  deleted_at      DateTime?         @db.Timestamp(0)
+  created_at      DateTime?         @db.Timestamp(0)
+  updated_at      DateTime?         @db.Timestamp(0)
+  course_types    course_types      @relation(fields: [course_type_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_student_groups_course_type_id_foreign")
+  mentors         mentors           @relation(fields: [mentor_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_student_groups_mentor_id_foreign")
+  course_students course_students[]
+
+  @@index([course_type_id], map: "course_student_groups_course_type_id_foreign")
+  @@index([mentor_id], map: "course_student_groups_mentor_id_foreign")
+}
+
+model course_students {
+  id                      String                @id @db.Char(36)
+  course_student_group_id String                @db.Char(36)
+  student_id              String                @db.Char(36)
+  deleted_at              DateTime?             @db.Timestamp(0)
+  created_at              DateTime?             @db.Timestamp(0)
+  updated_at              DateTime?             @db.Timestamp(0)
+  course_student_groups   course_student_groups @relation(fields: [course_student_group_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_students_course_student_group_id_foreign")
+  students                students              @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_students_student_id_foreign")
+
+  @@index([course_student_group_id], map: "course_students_course_student_group_id_foreign")
+  @@index([student_id], map: "course_students_student_id_foreign")
+}
+
+model course_syllabus {
+  id         String    @id @db.Char(36)
+  course_id  String    @db.Char(36)
+  title      String    @db.VarChar(255)
+  sort       Int
+  deleted_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  courses    courses   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_syllabus_course_id_foreign")
+
+  @@index([course_id], map: "course_syllabus_course_id_foreign")
+}
+
+model course_tool_pivot {
+  course_id String  @db.Char(36)
+  tool_id   String  @db.Char(36)
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_tool_pivot_course_id_foreign")
+  tools     tools   @relation(fields: [tool_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_tool_pivot_tool_id_foreign")
+
+  @@id([course_id, tool_id])
+  @@index([tool_id], map: "course_tool_pivot_tool_id_foreign")
+}
+
+model course_transactions {
+  id             String                     @id @db.Char(36)
+  code           String                     @db.VarChar(255)
+  course_id      String                     @db.Char(36)
+  student_id     String                     @db.Char(36)
+  type           course_transactions_type
+  batch_number   Int?
+  status         course_transactions_status @default(unpaid)
+  original_price Decimal                    @db.Decimal(20, 4)
+  discount       Decimal?                   @db.Decimal(20, 4)
+  final_price    Decimal                    @db.Decimal(20, 4)
+  deleted_at     DateTime?                  @db.Timestamp(0)
+  created_at     DateTime?                  @db.Timestamp(0)
+  updated_at     DateTime?                  @db.Timestamp(0)
+  courses        courses                    @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_transactions_course_id_foreign")
+  students       students                   @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_transactions_student_id_foreign")
+
+  @@index([course_id], map: "course_transactions_course_id_foreign")
+  @@index([student_id], map: "course_transactions_student_id_foreign")
+}
+
+model course_types {
+  id                    String                      @id @db.Char(36)
+  course_id             String                      @db.Char(36)
+  type                  course_types_type
+  batch_number          Int?
+  slug                  String                      @unique(map: "course_types_slug_unique") @db.VarChar(255)
+  normal_price          Decimal                     @db.Decimal(20, 4)
+  discount_type         course_types_discount_type?
+  discount              Decimal?                    @db.Decimal(20, 4)
+  start_date            DateTime?                   @db.DateTime(0)
+  end_date              DateTime?                   @db.DateTime(0)
+  is_active             Boolean                     @default(true)
+  is_discount           Boolean                     @default(false)
+  is_voucher            Boolean                     @default(false)
+  deleted_at            DateTime?                   @db.Timestamp(0)
+  created_at            DateTime?                   @db.Timestamp(0)
+  updated_at            DateTime?                   @db.Timestamp(0)
+  course_student_groups course_student_groups[]
+  courses               courses                     @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "course_types_course_id_foreign")
+
+  @@index([course_id], map: "course_types_course_id_foreign")
+}
+
+model courses {
+  id                    String                  @id @db.Char(36)
+  mentor_id             String                  @db.Char(36)
+  title                 String                  @db.VarChar(255)
+  slug                  String                  @db.Text
+  description           String                  @db.Text
+  thumbnail             String                  @db.VarChar(255)
+  trailer               String                  @db.VarChar(255)
+  level                 String                  @db.VarChar(255)
+  meetings              Int
+  is_popular            Boolean                 @default(false)
+  is_request            Boolean?                @default(false)
+  is_active             Boolean                 @default(true)
+  deleted_at            DateTime?               @db.Timestamp(0)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  course_category_pivot course_category_pivot[]
+  course_reviews        course_reviews[]
+  course_syllabus       course_syllabus[]
+  course_tool_pivot     course_tool_pivot[]
+  course_transactions   course_transactions[]
+  course_types          course_types[]
+  mentors               mentors                 @relation(fields: [mentor_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "courses_mentor_id_foreign")
+  mentor_earnings       mentor_earnings[]
+
+  @@index([mentor_id], map: "courses_mentor_id_foreign")
+}
+
+model event_registrants {
+  id               String                   @id @db.Char(36)
+  event_id         String                   @db.Char(36)
+  student_id       String                   @db.Char(36)
+  instagram_follow String?                  @db.VarChar(255)
+  payment_proof    String?                  @db.VarChar(255)
+  status           event_registrants_status @default(pending)
+  deleted_at       DateTime?                @db.Timestamp(0)
+  created_at       DateTime?                @db.Timestamp(0)
+  updated_at       DateTime?                @db.Timestamp(0)
+  events           events                   @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "event_registrants_event_id_foreign")
+  students         students                 @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "event_registrants_student_id_foreign")
+
+  @@index([event_id], map: "event_registrants_event_id_foreign")
+  @@index([student_id], map: "event_registrants_student_id_foreign")
+}
+
+model event_reviews {
+  id          String    @id @db.Char(36)
+  event_id    String    @db.Char(36)
+  student_id  String    @db.Char(36)
+  review      String    @db.VarChar(255)
+  is_approved Boolean   @default(false)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  events      events    @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "event_reviews_event_id_foreign")
+  students    students  @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "event_reviews_student_id_foreign")
+
+  @@index([event_id], map: "event_reviews_event_id_foreign")
+  @@index([student_id], map: "event_reviews_student_id_foreign")
+}
+
+model events {
+  id                  String              @id @db.Char(36)
+  mentor_id           String              @db.Char(36)
+  title               String              @db.VarChar(255)
+  slug                String              @db.VarChar(255)
+  thumbnail           String              @db.VarChar(255)
+  description         String              @db.Text
+  start_date          DateTime            @db.DateTime(0)
+  end_date            DateTime            @db.DateTime(0)
+  price               Decimal?            @db.Decimal(10, 2)
+  whatsapp_group_link String              @db.VarChar(255)
+  is_active           Boolean             @default(true)
+  deleted_at          DateTime?           @db.Timestamp(0)
+  created_at          DateTime?           @db.Timestamp(0)
+  updated_at          DateTime?           @db.Timestamp(0)
+  event_registrants   event_registrants[]
+  event_reviews       event_reviews[]
+  mentors             mentors             @relation(fields: [mentor_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "events_mentor_id_foreign")
+  mentor_earnings     mentor_earnings[]
+
+  @@index([mentor_id], map: "events_mentor_id_foreign")
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model faq_categories {
+  id         String    @id @db.Char(36)
+  name       String    @db.VarChar(255)
+  deleted_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  faqs       faqs[]
+}
+
+model faqs {
+  id              String         @id @db.Char(36)
+  faq_category_id String         @db.Char(36)
+  question        String         @db.Text
+  answer          String         @db.Text
+  deleted_at      DateTime?      @db.Timestamp(0)
+  created_at      DateTime?      @db.Timestamp(0)
+  updated_at      DateTime?      @db.Timestamp(0)
+  faq_categories  faq_categories @relation(fields: [faq_category_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "faqs_faq_category_id_foreign")
+
+  @@index([faq_category_id], map: "faqs_faq_category_id_foreign")
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  queue        String @db.VarChar(255)
+  payload      String @db.LongText
+  attempts     Int    @db.UnsignedTinyInt
+  reserved_at  Int?   @db.UnsignedInt
+  available_at Int    @db.UnsignedInt
+  created_at   Int    @db.UnsignedInt
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model mentor_earnings {
+  id         String    @id @db.Char(36)
+  mentor_id  String    @db.Char(36)
+  amount     Decimal   @db.Decimal(20, 4)
+  event_id   String?   @db.Char(36)
+  course_id  String?   @db.Char(36)
+  deleted_at DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  courses    courses?  @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mentor_earnings_course_id_foreign")
+  events     events?   @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mentor_earnings_event_id_foreign")
+  mentors    mentors   @relation(fields: [mentor_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mentor_earnings_mentor_id_foreign")
+
+  @@index([course_id], map: "mentor_earnings_course_id_foreign")
+  @@index([event_id], map: "mentor_earnings_event_id_foreign")
+  @@index([mentor_id], map: "mentor_earnings_mentor_id_foreign")
+}
+
+model mentors {
+  id                    String                  @id @db.Char(36)
+  user_id               String                  @db.Char(36)
+  username              String                  @unique(map: "mentors_username_unique") @db.VarChar(255)
+  name                  String                  @db.VarChar(255)
+  profile_picture       String?                 @db.VarChar(255)
+  gender                mentors_gender
+  phone                 String                  @db.VarChar(255)
+  city                  String                  @db.VarChar(255)
+  specialization        String                  @db.VarChar(255)
+  bio                   String                  @db.Text
+  deleted_at            DateTime?               @db.Timestamp(0)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  course_student_groups course_student_groups[]
+  courses               courses[]
+  events                events[]
+  mentor_earnings       mentor_earnings[]
+  users                 User                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mentors_user_id_foreign")
+
+  @@index([user_id], map: "mentors_user_id_foreign")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model model_has_permissions {
+  permission_id BigInt      @db.UnsignedBigInt
+  model_type    String      @db.VarChar(255)
+  model_id      String      @db.Char(36)
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "model_has_permissions_permission_id_foreign")
+
+  @@id([permission_id, model_id, model_type])
+  @@index([model_id, model_type], map: "model_has_permissions_model_id_model_type_index")
+}
+
+model model_has_roles {
+  role_id    BigInt @db.UnsignedBigInt
+  model_type String @db.VarChar(255)
+  model_id   String @db.Char(36)
+  roles      roles  @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "model_has_roles_role_id_foreign")
+
+  @@id([role_id, model_id, model_type])
+  @@index([model_id, model_type], map: "model_has_roles_model_id_model_type_index")
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model password_resets {
+  id         Int       @id
+  email      String    @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "password_resets_email_index")
+  @@ignore
+}
+
+model permissions {
+  id                    BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  name                  String                  @db.VarChar(255)
+  guard_name            String                  @db.VarChar(255)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  model_has_permissions model_has_permissions[]
+  role_has_permissions  role_has_permissions[]
+
+  @@unique([name, guard_name], map: "permissions_name_guard_name_unique")
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model promo_codes {
+  id            BigInt                    @id @default(autoincrement()) @db.UnsignedBigInt
+  code          String                    @db.VarChar(255)
+  discount_type promo_codes_discount_type
+  discount      Int
+  valid_until   DateTime                  @db.DateTime(0)
+  is_used       Boolean                   @default(false)
+  deleted_at    DateTime?                 @db.Timestamp(0)
+  created_at    DateTime?                 @db.Timestamp(0)
+  updated_at    DateTime?                 @db.Timestamp(0)
+}
+
+model role_has_permissions {
+  permission_id BigInt      @db.UnsignedBigInt
+  role_id       BigInt      @db.UnsignedBigInt
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "role_has_permissions_permission_id_foreign")
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "role_has_permissions_role_id_foreign")
+
+  @@id([permission_id, role_id])
+  @@index([role_id], map: "role_has_permissions_role_id_foreign")
+}
+
+model roles {
+  id                   BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
+  name                 String                 @db.VarChar(255)
+  guard_name           String                 @db.VarChar(255)
+  created_at           DateTime?              @db.Timestamp(0)
+  updated_at           DateTime?              @db.Timestamp(0)
+  model_has_roles      model_has_roles[]
+  role_has_permissions role_has_permissions[]
+
+  @@unique([name, guard_name], map: "roles_name_guard_name_unique")
+}
+
+model students {
+  id                  String                    @id @db.Char(36)
+  user_id             String                    @db.Char(36)
+  username            String                    @unique(map: "students_username_unique") @db.VarChar(255)
+  name                String                    @db.VarChar(255)
+  gender              students_gender?
+  occupation_type     students_occupation_type?
+  profile_picture     String?                   @db.VarChar(255)
+  occupation          String?                   @db.VarChar(255)
+  phone               String?                   @db.VarChar(255)
+  city                String?                   @db.VarChar(255)
+  deleted_at          DateTime?                 @db.Timestamp(0)
+  created_at          DateTime?                 @db.Timestamp(0)
+  updated_at          DateTime?                 @db.Timestamp(0)
+  course_reviews      course_reviews[]
+  course_students     course_students[]
+  course_transactions course_transactions[]
+  event_registrants   event_registrants[]
+  event_reviews       event_reviews[]
+  users               User                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "students_user_id_foreign")
+
+  @@index([user_id], map: "students_user_id_foreign")
+}
+
+model tools {
+  id                String              @id @db.Char(36)
+  logo              String              @db.VarChar(255)
+  name              String              @db.VarChar(255)
+  description       String?             @db.Text
+  url               String              @db.VarChar(255)
+  deleted_at        DateTime?           @db.Timestamp(0)
+  created_at        DateTime?           @db.Timestamp(0)
+  updated_at        DateTime?           @db.Timestamp(0)
+  course_tool_pivot course_tool_pivot[]
+}
+
+// Modified User model to work with Auth.js
+model User {
+  id                String     @id @db.Char(36)
+  name              String?    @db.VarChar(255)
+  email             String     @unique(map: "users_email_unique") @db.VarChar(255)
+  email_verified_at DateTime?  @db.Timestamp(0)
+  password          String?  
+  remember_token    String?    @db.VarChar(100)
+  image             String?    @db.VarChar(255)
+  deleted_at        DateTime?  @db.Timestamp(0)
+  created_at        DateTime?  @db.Timestamp(0)
+  updated_at        DateTime?  @db.Timestamp(0)
+  mentors           mentors[]
+  students          students[]
+  writers           writers[]
+  accounts          Account[]
+  sessions          Session[]
+}
+
+model writers {
+  id              String     @id @db.Char(36)
+  user_id         String     @db.Char(36)
+  username        String     @unique(map: "writers_username_unique") @db.VarChar(255)
+  name            String     @db.VarChar(255)
+  profile_picture String?    @db.VarChar(255)
+  deleted_at      DateTime?  @db.Timestamp(0)
+  created_at      DateTime?  @db.Timestamp(0)
+  updated_at      DateTime?  @db.Timestamp(0)
+  articles        articles[]
+  users           User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "writers_user_id_foreign")
+
+  @@index([user_id], map: "writers_user_id_foreign")
+}
+
+enum course_types_type {
+  group
+  private
+  batch
+}
+
+enum promo_codes_discount_type {
+  fixed
+  percentage
+}
+
+enum course_transactions_type {
+  group
+  private
+  batch
+}
+
+enum students_gender {
+  male
+  female
+}
+
+enum event_registrants_status {
+  pending
+  paid
+  rejected
+}
+
+enum mentors_gender {
+  male
+  female
+}
+
+enum students_occupation_type {
+  student
+  employee
+  business
+  other
+}
+
+enum course_transactions_status {
+  paid
+  unpaid
+  failed
+}
+
+enum course_types_discount_type {
+  percentage
+  fixed
+}
+

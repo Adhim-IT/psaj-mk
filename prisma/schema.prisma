@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// New simplified Role model
+model Role {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  users       User[]
+}
+
 // Auth.js / NextAuth.js models
 model Account {
   id                String  @id @default(cuid())
@@ -455,26 +465,6 @@ model migrations {
   batch     Int
 }
 
-model model_has_permissions {
-  permission_id BigInt      @db.UnsignedBigInt
-  model_type    String      @db.VarChar(255)
-  model_id      String      @db.Char(36)
-  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "model_has_permissions_permission_id_foreign")
-
-  @@id([permission_id, model_id, model_type])
-  @@index([model_id, model_type], map: "model_has_permissions_model_id_model_type_index")
-}
-
-model model_has_roles {
-  role_id    BigInt @db.UnsignedBigInt
-  model_type String @db.VarChar(255)
-  model_id   String @db.Char(36)
-  roles      roles  @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "model_has_roles_role_id_foreign")
-
-  @@id([role_id, model_id, model_type])
-  @@index([model_id, model_type], map: "model_has_roles_model_id_model_type_index")
-}
-
 model password_reset_tokens {
   email      String    @id @db.VarChar(255)
   token      String    @db.VarChar(255)
@@ -490,18 +480,6 @@ model password_resets {
 
   @@index([email], map: "password_resets_email_index")
   @@ignore
-}
-
-model permissions {
-  id                    BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
-  name                  String                  @db.VarChar(255)
-  guard_name            String                  @db.VarChar(255)
-  created_at            DateTime?               @db.Timestamp(0)
-  updated_at            DateTime?               @db.Timestamp(0)
-  model_has_permissions model_has_permissions[]
-  role_has_permissions  role_has_permissions[]
-
-  @@unique([name, guard_name], map: "permissions_name_guard_name_unique")
 }
 
 model personal_access_tokens {
@@ -531,28 +509,6 @@ model promo_codes {
   updated_at    DateTime?                 @db.Timestamp(0)
 }
 
-model role_has_permissions {
-  permission_id BigInt      @db.UnsignedBigInt
-  role_id       BigInt      @db.UnsignedBigInt
-  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "role_has_permissions_permission_id_foreign")
-  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "role_has_permissions_role_id_foreign")
-
-  @@id([permission_id, role_id])
-  @@index([role_id], map: "role_has_permissions_role_id_foreign")
-}
-
-model roles {
-  id                   BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
-  name                 String                 @db.VarChar(255)
-  guard_name           String                 @db.VarChar(255)
-  created_at           DateTime?              @db.Timestamp(0)
-  updated_at           DateTime?              @db.Timestamp(0)
-  model_has_roles      model_has_roles[]
-  role_has_permissions role_has_permissions[]
-
-  @@unique([name, guard_name], map: "roles_name_guard_name_unique")
-}
-
 model students {
   id                  String                    @id @db.Char(36)
   user_id             String                    @db.Char(36)
@@ -572,7 +528,7 @@ model students {
   course_transactions course_transactions[]
   event_registrants   event_registrants[]
   event_reviews       event_reviews[]
-  users               User                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "students_user_id_foreign")
+  users               User                      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "students_user_id_foreign")
 
   @@index([user_id], map: "students_user_id_foreign")
 }
@@ -598,6 +554,7 @@ model User {
   password          String?  
   remember_token    String?    @db.VarChar(100)
   image             String?    @db.VarChar(255)
+  role_id           String?    // Added role_id field
   deleted_at        DateTime?  @db.Timestamp(0)
   created_at        DateTime?  @db.Timestamp(0)
   updated_at        DateTime?  @db.Timestamp(0)
@@ -606,6 +563,7 @@ model User {
   writers           writers[]
   accounts          Account[]
   sessions          Session[]
+  role              Role?      @relation(fields: [role_id], references: [id]) // Added relation to Role model
 }
 
 model writers {
@@ -618,7 +576,7 @@ model writers {
   created_at      DateTime?  @db.Timestamp(0)
   updated_at      DateTime?  @db.Timestamp(0)
   articles        articles[]
-  users           User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "writers_user_id_foreign")
+  users           User       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "writers_user_id_foreign")
 
   @@index([user_id], map: "writers_user_id_foreign")
 }

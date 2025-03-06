@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Azeret_Mono as Geist_Mono } from 'next/font/google';
+import NextAuthSessionProvider from "@/providers/session-provider"
 import "./globals.css";
 
 import { Poppins } from 'next/font/google';
-import Footer from "@/src/components/user/Footer";
-import Navbar from "@/src/components/user/Navbar";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,8 +49,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
-       
-        {children}
+        <NextAuthSessionProvider>
+          {children}
+        </NextAuthSessionProvider>
       </body>
     </html>
   );

@@ -3,11 +3,18 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import { ChevronDown, Menu } from "lucide-react"
+import { ChevronDown, LogOut, Menu, Settings, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/src/components/ui/sheet"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
+import { useSession, signOut } from "next-auth/react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/user/avatar"
 
 // Define program items to ensure consistency between mobile and desktop
 const programItems = [
@@ -19,11 +26,28 @@ const programItems = [
 export default function Navbar() {
   const pathname = usePathname()
   const [isProgramOpen, setIsProgramOpen] = useState(false)
+  const { data: session, status } = useSession()
+  const isAuthenticated = status === "authenticated"
 
   const getLinkClass = (path: string) =>
     pathname === path
       ? "text-[#5596DF] font-semibold text-base"
       : "text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-base"
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/" })
+  }
+
+  // Get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!session?.user?.name) return "TC"
+    return session.user.name
+      .split(" ")
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
+  }
 
   return (
     <header className="w-full border-b border-black bg-white/80 backdrop-blur-md fixed top-0 z-50 transition-all duration-300 shadow-md">
@@ -67,20 +91,64 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        {/* Auth Buttons */}
+        {/* Auth Buttons or User Profile */}
         <div className="hidden items-center space-x-6 md:flex md:ml-auto">
-          <Link
-            href="/masuk"
-            className="rounded-md px-8 py-3 h-12 border border-gray-300 text-base text-gray-600 hover:bg-gray-100 hover:text-[#5596DF] hover:border-[#5596DF] transition-all duration-200 flex items-center justify-center"
-          >
-            Masuk
-          </Link>
-          <Link
-            href="/daftar"
-            className="rounded-md bg-[#5596DF] px-8 py-3 h-12 text-base text-white hover:bg-[#3E7BBF] transition-transform duration-200 transform hover:scale-105 flex items-center justify-center"
-          >
-            Daftar
-          </Link>
+          {isAuthenticated ? (
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 px-4 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
+                >
+                  <Avatar className="h-8 w-8 border border-[#5596DF]">
+                    <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
+                    <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium">{session?.user?.name}</span>
+                    <span className="text-xs text-gray-500">{session?.user?.email}</span>
+                  </div>
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 text-red-500 focus:text-red-500"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-md px-8 py-3 h-12 border border-gray-300 text-base text-gray-600 hover:bg-gray-100 hover:text-[#5596DF] hover:border-[#5596DF] transition-all duration-200 flex items-center justify-center"
+              >
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-md bg-[#5596DF] px-8 py-3 h-12 text-base text-white hover:bg-[#3E7BBF] transition-transform duration-200 transform hover:scale-105 flex items-center justify-center"
+              >
+                Daftar
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -100,6 +168,22 @@ export default function Navbar() {
               <SheetTitle className="text-left text-xl font-normal text-[#5596DF]">Menu</SheetTitle>
             </SheetHeader>
             <div className="flex h-full flex-col">
+              {/* User Profile in Mobile Menu (if authenticated) */}
+              {isAuthenticated && (
+                <div className="border-b p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-[#5596DF]">
+                      <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
+                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{session?.user?.name}</span>
+                      <span className="text-xs text-gray-500">{session?.user?.email}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <nav className="flex-1 space-y-2 p-4">
                 <Link href="/" className="block py-3 text-base text-gray-700 hover:text-[#5596DF]">
                   Home
@@ -140,21 +224,47 @@ export default function Navbar() {
                 <Link href="/mentor" className="block py-3 text-base text-gray-700 hover:text-[#5596DF]">
                   Mentor
                 </Link>
+
+                {/* User-specific links in mobile menu */}
+                {isAuthenticated && (
+                  <>
+                    <Link href="/dashboard" className="block py-3 text-base text-gray-700 hover:text-[#5596DF]">
+                      Dashboard
+                    </Link>
+                    <Link href="/settings" className="block py-3 text-base text-gray-700 hover:text-[#5596DF]">
+                      Settings
+                    </Link>
+                  </>
+                )}
               </nav>
+
               <div className="border-t p-4 space-y-3">
-                <Link href="/masuk" className="block w-full">
+                {isAuthenticated ? (
                   <Button
+                    onClick={handleSignOut}
                     variant="outline"
-                    className="w-full rounded-md border-gray-300 bg-white text-base text-gray-700 hover:bg-gray-50 hover:text-[#5596DF] hover:border-[#5596DF]"
+                    className="w-full rounded-md border-red-300 bg-white text-base text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-500 flex items-center justify-center gap-2"
                   >
-                    Masuk
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
                   </Button>
-                </Link>
-                <Link href="/daftar" className="block w-full">
-                  <Button className="w-full rounded-md bg-[#5596DF] text-base text-white hover:bg-[#3E7BBF]">
-                    Daftar
-                  </Button>
-                </Link>
+                ) : (
+                  <>
+                    <Link href="/login" className="block w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-md border-gray-300 bg-white text-base text-gray-700 hover:bg-gray-50 hover:text-[#5596DF] hover:border-[#5596DF]"
+                      >
+                        Masuk
+                      </Button>
+                    </Link>
+                    <Link href="/register" className="block w-full">
+                      <Button className="w-full rounded-md bg-[#5596DF] text-base text-white hover:bg-[#3E7BBF]">
+                        Daftar
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>

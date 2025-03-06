@@ -1,4 +1,16 @@
 -- CreateTable
+CREATE TABLE `Role` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `created_at` TIMESTAMP(0) NULL,
+    `updated_at` TIMESTAMP(0) NULL,
+
+    UNIQUE INDEX `Role_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Account` (
     `id` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
@@ -454,26 +466,6 @@ CREATE TABLE `migrations` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `model_has_permissions` (
-    `permission_id` BIGINT UNSIGNED NOT NULL,
-    `model_type` VARCHAR(255) NOT NULL,
-    `model_id` CHAR(36) NOT NULL,
-
-    INDEX `model_has_permissions_model_id_model_type_index`(`model_id`, `model_type`),
-    PRIMARY KEY (`permission_id`, `model_id`, `model_type`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `model_has_roles` (
-    `role_id` BIGINT UNSIGNED NOT NULL,
-    `model_type` VARCHAR(255) NOT NULL,
-    `model_id` CHAR(36) NOT NULL,
-
-    INDEX `model_has_roles_model_id_model_type_index`(`model_id`, `model_type`),
-    PRIMARY KEY (`role_id`, `model_id`, `model_type`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `password_reset_tokens` (
     `email` VARCHAR(255) NOT NULL,
     `token` VARCHAR(255) NOT NULL,
@@ -490,18 +482,6 @@ CREATE TABLE `password_resets` (
     `created_at` TIMESTAMP(0) NULL,
 
     INDEX `password_resets_email_index`(`email`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `permissions` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(255) NOT NULL,
-    `guard_name` VARCHAR(255) NOT NULL,
-    `created_at` TIMESTAMP(0) NULL,
-    `updated_at` TIMESTAMP(0) NULL,
-
-    UNIQUE INDEX `permissions_name_guard_name_unique`(`name`, `guard_name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -539,46 +519,25 @@ CREATE TABLE `promo_codes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `role_has_permissions` (
-    `permission_id` BIGINT UNSIGNED NOT NULL,
-    `role_id` BIGINT UNSIGNED NOT NULL,
+    CREATE TABLE `students` (
+        `id` CHAR(36) NOT NULL,
+        `user_id` CHAR(36) NOT NULL,
+        `username` VARCHAR(255) NOT NULL,
+        `name` VARCHAR(255) NOT NULL,
+        `gender` ENUM('male', 'female') NULL,
+        `occupation_type` ENUM('student', 'employee', 'business', 'other') NULL,
+        `profile_picture` VARCHAR(255) NULL,
+        `occupation` VARCHAR(255) NULL,
+        `phone` VARCHAR(255) NULL,
+        `city` VARCHAR(255) NULL,
+        `deleted_at` TIMESTAMP(0) NULL,
+        `created_at` TIMESTAMP(0) NULL,
+        `updated_at` TIMESTAMP(0) NULL,
 
-    INDEX `role_has_permissions_role_id_foreign`(`role_id`),
-    PRIMARY KEY (`permission_id`, `role_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `roles` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(255) NOT NULL,
-    `guard_name` VARCHAR(255) NOT NULL,
-    `created_at` TIMESTAMP(0) NULL,
-    `updated_at` TIMESTAMP(0) NULL,
-
-    UNIQUE INDEX `roles_name_guard_name_unique`(`name`, `guard_name`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `students` (
-    `id` CHAR(36) NOT NULL,
-    `user_id` CHAR(36) NOT NULL,
-    `username` VARCHAR(255) NOT NULL,
-    `name` VARCHAR(255) NOT NULL,
-    `gender` ENUM('male', 'female') NULL,
-    `occupation_type` ENUM('student', 'employee', 'business', 'other') NULL,
-    `profile_picture` VARCHAR(255) NULL,
-    `occupation` VARCHAR(255) NULL,
-    `phone` VARCHAR(255) NULL,
-    `city` VARCHAR(255) NULL,
-    `deleted_at` TIMESTAMP(0) NULL,
-    `created_at` TIMESTAMP(0) NULL,
-    `updated_at` TIMESTAMP(0) NULL,
-
-    UNIQUE INDEX `students_username_unique`(`username`),
-    INDEX `students_user_id_foreign`(`user_id`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        UNIQUE INDEX `students_username_unique`(`username`),
+        INDEX `students_user_id_foreign`(`user_id`),
+        PRIMARY KEY (`id`)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `tools` (
@@ -603,6 +562,7 @@ CREATE TABLE `User` (
     `password` VARCHAR(191) NULL,
     `remember_token` VARCHAR(100) NULL,
     `image` VARCHAR(255) NULL,
+    `role_id` VARCHAR(191) NULL,
     `deleted_at` TIMESTAMP(0) NULL,
     `created_at` TIMESTAMP(0) NULL,
     `updated_at` TIMESTAMP(0) NULL,
@@ -733,19 +693,10 @@ ALTER TABLE `mentor_earnings` ADD CONSTRAINT `mentor_earnings_mentor_id_foreign`
 ALTER TABLE `mentors` ADD CONSTRAINT `mentors_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE `model_has_permissions` ADD CONSTRAINT `model_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
-
--- AddForeignKey
-ALTER TABLE `model_has_roles` ADD CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
-
--- AddForeignKey
-ALTER TABLE `role_has_permissions` ADD CONSTRAINT `role_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
-
--- AddForeignKey
-ALTER TABLE `role_has_permissions` ADD CONSTRAINT `role_has_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
-
--- AddForeignKey
 ALTER TABLE `students` ADD CONSTRAINT `students_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
+
+-- AddForeignKey
+ALTER TABLE `User` ADD CONSTRAINT `User_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `Role`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `writers` ADD CONSTRAINT `writers_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT;

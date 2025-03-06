@@ -1,8 +1,7 @@
 "use server"
-
 import { RegisterSchema } from "@/lib/zod"
 import { hashSync } from "bcrypt-ts"
-import { prisma } from "./prisma"
+import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 
 export const signUpCredentials = async (prevState: unknown, formData: FormData) => {
@@ -18,20 +17,43 @@ export const signUpCredentials = async (prevState: unknown, formData: FormData) 
   const { name, email, password } = validateFields.data
   const hashedPassword = hashSync(password, 10)
 
+  // Generate username dari email (ambil sebelum '@')
+  const username = email.split("@")[0]
+
   try {
-    await prisma.user.create({
+    // Buat user di tabel users
+    const newUser = await prisma.user.create({
       data: {
         id: crypto.randomUUID(),
         name,
         email,
         password: hashedPassword,
+        role_id: "cm7vuccjw0001fgygzfjtsgho",
       },
     })
 
-    
+    // Tambahkan user ke tabel students
+    await prisma.students.create({
+      data: {
+        id: crypto.randomUUID(),
+        user_id: newUser.id,
+        username,
+        name,
+        gender: null, 
+        occupation_type: null,
+        profile_picture: null,
+        occupation: null,
+        phone: null,
+        city: null,
+        deleted_at: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    })
+
   } catch (error) {
     return { error: "Terjadi kesalahan saat registrasi" }
   }
+
   redirect("/login")
 }
-

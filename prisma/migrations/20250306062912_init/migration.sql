@@ -519,25 +519,25 @@ CREATE TABLE `promo_codes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-    CREATE TABLE `students` (
-        `id` CHAR(36) NOT NULL,
-        `user_id` CHAR(36) NOT NULL,
-        `username` VARCHAR(255) NOT NULL,
-        `name` VARCHAR(255) NOT NULL,
-        `gender` ENUM('male', 'female') NULL,
-        `occupation_type` ENUM('student', 'employee', 'business', 'other') NULL,
-        `profile_picture` VARCHAR(255) NULL,
-        `occupation` VARCHAR(255) NULL,
-        `phone` VARCHAR(255) NULL,
-        `city` VARCHAR(255) NULL,
-        `deleted_at` TIMESTAMP(0) NULL,
-        `created_at` TIMESTAMP(0) NULL,
-        `updated_at` TIMESTAMP(0) NULL,
+CREATE TABLE `students` (
+    `id` CHAR(36) NOT NULL,
+    `user_id` CHAR(36) NOT NULL,
+    `username` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `gender` ENUM('male', 'female') NULL,
+    `occupation_type` ENUM('student', 'employee', 'business', 'other') NULL,
+    `profile_picture` VARCHAR(255) NULL,
+    `occupation` VARCHAR(255) NULL,
+    `phone` VARCHAR(255) NULL,
+    `city` VARCHAR(255) NULL,
+    `deleted_at` TIMESTAMP(0) NULL,
+    `created_at` TIMESTAMP(0) NULL,
+    `updated_at` TIMESTAMP(0) NULL,
 
-        UNIQUE INDEX `students_username_unique`(`username`),
-        INDEX `students_user_id_foreign`(`user_id`),
-        PRIMARY KEY (`id`)
-    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    UNIQUE INDEX `students_username_unique`(`username`),
+    INDEX `students_user_id_foreign`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `tools` (

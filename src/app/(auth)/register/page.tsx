@@ -1,9 +1,18 @@
-
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 import RegisterForm from "@/components/auth/form-register"
 import { Rocket } from "lucide-react"
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const session = await auth()
+
+  // Redirect ke homepage jika sudah login
+  if (session) {
+    return redirect("/")
+  }
+  
+  
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Left side - Content and imagery */}

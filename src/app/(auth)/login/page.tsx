@@ -1,9 +1,17 @@
 
-
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 import LoginForm from "@/components/auth/form-login"
 import { Rocket } from "lucide-react"
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth()
+
+  // Redirect ke homepage jika sudah login
+  if (session) {
+    return redirect("/")
+  }
+  
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Left side - Content and imagery */}

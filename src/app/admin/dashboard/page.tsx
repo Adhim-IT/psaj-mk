@@ -4,6 +4,7 @@ import { RecentActivity } from "@/components/admin/dashboard/recent-activity"
 import { ArrowUp, BookOpen, FileText, Users } from "lucide-react"
 
 export default function DashboardPage() {
+    
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">

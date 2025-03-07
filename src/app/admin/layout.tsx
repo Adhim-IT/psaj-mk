@@ -28,11 +28,15 @@ export default function DashboardLayout({
     // If authenticated, check role
     if (status === "authenticated") {
       // Check if the user has the 'Admin' role
-      const isAdmin = session?.user?.role === "Admin"
-      setIsAuthorized(isAdmin)
-      if (!isAdmin) {
-        router.push("/")
+      const allowedRoles = ["Admin", "Mentor", "Writer"];
+      const isAuthorized = allowedRoles.includes(session?.user?.role ?? "");
+      
+      setIsAuthorized(isAuthorized);
+      
+      if (!isAuthorized) {
+        router.push("/");
       }
+      
     }
   }, [status, session, router])
 

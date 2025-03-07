@@ -28,11 +28,18 @@ export const signInCredentials = async (prevState: unknown, formData: FormData) 
     const response = await fetch("/api/auth/session");
     const session = await response.json();
 
-    if (session?.user?.role_id === "cm7wzebij0000fgngw776djak") {
+    const allowedRoleIds = [
+      "cm7wzebij0000fgngw776djak", 
+      "cm7wzebj10002fgngkkc6rkdk", 
+      "cm7wzebj60003fgngf5yl85ka"
+    ];
+    
+    if (allowedRoleIds.includes(session?.user?.role_id ?? "")) {
       window.location.href = "/admin/dashboard";
     } else {
       window.location.href = "/";
     }
+    
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

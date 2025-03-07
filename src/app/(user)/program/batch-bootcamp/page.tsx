@@ -1,24 +1,22 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, MessageCircle, Calendar, FileText, Award, Play } from 'lucide-react'
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/src/components/ui/badge"
+import { ArrowRight, MessageCircle, Calendar} from 'lucide-react'
+import ProgramPage from "@/src/components/user/program"
 
 export default function BatchBootcamp() {
     return (
         <main className="min-h-screen ">
             {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-white py-20 md:py-32 ">
+            <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-white py-20 md:py-32">
                 <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25 "></div>
                 <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center ">
                         <div className="space-y-6">
-                            <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-[#5596DF] to-[#41C5E9] bg-clip-text text-transparent">
+                            <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-[#5596DF] to-[#41C5E9] bg-clip-text text-transparent md:max-w-2xl">
                             Online Bootcamp Batch
                             </h1>
-                            <p className="text-lg text-muted-foreground max-w-md">
-                            Program Online Bootcamp Batch merupakan program dari TeenCode dimana peserta dalam bentuk kelompok yang terdiri maksimal 15 Orang. Kelas bersifat online sehingga bisa diikuti peserta dari mana saja.
+                            <p className="text-lg text-muted-foreground max-w-xl">
+                            Program Online Bootcamp Batch merupakan program TeenCode dimana peserta dlam bentuk kelompok yang terdiri maksimal 15 orang. Keas bersifat online sehingga bisa diikuti peserta dari mana saja dan kapan saja.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -56,7 +54,7 @@ export default function BatchBootcamp() {
 
                             <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                                 <Image
-                                    src="/images/Online-Bootcamp-Intensive.jpg"
+                                    src="/images/program/online-batch-bootcamp.png"
                                     width={600}
                                     height={500}
                                     alt="Student learning online"
@@ -83,164 +81,9 @@ export default function BatchBootcamp() {
                 </div>
             </section>
 
-            {/* Features Section */}
-            <section className="py-20">
-                <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
-                    <div className="text-center max-w-2xl mx-auto mb-16">
-                        <Badge className="mb-4">Program Features</Badge>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need to succeed</h2>
-                        <p className="text-muted-foreground">
-                            Our program is designed to provide you with all the tools, resources, and support you need to master new
-                            skills and advance your career.
-                        </p>
-                    </div>
+            <ProgramPage />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-white hover:shadow-xl transition-all duration-300 group">
-                            <CardContent className="p-6">
-                                <div className="bg-blue-100 p-3 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-                                    <FileText className="h-6 w-6 text-blue-600" />
-                                </div>
-                                <h3 className="font-bold text-lg mb-2">Comprehensive Modules</h3>
-                                <p className="text-muted-foreground">
-                                    Structured learning materials designed by industry experts to ensure you master every concept.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-white hover:shadow-xl transition-all duration-300 group">
-                            <CardContent className="p-6">
-                                <div className="bg-purple-100 p-3 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
-                                    <Play className="h-6 w-6 text-purple-600" />
-                                </div>
-                                <h3 className="font-bold text-lg mb-2">Session Recordings</h3>
-                                <p className="text-muted-foreground">
-                                    Access recordings of all sessions to review concepts and catch up on anything you missed.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-white hover:shadow-xl transition-all duration-300 group">
-                            <CardContent className="p-6">
-                                <div className="bg-green-100 p-3 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
-                                    <Calendar className="h-6 w-6 text-green-600" />
-                                </div>
-                                <h3 className="font-bold text-lg mb-2">Flexible Schedule</h3>
-                                <p className="text-muted-foreground">
-                                    Learn at your own pace with flexible scheduling options that fit your busy lifestyle.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-lg bg-gradient-to-br from-orange-50 to-white hover:shadow-xl transition-all duration-300 group">
-                            <CardContent className="p-6">
-                                <div className="bg-orange-100 p-3 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-orange-200 transition-colors">
-                                    <Award className="h-6 w-6 text-orange-600" />
-                                </div>
-                                <h3 className="font-bold text-lg mb-2">Certification</h3>
-                                <p className="text-muted-foreground">
-                                    Receive an industry-recognized certificate upon successful completion of the program.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <div className="mt-12 text-center">
-                        <Link href="#" className="inline-flex items-center text-blue-600 font-medium hover:underline">
-                            Explore All Features
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* Learning Methods Section */}
-            <section className="py-20 bg-gradient-to-b from-white to-gray-50">
-                <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
-                    <div className="text-center max-w-2xl mx-auto mb-16">
-                        <Badge className="mb-4">Our Methodology</Badge>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Learning Methods in Our Intensive Bootcamp Program</h2>
-                        <p className="text-muted-foreground">
-                            Our proven learning methodology ensures you gain practical skills through a combination of theory,
-                            practice, and real-world projects.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                            <div className="h-40 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center p-6">
-                                <Image
-                                    src="/placeholder.svg?height=120&width=120"
-                                    width={120}
-                                    height={120}
-                                    alt="Meetings icon"
-                                    className="w-24 h-24 object-contain group-hover:scale-110 transition-transform duration-300"
-                                />
-                            </div>
-                            <CardContent className="p-6">
-                                <h3 className="font-bold text-xl mb-3">Twice Weekly Sessions</h3>
-                                <p className="text-muted-foreground">
-                                    Regular twice-weekly sessions ensure consistent learning and progress tracking.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                            <div className="h-40 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center p-6">
-                                <Image
-                                    src="/placeholder.svg?height=120&width=120"
-                                    width={120}
-                                    height={120}
-                                    alt="Learning modules icon"
-                                    className="w-24 h-24 object-contain group-hover:scale-110 transition-transform duration-300"
-                                />
-                            </div>
-                            <CardContent className="p-6">
-                                <h3 className="font-bold text-xl mb-3">Sequential Learning with Modules</h3>
-                                <p className="text-muted-foreground">
-                                    Sequential learning with structured modules for optimal knowledge retention.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                            <div className="h-40 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center p-6">
-                                <Image
-                                    src="/placeholder.svg?height=120&width=120"
-                                    width={120}
-                                    height={120}
-                                    alt="Discussion group icon"
-                                    className="w-24 h-24 object-contain group-hover:scale-110 transition-transform duration-300"
-                                />
-                            </div>
-                            <CardContent className="p-6">
-                                <h3 className="font-bold text-xl mb-3">Mentor-led Discussion Groups</h3>
-                                <p className="text-muted-foreground">
-                                    Interactive discussion groups with mentors to clarify concepts and share ideas.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                            <div className="h-40 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center p-6">
-                                <Image
-                                    src="/placeholder.svg?height=120&width=120"
-                                    width={120}
-                                    height={120}
-                                    alt="Final project icon"
-                                    className="w-24 h-24 object-contain group-hover:scale-110 transition-transform duration-300"
-                                />
-                            </div>
-                            <CardContent className="p-6">
-                                <h3 className="font-bold text-xl mb-3">Specialized Final Projects</h3>
-                                <p className="text-muted-foreground">
-                                    Culminating projects that apply your skills to real-world scenarios relevant to your field.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </section>
+            
         </main>
     )
 }

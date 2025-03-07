@@ -2,9 +2,31 @@ import type React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface RecentActivityProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface Activity {
+  userName: string
+  userAvatar: string
+  action: string
+  time: string
+}
 
-export function RecentActivity({ className, ...props }: RecentActivityProps) {
+interface RecentActivityProps extends React.HTMLAttributes<HTMLDivElement> {
+  activities?: Activity[]
+}
+
+export function RecentActivity({ className, activities = [], ...props }: RecentActivityProps) {
+  // Use provided activities or fallback to empty array
+  const displayedActivities =
+    activities.length > 0
+      ? activities
+      : [
+          {
+            userName: "No recent activity",
+            userAvatar: "/placeholder.svg",
+            action: "No actions recorded yet",
+            time: "-",
+          },
+        ]
+
   return (
     <Card className={className} {...props}>
       <CardHeader className="pb-3">
@@ -23,7 +45,7 @@ export function RecentActivity({ className, ...props }: RecentActivityProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-5">
-          {activities.map((activity, index) => (
+          {displayedActivities.map((activity, index) => (
             <div key={index} className="flex items-center gap-4">
               <Avatar className="h-10 w-10 border-2 border-blue-100">
                 <AvatarImage src={activity.userAvatar} alt={activity.userName} />
@@ -45,37 +67,4 @@ export function RecentActivity({ className, ...props }: RecentActivityProps) {
     </Card>
   )
 }
-
-const activities = [
-  {
-    userName: "Budi Santoso",
-    userAvatar: "/placeholder.svg",
-    action: "Mendaftar kelas baru",
-    time: "2m",
-  },
-  {
-    userName: "Siti Rahayu",
-    userAvatar: "/placeholder.svg",
-    action: "Memperbarui profil",
-    time: "15m",
-  },
-  {
-    userName: "Ahmad Hidayat",
-    userAvatar: "/placeholder.svg",
-    action: "Menyelesaikan kelas",
-    time: "1h",
-  },
-  {
-    userName: "Dewi Lestari",
-    userAvatar: "/placeholder.svg",
-    action: "Menambahkan artikel baru",
-    time: "3h",
-  },
-  {
-    userName: "Rudi Hartono",
-    userAvatar: "/placeholder.svg",
-    action: "Mendaftar event",
-    time: "5h",
-  },
-]
 

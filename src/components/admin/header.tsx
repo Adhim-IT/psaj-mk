@@ -1,8 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Bell, ChevronDown, Search, User } from "lucide-react"
-
+import { Bell, ChevronDown, Search, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -15,8 +14,22 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useSession, signOut } from "next-auth/react"
 
 export function DashboardHeader() {
+  const { data: session, status } = useSession()
+  const isAuthenticated = status === "authenticated"
+
+  const getUserInitials = () => {
+    if (!session?.user?.name) return "U"
+    return session.user.name
+      .split(" ")
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
+  }
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6 shadow-sm">
       <SidebarTrigger className="text-gray-500 hover:text-blue-600 transition-colors" />
@@ -49,11 +62,13 @@ export function DashboardHeader() {
               className="flex items-center gap-2 px-2 rounded-full hover:bg-blue-50 transition-colors"
             >
               <Avatar className="h-8 w-8 border-2 border-blue-100">
-                <AvatarImage src="/placeholder.svg" alt="User" />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">A</AvatarFallback>
+                <AvatarImage src={session?.user?.image || "/placeholder.svg"} alt="User" />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                  {getUserInitials()}
+                </AvatarFallback>
               </Avatar>
               <div className="flex items-center">
-                <span className="mr-2 text-sm font-medium">admin@teencode.com</span>
+                <span className="mr-2 text-sm font-medium">{session?.user?.email || "Guest"}</span>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </div>
             </Button>
@@ -61,24 +76,34 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end" className="w-56 mt-1">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
+            <DropdownMenuItem asChild>
               <Link href="/dashboard/profile" className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="cursor-pointer">
+            <DropdownMenuItem asChild>
               <Link href="/dashboard/settings" className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer">Log out</DropdownMenuItem>
+            {isAuthenticated ? (
+              <DropdownMenuItem onClick={() => signOut()} className="text-red-600 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem asChild>
+                <Link href="/login" className="text-blue-600 cursor-pointer">
+                  Log in
+                </Link>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
   )
 }
-

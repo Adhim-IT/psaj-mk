@@ -1,18 +1,20 @@
 "use client"
 
 import { signInCredentials } from "@/lib/login"
-import { useActionState } from "react" // Changed from react-dom to React
+import { useActionState } from "react"
 import { LoginButton } from "./button"
 import { Eye, EyeOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import  Link  from "next/link"
+import Link from "next/link"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const LoginForm = () => {
-  const [state, formAction, isPending] = useActionState(signInCredentials, null) 
+  const [state, formAction, isPending] = useActionState(signInCredentials, null)
   const [showPassword, setShowPassword] = useState(false)
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword)
+
   return (
     <div className="w-full mx-auto">
       <div className="text-center mb-4 sm:mb-6">
@@ -21,6 +23,13 @@ const LoginForm = () => {
       </div>
 
       <form action={formAction} className="space-y-3 sm:space-y-4">
+        {/* Display general error message when both credentials are wrong */}
+        {state?.message && (
+          <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800 py-2">
+            <AlertDescription className="text-sm font-medium">{state.message}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-1 sm:space-y-2">
           <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
             <svg className="w-4 h-4 text-[#3182CE]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,5 +124,6 @@ const LoginForm = () => {
     </div>
   )
 }
+
 export default LoginForm
 

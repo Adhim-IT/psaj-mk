@@ -76,18 +76,8 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end" className="w-56 mt-1">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/profile" className="flex items-center">
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" className="flex items-center">
-                <User className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </Link>
-            </DropdownMenuItem>
+            
+            
             <DropdownMenuSeparator />
             {isAuthenticated ? (
               <DropdownMenuItem onClick={() => signOut()} className="text-red-600 cursor-pointer">

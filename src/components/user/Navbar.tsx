@@ -2,15 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronDown, LogOut, Menu, Settings, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
@@ -28,6 +23,15 @@ export default function Navbar() {
   const [isProgramOpen, setIsProgramOpen] = useState(false)
   const { data: session, status } = useSession()
   const isAuthenticated = status === "authenticated"
+  const [userName, setUserName] = useState("")
+  const [userEmail, setUserEmail] = useState("")
+
+  useEffect(() => {
+    if (session?.user) {
+      setUserName(session.user.name || "")
+      setUserEmail(session.user.email || "")
+    }
+  }, [session])
 
   const getLinkClass = (path: string) =>
     pathname === path
@@ -38,10 +42,9 @@ export default function Navbar() {
     signOut({ callbackUrl: "/" })
   }
 
-  // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!session?.user?.name) return "TC"
-    return session.user.name
+    if (!userName) return "TC"
+    return userName
       .split(" ")
       .map((name) => name[0])
       .join("")
@@ -101,12 +104,12 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-4 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
                 >
                   <Avatar className="h-8 w-8 border border-[#5596DF]">
-                    <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
+                    <AvatarImage src={session?.user?.image || ""} alt={userName || "User"} />
                     <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start">
-                    <span className="text-sm font-medium">{session?.user?.name}</span>
-                    <span className="text-xs text-gray-500">{session?.user?.email}</span>
+                    <span className="text-sm font-medium">{userName}</span>
+                    <span className="text-xs text-gray-500">{userEmail}</span>
                   </div>
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
@@ -173,12 +176,12 @@ export default function Navbar() {
                 <div className="border-b p-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border border-[#5596DF]">
-                      <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "User"} />
+                      <AvatarImage src={session?.user?.image || ""} alt={userName || "User"} />
                       <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="font-medium">{session?.user?.name}</span>
-                      <span className="text-xs text-gray-500">{session?.user?.email}</span>
+                      <span className="font-medium">{userName}</span>
+                      <span className="text-xs text-gray-500">{userEmail}</span>
                     </div>
                   </div>
                 </div>

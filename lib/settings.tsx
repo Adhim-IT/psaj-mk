@@ -35,11 +35,12 @@ export async function updateProfile(formData: UpdateProfileData) {
       name: formData.name,
       email: formData.email,
       image: formData.image || session.user.image,
+      updated_at: new Date(),
     }
 
     let updatedUser
 
-    // Start a transaction to update both user and student
+    // Start a transaction to update both user and corresponding role table
     await prisma.$transaction(async (tx) => {
       // Update user
       updatedUser = await tx.user.update({
@@ -47,20 +48,63 @@ export async function updateProfile(formData: UpdateProfileData) {
         data: updateData,
       })
 
-      const student = await tx.students.findFirst({
-        where: { user_id: session?.user?.id },
-        select: { id: true, username: true, profile_picture: true },
+      const userRole = await tx.user.findUnique({
+        where: { id: session?.user?.id },
+        select: { role_id: true },
       })
 
-      if (student) {
-        // Update student if exists
-        await tx.students.update({
-          where: { id: student.id }, 
-          data: {
-            name: formData.name,
-            profile_picture: formData.image || student.profile_picture,
-          },
+      if (!userRole) {
+        throw new Error("User role not found")
+      }
+
+      if (userRole.role_id === "cm7wzebiv0001fgnglebnmv99") {
+        const student = await tx.students.findFirst({
+          where: { user_id: session?.user?.id },
+          select: { id: true, username: true, profile_picture: true },
         })
+
+        if (student) {
+          await tx.students.update({
+            where: { id: student.id },
+            data: {
+              name: formData.name,
+              profile_picture: formData.image || student.profile_picture,
+              updated_at: new Date(),
+            },
+          })
+        }
+      } else if (userRole.role_id === "cm7wzebj10002fgngkkc6rkdk") {
+        const mentor = await tx.mentors.findFirst({
+          where: { user_id: session?.user?.id },
+          select: { id: true, name: true, profile_picture: true },
+        })
+
+        if (mentor) {
+          await tx.mentors.update({
+            where: { id: mentor.id },
+            data: {
+              name: formData.name,
+              profile_picture: formData.image || mentor.profile_picture,
+              updated_at: new Date(),
+            },
+          })
+        }
+      } else if (userRole.role_id === "cm7wzebj60003fgngf5yl85ka") {
+        const writer = await tx.writers.findFirst({
+          where: { user_id: session?.user?.id },
+          select: { id: true, name: true, profile_picture: true },
+        })
+
+        if (writer) {
+          await tx.writers.update({
+            where: { id: writer.id },
+            data: {
+              name: formData.name,
+              profile_picture: formData.image || writer.profile_picture,
+              updated_at: new Date(),
+            },
+          })
+        }
       }
     })
 
@@ -106,7 +150,10 @@ export async function updatePassword(formData: {
     // Update password in database
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { password: hashedPassword },
+      data: { 
+        password: hashedPassword,
+        updated_at: new Date(),
+      },
     })
 
     revalidatePath("/settings")
@@ -116,4 +163,3 @@ export async function updatePassword(formData: {
     throw error
   }
 }
-

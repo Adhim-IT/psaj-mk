@@ -1,4 +1,4 @@
-import SlugPage from "@/src/app/(user)/kelas/[slug]/page"
+import { isValidYouTubeUrl } from "./youtube"
 import { object, string, z } from "zod"
 
 
@@ -38,3 +38,22 @@ export const CategoryCourseSchema = object({
   slug: string().min(1, "Slug harus diisi"),
 })
 export type CourseCategoryFormData = z.infer<typeof CategoryCourseSchema>
+
+export const listClassSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  thumbnail: z.string().min(1, "Thumbnail is required"),
+  trailer: z.string().min(1, "Trailer URL is required").refine(isValidYouTubeUrl, {
+    message: "Please enter a valid YouTube URL",
+  }),
+  level: z.enum(["Beginner", "Intermediate", "Advanced"], {
+    errorMap: () => ({ message: "Please select a valid level" }),
+  }),
+  meetings: z.coerce.number().int("Number of meetings must be an integer").min(1, "At least one meeting is required"),
+  mentor_id: z.string().min(1, "Mentor is required"),
+  is_popular: z.boolean().default(false),
+  is_request: z.boolean().nullable().default(null),
+  is_active: z.boolean().default(true),
+})
+
+export type ListClassFormData = z.infer<typeof listClassSchema>

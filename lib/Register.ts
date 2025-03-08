@@ -29,6 +29,8 @@ export const signUpCredentials = async (prevState: unknown, formData: FormData) 
         email,
         password: hashedPassword,
         role_id: "cm7wzebiv0001fgnglebnmv99",
+        created_at: new Date(),
+        updated_at: new Date(),
       },
     })
 

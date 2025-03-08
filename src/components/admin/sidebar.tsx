@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -109,9 +109,22 @@ const navItems: NavItem[] = [
   },
 ]
 
-export function DashboardSidebar() {
+export function AdminSidebar() {
   const pathname = usePathname()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
+
+  // Auto-expand menus that contain the active page
+  React.useEffect(() => {
+    const newOpenMenus: Record<string, boolean> = {}
+
+    navItems.forEach((item) => {
+      if (item.submenu && item.submenu.some((subItem) => pathname === subItem.href)) {
+        newOpenMenus[item.title] = true
+      }
+    })
+
+    setOpenMenus((prev) => ({ ...prev, ...newOpenMenus }))
+  }, [pathname])
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({
@@ -122,74 +135,21 @@ export function DashboardSidebar() {
 
   // Check if a menu item or any of its submenu items is active
   const isMenuActive = (item: NavItem) => {
-    if (pathname === item.href) return true
+    if (pathname.startsWith(item.href)) return true
     if (item.submenu) {
-      return item.submenu.some((subItem) => pathname === subItem.href)
+      return item.submenu.some((subItem) => pathname.startsWith(subItem.href))
     }
     return false
   }
 
-  // First, let's add a function to determine the sidebar color based on the current path
-  // Add this function after the isMenuActive function
-
-  const getSidebarColor = () => {
-    // You can customize these color mappings based on your needs
-    if (pathname.includes("/admin/dashboard/kelas")) {
-      return "bg-blue-50 dark:bg-blue-950/20"
-    } else if (pathname.includes("/admin/dashboard/event")) {
-      return "bg-green-50 dark:bg-green-950/20"
-    } else if (pathname.includes("/admin/dashboard/transaksi")) {
-      return "bg-purple-50 dark:bg-purple-950/20"
-    } else if (pathname.includes("/admin/dashboard/artikel")) {
-      return "bg-orange-50 dark:bg-orange-950/20"
-    } else if (pathname.includes("/admin/dashboard/akun")) {
-      return "bg-pink-50 dark:bg-pink-950/20"
-    } else if (pathname.includes("/admin/dashboard/faq")) {
-      return "bg-yellow-50 dark:bg-yellow-950/20"
-    }
-    // Default color
-    return "bg-white dark:bg-gray-950"
-  }
-
-  // Now modify the Sidebar component to use this color
-  // Replace the <Sidebar className="border-r shadow-sm"> line with:
-
-  const getActiveColor = (item: NavItem) => {
-    if (item.href.includes("/kelas") || pathname.includes("/admin/dashboard/kelas")) {
-      return "text-blue-600 dark:text-blue-400"
-    } else if (item.href.includes("/event") || pathname.includes("/admin/dashboard/event")) {
-      return "text-green-600 dark:text-green-400"
-    } else if (item.href.includes("/transaksi") || pathname.includes("/admin/dashboard/transaksi")) {
-      return "text-purple-600 dark:text-purple-400"
-    } else if (item.href.includes("/artikel") || pathname.includes("/admin/dashboard/artikel")) {
-      return "text-orange-600 dark:text-orange-400"
-    } else if (item.href.includes("/akun") || pathname.includes("/admin/dashboard/akun")) {
-      return "text-pink-600 dark:text-pink-400"
-    } else if (item.href.includes("/faq") || pathname.includes("/admin/dashboard/faq")) {
-      return "text-yellow-600 dark:text-yellow-400"
-    }
-    return "text-blue-600 dark:text-blue-400"
-  }
-
-  const getActiveBackground = (item: NavItem) => {
-    if (item.href.includes("/kelas") || pathname.includes("/admin/dashboard/kelas")) {
-      return "bg-blue-50 dark:bg-blue-950/30"
-    } else if (item.href.includes("/event") || pathname.includes("/admin/dashboard/event")) {
-      return "bg-green-50 dark:bg-green-950/30"
-    } else if (item.href.includes("/transaksi") || pathname.includes("/admin/dashboard/transaksi")) {
-      return "bg-purple-50 dark:bg-purple-950/30"
-    } else if (item.href.includes("/artikel") || pathname.includes("/admin/dashboard/artikel")) {
-      return "bg-orange-50 dark:bg-orange-950/30"
-    } else if (item.href.includes("/akun") || pathname.includes("/admin/dashboard/akun")) {
-      return "bg-pink-50 dark:bg-pink-950/30"
-    } else if (item.href.includes("/faq") || pathname.includes("/admin/dashboard/faq")) {
-      return "bg-yellow-50 dark:bg-yellow-950/30"
-    }
-    return "bg-blue-50 dark:bg-blue-950/30"
-  }
+  // Define common active styles for both menu and submenu items
+  const activeTextClass = "text-blue-600 dark:text-blue-400"
+  const activeIconClass = "text-blue-600 dark:text-blue-400"
+  const activeBgClass = "bg-blue-50 dark:bg-blue-950/30"
+  const hoverClass = "hover:bg-blue-50 dark:hover:bg-blue-950/30"
 
   return (
-    <Sidebar className={cn("border-r shadow-sm transition-colors duration-300", getSidebarColor())}>
+    <Sidebar className="border-r shadow-sm">
       <SidebarHeader className="border-b px-6 py-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
@@ -211,16 +171,16 @@ export function DashboardSidebar() {
                     <SidebarMenuButton
                       onClick={() => toggleMenu(item.title)}
                       className={cn(
-                        "justify-between transition-all duration-200 hover:bg-opacity-80",
-                        isMenuActive(item) && `${getActiveBackground(item)} ${getActiveColor(item)} font-medium`,
-                        !isMenuActive(item) && `hover:${getActiveBackground(item)}`,
+                        "justify-between transition-all duration-200",
+                        hoverClass,
+                        isMenuActive(item) && cn(activeBgClass, activeTextClass, "font-medium"),
                       )}
                     >
                       <div className="flex items-center">
                         <item.icon
                           className={cn(
                             "h-4 w-4 mr-2 transition-colors",
-                            isMenuActive(item) ? getActiveColor(item) : "text-gray-500 dark:text-gray-400",
+                            isMenuActive(item) ? activeIconClass : "text-gray-500 dark:text-gray-400",
                           )}
                         />
                         <span>{item.title}</span>
@@ -234,41 +194,46 @@ export function DashboardSidebar() {
                     </SidebarMenuButton>
                     {openMenus[item.title] && (
                       <SidebarMenuSub className="animate-in slide-in-from-left-2 duration-200">
-                        {item.submenu.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.href}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={pathname === subItem.href}
-                              className={cn(
-                                "transition-all duration-200",
-                                pathname === subItem.href && getActiveColor(item),
-                                `hover:${getActiveBackground(item)}`,
-                              )}
-                            >
-                              <Link href={subItem.href}>
-                                <span className="ml-1">• {subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
+                        {item.submenu.map((subItem) => {
+                          const isSubItemActive = pathname.startsWith(subItem.href)
+                          return (
+                            <SidebarMenuSubItem key={subItem.href}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={isSubItemActive}
+                                className={cn(
+                                  "transition-all duration-200",
+                                  hoverClass,
+                                  isSubItemActive && cn(activeTextClass, "font-medium"),
+                                )}
+                              >
+                                <Link href={subItem.href}>
+                                  <span className={cn("ml-1", isSubItemActive && activeTextClass)}>
+                                    • {subItem.title}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )
+                        })}
                       </SidebarMenuSub>
                     )}
                   </>
                 ) : (
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href)}
                     className={cn(
                       "transition-all duration-200",
-                      pathname === item.href && `${getActiveBackground(item)} ${getActiveColor(item)} font-medium`,
-                      !isMenuActive(item) && `hover:${getActiveBackground(item)}`,
+                      hoverClass,
+                      pathname.startsWith(item.href) && cn(activeBgClass, activeTextClass, "font-medium"),
                     )}
                   >
                     <Link href={item.href}>
                       <item.icon
                         className={cn(
                           "h-4 w-4 mr-2 transition-colors",
-                          pathname === item.href ? getActiveColor(item) : "text-gray-500 dark:text-gray-400",
+                          pathname.startsWith(item.href) ? activeIconClass : "text-gray-500 dark:text-gray-400",
                         )}
                       />
                       <span>{item.title}</span>

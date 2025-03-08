@@ -25,11 +25,13 @@ export default function Navbar() {
   const isAuthenticated = status === "authenticated"
   const [userName, setUserName] = useState("")
   const [userEmail, setUserEmail] = useState("")
+  const [userImage, setUserImage] = useState("")
 
   useEffect(() => {
     if (session?.user) {
       setUserName(session.user.name || "")
       setUserEmail(session.user.email || "")
+      setUserImage(session.user.image || "")
     }
   }, [session])
 
@@ -104,7 +106,7 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-4 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
                 >
                   <Avatar className="h-8 w-8 border border-[#5596DF]">
-                    <AvatarImage src={session?.user?.image || ""} alt={userName || "User"} />
+                    <AvatarImage src={userImage} alt={userName || "User"} />
                     <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start">

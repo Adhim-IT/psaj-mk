@@ -7,7 +7,8 @@ import { toast } from "@/components/ui/use-toast"
 import { ProfileForm } from "./profile-form"
 import { PasswordForm } from "./password-form"
 import { updateProfile, updatePassword } from "@/lib/settings"
-import { UserCircle, KeyRound } from 'lucide-react'
+import { UserCircle, KeyRound } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 interface SettingsFormProps {
   user: User & {
@@ -21,16 +22,30 @@ export default function SettingsForm({ user }: SettingsFormProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("profile")
   const [isLoading, setIsLoading] = useState(false)
+  const { data: session, update } = useSession()
 
   const handleProfileUpdate = async (data: any) => {
     setIsLoading(true)
     try {
-      await updateProfile(data)
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      })
-      router.refresh()
+      const result = await updateProfile(data)
+      if (result.success) {
+        // Update the session with new user data
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: data.name,
+            email: data.email,
+            image: data.image instanceof File ? URL.createObjectURL(data.image) : session?.user?.image,
+          },
+        })
+
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        })
+        router.refresh()
+      }
     } catch (error) {
       console.error(error)
       toast({
@@ -69,9 +84,8 @@ export default function SettingsForm({ user }: SettingsFormProps) {
         <button
           onClick={() => setActiveTab("profile")}
           className={`flex items-center gap-2 px-6 py-3 font-medium text-sm relative transition-colors
-            ${activeTab === "profile"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+            ${
+              activeTab === "profile" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-gray-900"
             }
             before:absolute before:bottom-0 before:left-0 before:w-full before:h-0.5 
             before:bg-blue-600 before:transform before:scale-x-0 before:transition-transform
@@ -84,9 +98,10 @@ export default function SettingsForm({ user }: SettingsFormProps) {
         <button
           onClick={() => setActiveTab("password")}
           className={`flex items-center gap-2 px-6 py-3 font-medium text-sm relative transition-colors
-            ${activeTab === "password"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+            ${
+              activeTab === "password"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-600 hover:text-gray-900"
             }
             before:absolute before:bottom-0 before:left-0 before:w-full before:h-0.5 
             before:bg-blue-600 before:transform before:scale-x-0 before:transition-transform
@@ -97,7 +112,7 @@ export default function SettingsForm({ user }: SettingsFormProps) {
           <span>Password</span>
         </button>
       </div>
-      
+
       <div className="pb-8">
         {activeTab === "profile" && <ProfileForm user={user} onSubmit={handleProfileUpdate} isLoading={isLoading} />}
         {activeTab === "password" && <PasswordForm onSubmit={handlePasswordUpdate} isLoading={isLoading} />}
@@ -105,3 +120,4 @@ export default function SettingsForm({ user }: SettingsFormProps) {
     </div>
   )
 }
+

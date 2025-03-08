@@ -1,4 +1,6 @@
-import { object, string } from "zod"
+import SlugPage from "@/src/app/(user)/kelas/[slug]/page"
+import { object, string, z } from "zod"
+
 
 export const LoginSchema = object({
   email: string().email("Email tidak valid"),
@@ -20,3 +22,19 @@ export const RegisterSchema = object({
   message: "Kata sandi tidak cocok",
   path: ["confirmPassword"],
 })
+
+export const toolSchema = object({
+  name: string().min(1, "Nama tool harus diisi"),
+  description: string().optional(),
+  url: string().url("URL tidak valid"),
+  logo: string().min(1, "Logo harus diisi"),
+})
+
+export type ToolFormData = z.infer<typeof toolSchema>
+
+
+export const CategoryCourseSchema = object({
+  name: string().min(1, "Nama kategori harus diisi"),
+  slug: string().min(1, "Slug harus diisi"),
+})
+export type CourseCategoryFormData = z.infer<typeof CategoryCourseSchema>

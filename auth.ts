@@ -34,7 +34,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email,
           },
           include: {
-            role: true, // Include role information
+            role: true,
           },
         })
         if (!user || !user?.password) {
@@ -49,19 +49,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           image: user.image,
-          role: user.role?.name, // Include role name in the token
-          role_id: user.role_id || undefined, // Use undefined instead of null
+          role: user.role?.name,
+          role_id: user.role_id || undefined,
         }
       },
     }),
   ],
 
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger, session }) => {
       if (user) {
         token.id = user.id
         token.role = user.role
         token.role_id = user.role_id
+      }
+      // If the session was updated, update the token
+      if (trigger === "update" && session) {
+        token.name = session.user.name
+        token.email = session.user.email
+        token.picture = session.user.image
       }
       return token
     },
@@ -70,6 +76,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string
         session.user.role = token.role as string | undefined
         session.user.role_id = token.role_id as string | undefined
+        session.user.name = token.name
+        session.user.email = token.email as string
+        session.user.image = token.picture as string | null | undefined
       }
       return session
     },

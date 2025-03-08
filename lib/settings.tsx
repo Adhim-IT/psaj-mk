@@ -37,14 +37,16 @@ export async function updateProfile(formData: UpdateProfileData) {
       image: formData.image || session.user.image,
     }
 
+    let updatedUser
+
     // Start a transaction to update both user and student
     await prisma.$transaction(async (tx) => {
       // Update user
-      await tx.user.update({
+      updatedUser = await tx.user.update({
         where: { id: session?.user?.id },
         data: updateData,
       })
-      
+
       const student = await tx.students.findFirst({
         where: { user_id: session?.user?.id },
         select: { id: true, username: true, profile_picture: true },
@@ -53,7 +55,7 @@ export async function updateProfile(formData: UpdateProfileData) {
       if (student) {
         // Update student if exists
         await tx.students.update({
-          where: { id: student.id }, // Use the student's id for the update
+          where: { id: student.id }, 
           data: {
             name: formData.name,
             profile_picture: formData.image || student.profile_picture,
@@ -63,7 +65,7 @@ export async function updateProfile(formData: UpdateProfileData) {
     })
 
     revalidatePath("/settings")
-    return { success: true }
+    return { success: true, user: updatedUser }
   } catch (error) {
     console.error("Error updating profile:", error)
     throw error

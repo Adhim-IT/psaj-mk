@@ -4,8 +4,18 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { getToolById, updateTool } from "@/lib/tools"
 import { ToolForm } from "@/components/admin/tools/tool-form"
-import { Loader2 } from "lucide-react"
+import { HomeIcon, AlertCircle } from "lucide-react"
 import type { ToolFormData } from "@/lib/zod"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default function EditToolPage() {
   const params = useParams()
@@ -47,28 +57,63 @@ export default function EditToolPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-[400px] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return <div className="rounded-md bg-red-50 p-4 text-red-700">{error}</div>
-  }
-
   return (
     <div className="space-y-6">
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/dashboard">
+              <HomeIcon className="h-4 w-4 mr-1" />
+              Dashboard
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/dashboard/kelas">Kelas</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/dashboard/kelas/tool">Tool</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink>Edit</BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Edit Tool</h1>
-        <p className="text-muted-foreground mt-2">Update the tool information.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Edit Tool</h1>
+        <p className="text-muted-foreground">Perbarui informasi tool yang sudah ada.</p>
       </div>
 
-      <div className="rounded-md border p-6">
-        {tool && <ToolForm initialData={tool} onSubmit={handleUpdateTool} isSubmitting={isSubmitting} />}
-      </div>
+      {isLoading ? (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-24 w-24 rounded-md" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <div className="flex justify-between pt-4">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            {tool && <ToolForm initialData={tool} onSubmit={handleUpdateTool} isSubmitting={isSubmitting} />}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

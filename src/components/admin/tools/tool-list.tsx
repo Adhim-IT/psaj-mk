@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/use-toast"
 import { deleteTool } from "@/lib/tools"
-import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react"
+import { Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
 import Image from "next/image"
 
 interface Tool {
@@ -60,6 +61,7 @@ export function ToolList({ tools }: ToolListProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [toolToDelete, setToolToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const handleDelete = async () => {
     if (!toolToDelete) return
@@ -98,10 +100,27 @@ export function ToolList({ tools }: ToolListProps) {
     setIsDeleteDialogOpen(true)
   }
 
+  // Filter tools based on search query
+  const filteredTools = tools.filter(
+    (tool) =>
+      tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tool.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (tool.description && tool.description.toLowerCase().includes(searchQuery.toLowerCase())),
+  )
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Tools</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search tools..."
+            className="pl-8 w-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         <Button asChild>
           <Link href="/admin/dashboard/kelas/tool/create" className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
@@ -122,14 +141,14 @@ export function ToolList({ tools }: ToolListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tools.length === 0 ? (
+            {filteredTools.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  No tools found. Create your first tool.
+                  {searchQuery ? "No tools found matching your search." : "No tools found. Create your first tool."}
                 </TableCell>
               </TableRow>
             ) : (
-              tools.map((tool) => (
+              filteredTools.map((tool) => (
                 <TableRow key={tool.id}>
                   <TableCell>
                     <div className="relative h-10 w-10 overflow-hidden rounded-md">

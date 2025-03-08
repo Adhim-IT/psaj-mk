@@ -3,7 +3,9 @@
 import { useState } from "react"
 import { createCourseCategory } from "@/lib/ketagori-kelas"
 import type { CourseCategoryFormData } from "@/lib/zod"
-import { CourseCategoryForm } from "@/src/components/admin/categoryclass/categoryclass-form"
+import { CourseCategoryForm } from "@/components/admin/categoryclass/categoryclass-form"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { HomeIcon } from 'lucide-react'
 
 export default function CreateCourseCategoryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -21,13 +23,31 @@ export default function CreateCourseCategoryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Create New Course Category</h1>
-        <p className="text-muted-foreground mt-2">Add a new course category to the system.</p>
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin/dashboard">
+                <HomeIcon className="h-4 w-4 mr-1" />
+                Dashboard
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin/dashboard/kelas">Kelas</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin/dashboard/kelas/kategori">Kategori</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink>Buat Baru</BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
 
-      <div className="rounded-md border p-6">
-        <CourseCategoryForm onSubmit={handleCreateCourseCategory} isSubmitting={isSubmitting} />
-      </div>
+      <CourseCategoryForm onSubmit={handleCreateCourseCategory} isSubmitting={isSubmitting} />
     </div>
   )
 }

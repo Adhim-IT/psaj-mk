@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowLeft } from 'lucide-react'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 interface CategoryFormProps {
   initialData?: {
@@ -29,6 +30,8 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<CourseCategoryFormData>({
     resolver: zodResolver(CategoryCourseSchema),
     defaultValues: {
@@ -36,6 +39,25 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
       slug: initialData?.slug || "",
     },
   })
+
+  const nameValue = watch("name")
+
+  // Function to convert name to slug
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "") // Remove characters except letters, numbers, and spaces
+      .replace(/\s+/g, "-") // Replace spaces with "-"
+      .replace(/-+/g, "-") // Avoid repeated "-"
+  }
+
+  // Update slug automatically when "name" changes
+  useEffect(() => {
+    if (!initialData) {
+      setValue("slug", generateSlug(nameValue), { shouldValidate: true })
+    }
+  }, [nameValue, setValue, initialData])
 
   useEffect(() => {
     if (initialData) {
@@ -76,24 +98,65 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="name">Nama Kategori</Label>
-          <Input id="name" {...register("name")} className="mt-1" placeholder="Masukkan nama kategori" />
-          {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
-        </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{initialData ? "Edit Kategori" : "Buat Kategori Baru"}</CardTitle>
+        <CardDescription>
+          {initialData 
+            ? "Perbarui informasi kategori kelas yang sudah ada" 
+            : "Tambahkan kategori kelas baru ke dalam sistem"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form id="category-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nama Kategori</Label>
+              <Input 
+                id="name" 
+                {...register("name")} 
+                placeholder="Masukkan nama kategori"
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && (
+                <p className="text-sm font-medium text-red-500">{errors.name.message}</p>
+              )}
+            </div>
 
-        <div>
-          <Label htmlFor="slug">Slug</Label>
-          <Input id="slug" {...register("slug")} className="mt-1" placeholder="Masukkan slug kategori" />
-          {errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug.message}</p>}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/dashboard/kelas/kategori")}>Kembali</Button>
-        <Button type="submit" disabled={isSubmitting}>
+            <div className="space-y-2">
+              <Label htmlFor="slug">Slug</Label>
+              <Input 
+                id="slug" 
+                {...register("slug")} 
+                className={`bg-muted ${errors.slug ? "border-red-500" : ""}`} 
+                readOnly 
+              />
+              {errors.slug && (
+                <p className="text-sm font-medium text-red-500">{errors.slug.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Slug akan digunakan sebagai URL untuk kategori ini
+              </p>
+            </div>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push("/admin/dashboard/kelas/kategori")}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Kembali
+        </Button>
+        <Button 
+          type="submit" 
+          form="category-form"
+          disabled={isSubmitting}
+          className="min-w-[120px]"
+        >
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -105,7 +168,7 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
             "Buat Kategori"
           )}
         </Button>
-      </div>
-    </form>
+      </CardFooter>
+    </Card>
   )
 }

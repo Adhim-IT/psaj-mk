@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -18,8 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/use-toast"
 import { deleteCourseCategory } from "@/lib/ketagori-kelas"
-import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react"
-import Image from "next/image"
+import { Edit, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react'
 
 interface CourseCategory {
   id: string
@@ -36,6 +36,7 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [courseCategoryToDelete, setCourseCategoryToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const handleDelete = async () => {
     if (!courseCategoryToDelete) return
@@ -74,10 +75,25 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
     setIsDeleteDialogOpen(true)
   }
 
+  // Filter categories based on search query
+  const filteredCategories = CourseCategory.filter(category => 
+    category.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (category.slug && category.slug.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Course Categories</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search categories..."
+            className="pl-8 w-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         <Button asChild>
           <Link href="/admin/dashboard/kelas/kategori/create" className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
@@ -96,14 +112,14 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {CourseCategory.length === 0 ? (
+            {filteredCategories.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                  No course categories found. Create your first category.
+                  {searchQuery ? "No categories found matching your search." : "No course categories found. Create your first category."}
                 </TableCell>
               </TableRow>
             ) : (
-              CourseCategory.map((category) => (
+              filteredCategories.map((category) => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell className="hidden md:table-cell">{category.slug || "-"}</TableCell>

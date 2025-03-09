@@ -18,7 +18,7 @@ interface ToolFormProps {
   initialData?: {
     id?: string
     name: string
-    description: string | null
+    description: string
     url: string
     logo: string
   }

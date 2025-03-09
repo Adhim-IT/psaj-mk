@@ -168,6 +168,9 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
           description: initialData
             ? "List class has been updated successfully."
             : "New list class has been created successfully.",
+            
+        
+            
         })
         router.push("/admin/dashboard/kelas/list")
       } else {
@@ -420,4 +423,3 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
     </form>
   )
 }
-

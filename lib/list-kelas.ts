@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { v4 as uuidv4 } from "uuid"
 import { uploadImage, deleteImage } from "@/lib/cloudinary"
-import type { ListClassFormData } from "@/types/list-kelas"
+import type { ListClassFormData } from "@/types"
 import { prisma } from "@/lib/prisma"
 
 // Helper function to generate slug from title

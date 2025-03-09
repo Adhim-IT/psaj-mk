@@ -57,3 +57,58 @@ export const listClassSchema = z.object({
 })
 
 export type ListClassFormData = z.infer<typeof listClassSchema>
+
+
+export const courseTypeSchema = z
+  .object({
+    course_id: z.string().min(1, {
+      message: "Kelas harus dipilih",
+    }),
+    type: z.enum(["group", "private", "batch"], {
+      required_error: "Tipe kelas harus dipilih",
+    }),
+    batch_number: z.number().nullable().optional(),
+    slug: z.string().optional(),
+    normal_price: z
+      .number({
+        required_error: "Harga harus diisi",
+      })
+      .min(0, {
+        message: "Harga tidak boleh negatif",
+      }),
+    discount_type: z.enum(["percentage", "fixed"]).optional().nullable(),
+    discount: z.number().optional().nullable(),
+    start_date: z
+      .date()
+      .nullable()
+      .optional()
+      .refine(
+        (date) => {
+          if (!date) return true
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          return date >= today
+        },
+        {
+          message: "Tanggal mulai tidak boleh di masa lalu",
+        },
+      ),
+    end_date: z.date().nullable().optional(),
+    is_active: z.boolean().default(true),
+    is_discount: z.boolean().default(false),
+    is_voucher: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.end_date) {
+        return data.end_date >= data.start_date
+      }
+      return true
+    },
+    {
+      message: "Tanggal akhir harus setelah tanggal mulai",
+      path: ["end_date"],
+    },
+  )
+
+export type CourseTypeFormData = z.infer<typeof courseTypeSchema>

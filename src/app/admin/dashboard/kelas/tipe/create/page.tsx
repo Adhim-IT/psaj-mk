@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createListClass, getMentors } from "@/lib/list-kelas"
-import type { ListClassFormData } from "@/types"
-import { ListClassForm } from "@/components/admin/list-kelas/ListClass-form"
+import { createCourseType, getCourses } from "@/lib/course-types"
+import type { CourseTypeFormData } from "@/lib/zod"
+import { CourseTypeForm } from "@/components/admin/tipe-kelas/course-type-form"
 import { HomeIcon } from "lucide-react"
 import {
   Breadcrumb,
@@ -15,37 +15,37 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface Mentor {
-  id: string
-  name: string
-  specialization: string
-}
-
-export default function CreateListClassPage() {
+export default function CreateCourseTypePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [mentors, setMentors] = useState<Mentor[]>([])
+
+  interface Course {
+    id: string
+    title: string
+  }
+
+  const [courses, setCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchMentors = async () => {
+    const fetchCourses = async () => {
       setIsLoading(true)
       try {
-        const { mentors } = await getMentors()
-        setMentors(mentors || [])
+        const { courses } = await getCourses()
+        setCourses(courses || [])
       } catch (error) {
-        console.error("Error fetching mentors:", error)
+        console.error("Error fetching courses:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchMentors()
+    fetchCourses()
   }, [])
 
-  const handleCreateListClass = async (data: ListClassFormData) => {
+  const handleCreateCourseType = async (data: CourseTypeFormData) => {
     setIsSubmitting(true)
     try {
-      const result = await createListClass(data)
+      const result = await createCourseType(data)
       return result
     } finally {
       setIsSubmitting(false)
@@ -68,7 +68,7 @@ export default function CreateListClassPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/dashboard/kelas/list">List</BreadcrumbLink>
+            <BreadcrumbLink href="/admin/dashboard/kelas/tipe">Tipe</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -78,8 +78,8 @@ export default function CreateListClassPage() {
       </Breadcrumb>
 
       <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Buat Kelas Baru</h1>
-        <p className="text-muted-foreground">Tambahkan kelas baru ke sistem.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Buat Tipe Kelas Baru</h1>
+        <p className="text-muted-foreground">Tambahkan tipe kelas baru ke sistem.</p>
       </div>
 
       <Card>
@@ -91,14 +91,13 @@ export default function CreateListClassPage() {
               <Skeleton className="h-40 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-40 w-full" />
               <div className="flex justify-end space-x-2">
                 <Skeleton className="h-10 w-24" />
                 <Skeleton className="h-10 w-32" />
               </div>
             </div>
           ) : (
-            <ListClassForm mentors={mentors} onSubmit={handleCreateListClass} isSubmitting={isSubmitting} />
+            <CourseTypeForm courses={courses} onSubmit={handleCreateCourseType} isSubmitting={isSubmitting} />
           )}
         </CardContent>
       </Card>

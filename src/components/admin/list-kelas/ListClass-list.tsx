@@ -23,7 +23,7 @@ import { deleteListClass } from "@/lib/list-kelas"
 import { Edit, MoreHorizontal, Plus, Search, Trash2, Youtube } from 'lucide-react'
 import Image from "next/image"
 import { extractYouTubeId } from "@/lib/youtube"
-import type { ListClass } from "@/types/list-kelas"
+import type { ListClass } from "@/types"
 
 interface ListClassListProps {
   listClasses: ListClass[]

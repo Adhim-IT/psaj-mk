@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { getListClassById, updateListClass, getMentors } from "@/lib/list-kelas"
-import { ListClassForm } from "@/components/admin/list-kelas/ListClass-form"
+import { getCourseTypeById, updateCourseType, getCourses } from "@/lib/course-types"
+import { CourseTypeForm } from "@/components/admin/tipe-kelas/course-type-form"
 import { HomeIcon, AlertCircle } from "lucide-react"
-import type { ListClassFormData } from "@/types"
+import type { CourseTypeFormData } from "@/lib/zod"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,18 +17,17 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 
-interface Mentor {
-  id: string
-  name: string
-  specialization: string
-}
-
-export default function EditListClassPage() {
+export default function EditCourseTypePage() {
   const params = useParams()
   const id = params.id as string
 
-  const [listClass, setListClass] = useState<any>(null)
-  const [mentors, setMentors] = useState<Mentor[]>([])
+  const [courseType, setCourseType] = useState<any>(null)
+  interface Course {
+    id: string
+    title: string
+  }
+
+  const [courses, setCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,16 +36,21 @@ export default function EditListClassPage() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        // Fetch list class and mentors in parallel
-        const [listClassResult, mentorsResult] = await Promise.all([getListClassById(id), getMentors()])
+        const [courseTypeResult, coursesResult] = await Promise.all([getCourseTypeById(id), getCourses()])
 
-        if (listClassResult.error) {
-          setError(listClassResult.error)
+        if (courseTypeResult.error) {
+          setError(courseTypeResult.error)
         } else {
-          setListClass(listClassResult.listClass)
+          // Ensure numeric values are properly converted
+          const formattedCourseType = {
+            ...courseTypeResult.courseType,
+            normal_price: Number(courseTypeResult.courseType.normal_price),
+            discount: courseTypeResult.courseType.discount ? Number(courseTypeResult.courseType.discount) : null,
+          }
+          setCourseType(formattedCourseType)
         }
 
-        setMentors(mentorsResult.mentors || [])
+        setCourses(coursesResult.courses || [])
       } catch (err) {
         setError("Gagal mengambil data")
       } finally {
@@ -57,10 +61,10 @@ export default function EditListClassPage() {
     fetchData()
   }, [id])
 
-  const handleUpdateListClass = async (data: ListClassFormData) => {
+  const handleUpdateCourseType = async (data: CourseTypeFormData) => {
     setIsSubmitting(true)
     try {
-      const result = await updateListClass(id, data)
+      const result = await updateCourseType(id, data)
       return result
     } finally {
       setIsSubmitting(false)
@@ -83,7 +87,7 @@ export default function EditListClassPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/dashboard/kelas/list">List</BreadcrumbLink>
+            <BreadcrumbLink href="/admin/dashboard/kelas/tipe">Tipe</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -93,8 +97,8 @@ export default function EditListClassPage() {
       </Breadcrumb>
 
       <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Edit Kelas</h1>
-        <p className="text-muted-foreground">Perbarui informasi untuk kelas yang sudah ada.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Edit Tipe Kelas</h1>
+        <p className="text-muted-foreground">Perbarui informasi tipe kelas yang sudah ada.</p>
       </div>
 
       {isLoading ? (
@@ -105,7 +109,6 @@ export default function EditListClassPage() {
             <Skeleton className="h-40 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-40 w-full" />
             <div className="flex justify-end space-x-2">
               <Skeleton className="h-10 w-24" />
               <Skeleton className="h-10 w-32" />
@@ -121,11 +124,11 @@ export default function EditListClassPage() {
       ) : (
         <Card>
           <CardContent className="pt-6">
-            {listClass && (
-              <ListClassForm
-                initialData={listClass}
-                mentors={mentors}
-                onSubmit={handleUpdateListClass}
+            {courseType && (
+              <CourseTypeForm
+                initialData={courseType}
+                courses={courses}
+                onSubmit={handleUpdateCourseType}
                 isSubmitting={isSubmitting}
               />
             )}

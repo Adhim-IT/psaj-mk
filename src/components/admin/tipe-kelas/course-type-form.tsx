@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -122,23 +122,27 @@ export function CourseTypeForm({ initialData, courses, onSubmit, isSubmitting }:
       const result = await onSubmit(data)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: initialData ? "Tipe kelas diperbarui" : "Tipe kelas dibuat",
-          description: initialData ? "Tipe kelas telah berhasil diperbarui." : "Tipe kelas baru telah berhasil dibuat.",
+          text: initialData ? "Tipe kelas telah berhasil diperbarui." : "Tipe kelas baru telah berhasil dibuat.",
         })
         router.push("/admin/dashboard/kelas/tipe")
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description: typeof result.error === "string" ? result.error || "Gagal menyimpan tipe kelas" : "Gagal menyimpan tipe kelas",
-          variant: "destructive",
+          text:
+            typeof result.error === "string"
+              ? result.error || "Gagal menyimpan tipe kelas"
+              : "Gagal menyimpan tipe kelas",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "Terjadi kesalahan yang tidak terduga",
-        variant: "destructive",
+        text: "Terjadi kesalahan yang tidak terduga",
       })
     }
   }

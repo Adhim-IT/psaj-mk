@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -8,8 +8,8 @@ import { CategoryCourseSchema, type CourseCategoryFormData } from "@/lib/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "@/components/ui/use-toast"
-import { Loader2, ArrowLeft } from 'lucide-react'
+import Swal from "sweetalert2"
+import { Loader2, ArrowLeft } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 interface CategoryFormProps {
@@ -73,26 +73,27 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
       const result = await onSubmit(data)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: initialData ? "Kategori diperbarui" : "Kategori dibuat",
-          description: initialData ? "Kategori telah berhasil diperbarui." : "Kategori baru telah berhasil dibuat.",
+          text: initialData ? "Kategori telah berhasil diperbarui." : "Kategori baru telah berhasil dibuat.",
         })
         router.push("/admin/dashboard/kelas/kategori")
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description:
+          text:
             typeof result.error === "string"
               ? result.error
               : "Gagal menyimpan kategori. Silakan periksa formulir dan coba lagi.",
-          variant: "destructive",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "Terjadi kesalahan yang tidak terduga. Silakan coba lagi.",
-        variant: "destructive",
+        text: "Terjadi kesalahan yang tidak terduga. Silakan coba lagi.",
       })
     }
   }
@@ -102,8 +103,8 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
       <CardHeader>
         <CardTitle>{initialData ? "Edit Kategori" : "Buat Kategori Baru"}</CardTitle>
         <CardDescription>
-          {initialData 
-            ? "Perbarui informasi kategori kelas yang sudah ada" 
+          {initialData
+            ? "Perbarui informasi kategori kelas yang sudah ada"
             : "Tambahkan kategori kelas baru ke dalam sistem"}
         </CardDescription>
       </CardHeader>
@@ -112,31 +113,25 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nama Kategori</Label>
-              <Input 
-                id="name" 
-                {...register("name")} 
+              <Input
+                id="name"
+                {...register("name")}
                 placeholder="Masukkan nama kategori"
                 className={errors.name ? "border-red-500" : ""}
               />
-              {errors.name && (
-                <p className="text-sm font-medium text-red-500">{errors.name.message}</p>
-              )}
+              {errors.name && <p className="text-sm font-medium text-red-500">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="slug">Slug</Label>
-              <Input 
-                id="slug" 
-                {...register("slug")} 
-                className={`bg-muted ${errors.slug ? "border-red-500" : ""}`} 
-                readOnly 
+              <Input
+                id="slug"
+                {...register("slug")}
+                className={`bg-muted ${errors.slug ? "border-red-500" : ""}`}
+                readOnly
               />
-              {errors.slug && (
-                <p className="text-sm font-medium text-red-500">{errors.slug.message}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Slug akan digunakan sebagai URL untuk kategori ini
-              </p>
+              {errors.slug && <p className="text-sm font-medium text-red-500">{errors.slug.message}</p>}
+              <p className="text-xs text-muted-foreground">Slug akan digunakan sebagai URL untuk kategori ini</p>
             </div>
           </div>
         </form>
@@ -151,12 +146,7 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
           <ArrowLeft className="h-4 w-4" />
           Kembali
         </Button>
-        <Button 
-          type="submit" 
-          form="category-form"
-          disabled={isSubmitting}
-          className="min-w-[120px]"
-        >
+        <Button type="submit" form="category-form" disabled={isSubmitting} className="min-w-[120px]">
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -172,3 +162,4 @@ export function CourseCategoryForm({ initialData, onSubmit, isSubmitting }: Cate
     </Card>
   )
 }
+

@@ -18,9 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { deleteListClass } from "@/lib/list-kelas"
-import { Edit, MoreHorizontal, Plus, Search, Trash2, Youtube } from 'lucide-react'
+import { Edit, MoreHorizontal, Plus, Search, Trash2, Youtube } from "lucide-react"
 import Image from "next/image"
 import { extractYouTubeId } from "@/lib/youtube"
 import type { ListClass } from "@/types"
@@ -77,22 +77,23 @@ export function ListClassList({ listClasses }: ListClassListProps) {
       const result = await deleteListClass(listClassToDelete)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: "List class deleted",
-          description: "List class has been deleted successfully.",
+          text: "List class has been deleted successfully.",
         })
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description: typeof result.error === "string" ? result.error : "Failed to delete list class.",
-          variant: "destructive",
+          text: typeof result.error === "string" ? result.error : "Failed to delete list class.",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        text: "An unexpected error occurred. Please try again.",
       })
     } finally {
       setIsDeleting(false)
@@ -275,3 +276,4 @@ export function ListClassList({ listClasses }: ListClassListProps) {
     </div>
   )
 }
+

@@ -17,9 +17,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { deleteCourseCategory } from "@/lib/ketagori-kelas"
-import { Edit, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react'
+import { Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
 
 interface CourseCategory {
   id: string
@@ -46,22 +46,23 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
       const result = await deleteCourseCategory(courseCategoryToDelete)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: "Course category deleted",
-          description: "The course category has been deleted successfully.",
+          text: "The course category has been deleted successfully.",
         })
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description: typeof result.error === "string" ? result.error : "Failed to delete course category.",
-          variant: "destructive",
+          text: typeof result.error === "string" ? result.error : "Failed to delete course category.",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        text: "An unexpected error occurred. Please try again.",
       })
     } finally {
       setIsDeleting(false)
@@ -76,9 +77,10 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
   }
 
   // Filter categories based on search query
-  const filteredCategories = CourseCategory.filter(category => 
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (category.slug && category.slug.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredCategories = CourseCategory.filter(
+    (category) =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (category.slug && category.slug.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
   return (
@@ -115,7 +117,9 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
             {filteredCategories.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                  {searchQuery ? "No categories found matching your search." : "No course categories found. Create your first category."}
+                  {searchQuery
+                    ? "No categories found matching your search."
+                    : "No course categories found. Create your first category."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -132,7 +136,9 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/kelas/kategori/edit/${category.id}`)}>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/admin/dashboard/kelas/kategori/edit/${category.id}`)}
+                        >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
@@ -176,3 +182,4 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
     </div>
   )
 }
+

@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { deleteCourseType } from "@/lib/course-types"
 import { Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
 import { format } from "date-fns"
@@ -43,24 +43,32 @@ export function CourseTypeList({ courseTypes }: CourseTypeListProps) {
       const result = await deleteCourseType(courseTypeToDelete)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: "Tipe kelas dihapus",
-          description: "Tipe kelas telah berhasil dihapus.",
+          text: "Tipe kelas telah berhasil dihapus.",
+          timer: 3000,
+          timerProgressBar: true,
         })
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description: typeof result.error === "string" ? result.error : "Gagal menghapus tipe kelas.",
-          variant: "destructive",
+          text: typeof result.error === "string" ? result.error : "Gagal menghapus tipe kelas.",
+          timer: 5000,
+          timerProgressBar: true,
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "Terjadi kesalahan yang tidak terduga",
-        variant: "destructive",
+        text: "Terjadi kesalahan yang tidak terduga",
+        timer: 5000,
+        timerProgressBar: true,
       })
     } finally {
+      router.refresh()
       setIsDeleting(false)
       setIsDeleteDialogOpen(false)
       setCourseTypeToDelete(null)
@@ -145,11 +153,7 @@ export function CourseTypeList({ courseTypes }: CourseTypeListProps) {
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <span>
-                        {courseType.type === "group"
-                          ? "Group"
-                          : courseType.type === "private"
-                            ? "Private"
-                            : "Batch"}
+                        {courseType.type === "group" ? "Group" : courseType.type === "private" ? "Private" : "Batch"}
                         {courseType.batch_number && ` (Batch ${courseType.batch_number})`}
                       </span>
                       <span className="text-xs text-muted-foreground">{courseType.slug}</span>

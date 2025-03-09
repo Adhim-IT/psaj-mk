@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -9,7 +10,7 @@ import { toolSchema, type ToolFormData } from "@/lib/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { Loader2, Upload, Bold, Italic, List, LinkIcon } from "lucide-react"
 import Image from "next/image"
 import { Textarea } from "@/components/ui/textarea"
@@ -133,26 +134,27 @@ export function ToolForm({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       const result = await onSubmit(data)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: initialData ? "Tool updated" : "Tool created",
-          description: initialData ? "Tool has been updated successfully." : "New tool has been created successfully.",
+          text: initialData ? "Tool has been updated successfully." : "New tool has been created successfully.",
         })
         router.push("/admin/dashboard/kelas/tool")
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description:
+          text:
             typeof result.error === "string"
               ? result.error
               : "Failed to save tool. Please check the form and try again.",
-          variant: "destructive",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        text: "An unexpected error occurred. Please try again.",
       })
     }
   }

@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { deleteTool } from "@/lib/tools"
 import { Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
 import Image from "next/image"
@@ -71,22 +71,23 @@ export function ToolList({ tools }: ToolListProps) {
       const result = await deleteTool(toolToDelete)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: "Tool deleted",
-          description: "Tool has been deleted successfully.",
+          text: "Tool has been deleted successfully.",
         })
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description: typeof result.error === "string" ? result.error : "Failed to delete tool.",
-          variant: "destructive",
+          text: typeof result.error === "string" ? result.error : "Failed to delete tool.",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        text: "An unexpected error occurred. Please try again.",
       })
     } finally {
       setIsDeleting(false)

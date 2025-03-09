@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 import { Loader2, Upload, Bold, Italic, List, LinkIcon } from "lucide-react"
 import Image from "next/image"
 import { YouTubePreview } from "./youtube-preview"
@@ -163,31 +163,29 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
       const result = await onSubmit(data)
 
       if (result.success) {
-        toast({
+        Swal.fire({
+          icon: "success",
           title: initialData ? "List class updated" : "List class created",
-          description: initialData
+          text: initialData
             ? "List class has been updated successfully."
             : "New list class has been created successfully.",
-            
-        
-            
         })
         router.push("/admin/dashboard/kelas/list")
       } else {
-        toast({
+        Swal.fire({
+          icon: "error",
           title: "Error",
-          description:
+          text:
             typeof result.error === "string"
               ? result.error
               : "Failed to save list class. Please check the form and try again.",
-          variant: "destructive",
         })
       }
     } catch (error) {
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        text: "An unexpected error occurred. Please try again.",
       })
     }
   }
@@ -423,3 +421,4 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
     </form>
   )
 }
+

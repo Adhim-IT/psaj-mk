@@ -12,10 +12,27 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import Swal from "sweetalert2"
-import { Loader2, Upload, Bold, Italic, List, LinkIcon } from "lucide-react"
+import { Loader2, Upload, Bold, Italic, List, LinkIcon, X, Plus, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import { YouTubePreview } from "./youtube-preview"
+
+interface Category {
+  id: string
+  name: string
+}
+
+interface Tool {
+  id: string
+  name: string
+}
+
+interface SyllabusItem {
+  id: string
+  title: string
+  sort: number
+}
 
 interface Mentor {
   id: string
@@ -28,6 +45,7 @@ interface ListClassFormProps {
     id?: string
     mentor_id: string
     title: string
+    slug: string
     description: string
     thumbnail: string
     trailer: string
@@ -36,18 +54,30 @@ interface ListClassFormProps {
     is_popular: boolean
     is_request?: boolean
     is_active: boolean
+    categories?: { id: string; name: string }[]
+    tools?: { id: string; name: string }[]
+    syllabus?: SyllabusItem[]
   }
   mentors: Mentor[]
+  categories: Category[]
+  tools: Tool[]
   onSubmit: (data: ListClassFormData) => Promise<{ success?: boolean; error?: any }>
   isSubmitting: boolean
 }
 
-export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: ListClassFormProps) {
+export function ListClassForm({ initialData, mentors, categories, tools, onSubmit, isSubmitting }: ListClassFormProps) {
   const router = useRouter()
   const [thumbnailPreview, setThumbnailPreview] = useState<string>(initialData?.thumbnail || "")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialData?.categories?.map((cat) => cat.id) || [],
+  )
+  const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.tools?.map((tool) => tool.id) || [])
+  const [syllabusItems, setSyllabusItems] = useState<SyllabusItem[]>(initialData?.syllabus || [])
+  const [newSyllabusTitle, setNewSyllabusTitle] = useState("")
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(!!initialData?.slug)
 
   const {
     register,
@@ -61,37 +91,59 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
     defaultValues: {
       mentor_id: initialData?.mentor_id || "",
       title: initialData?.title || "",
+      slug: initialData?.slug || "",
       description: initialData?.description || "",
       thumbnail: initialData?.thumbnail || "",
       trailer: initialData?.trailer || "",
-      level: (initialData?.level as "Beginner" | "Intermediate" | "Advanced") || "Beginner",
+      level: (initialData?.level as "Beginner" | "Intermediate" | "Expert") || "Beginner",
       meetings: initialData?.meetings || 1,
       is_popular: initialData?.is_popular || false,
       is_request: initialData?.is_request || null,
       is_active: initialData?.is_active || true,
+      categories: initialData?.categories?.map((cat) => cat.id) || [],
+      tools: initialData?.tools?.map((tool) => tool.id) || [],
+      syllabus: initialData?.syllabus || [],
     },
   })
 
   // Watch fields for real-time updates
+  const title = watch("title")
+  const slug = watch("slug")
   const description = watch("description")
   const trailer = watch("trailer")
   const level = watch("level")
+
+  // Auto-generate slug from title if slug hasn't been manually edited
+  useEffect(() => {
+    if (title && !isSlugManuallyEdited) {
+      const generatedSlug = generateSlug(title)
+      setValue("slug", generatedSlug)
+    }
+  }, [title, isSlugManuallyEdited, setValue])
 
   useEffect(() => {
     if (initialData) {
       reset({
         mentor_id: initialData.mentor_id,
         title: initialData.title,
+        slug: initialData.slug,
         description: initialData.description,
         thumbnail: initialData.thumbnail,
         trailer: initialData.trailer,
-        level: initialData.level as "Beginner" | "Intermediate" | "Advanced",
+        level: initialData.level as "Beginner" | "Intermediate" | "Expert",
         meetings: initialData.meetings,
         is_popular: initialData.is_popular,
         is_request: initialData.is_request || null,
         is_active: initialData.is_active,
+        categories: initialData?.categories?.map((cat) => cat.id) || [],
+        tools: initialData?.tools?.map((tool) => tool.id) || [],
+        syllabus: initialData?.syllabus || [],
       })
       setThumbnailPreview(initialData.thumbnail)
+      setSelectedCategories(initialData?.categories?.map((cat) => cat.id) || [])
+      setSelectedTools(initialData?.tools?.map((tool) => tool.id) || [])
+      setSyllabusItems(initialData?.syllabus || [])
+      setIsSlugManuallyEdited(!!initialData.slug)
     }
   }, [initialData, reset])
 
@@ -108,6 +160,29 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  // Generate slug from title
+  const generateSlug = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/--+/g, "-") // Replace multiple hyphens with single hyphen
+      .trim()
+  }
+
+  // Regenerate slug from title
+  const regenerateSlug = () => {
+    if (title) {
+      const generatedSlug = generateSlug(title)
+      setValue("slug", generatedSlug)
+    }
+  }
+
+  // Handle manual slug edit
+  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsSlugManuallyEdited(true)
   }
 
   // Simple formatting functions
@@ -158,9 +233,75 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
     }, 0)
   }
 
+  // Category management
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev.filter((id) => id !== categoryId)
+      } else {
+        return [...prev, categoryId]
+      }
+    })
+    setValue(
+      "categories",
+      selectedCategories.includes(categoryId)
+        ? selectedCategories.filter((id) => id !== categoryId)
+        : [...selectedCategories, categoryId],
+    )
+  }
+
+  // Tool management
+  const toggleTool = (toolId: string) => {
+    setSelectedTools((prev) => {
+      if (prev.includes(toolId)) {
+        return prev.filter((id) => id !== toolId)
+      } else {
+        return [...prev, toolId]
+      }
+    })
+    setValue(
+      "tools",
+      selectedTools.includes(toolId) ? selectedTools.filter((id) => id !== toolId) : [...selectedTools, toolId],
+    )
+  }
+
+  // Syllabus management
+  const addSyllabusItem = () => {
+    if (!newSyllabusTitle.trim()) return
+
+    const newItem: SyllabusItem = {
+      id: Math.random().toString(36).substring(2, 9), // Generate a temporary ID
+      title: newSyllabusTitle,
+      sort: syllabusItems.length + 1,
+    }
+
+    setSyllabusItems((prev) => [...prev, newItem])
+    setValue("syllabus", [...syllabusItems, newItem])
+    setNewSyllabusTitle("")
+  }
+
+  const removeSyllabusItem = (id: string) => {
+    const updatedItems = syllabusItems
+      .filter((item) => item.id !== id)
+      .map((item, index) => ({
+        ...item,
+        sort: index + 1,
+      }))
+    setSyllabusItems(updatedItems)
+    setValue("syllabus", updatedItems)
+  }
+
   const handleFormSubmit = async (data: ListClassFormData) => {
+    // Ensure categories, tools, and syllabus are included in the submission
+    const formData = {
+      ...data,
+      categories: selectedCategories,
+      tools: selectedTools,
+      syllabus: syllabusItems,
+    }
+
     try {
-      const result = await onSubmit(data)
+      const result = await onSubmit(formData)
 
       if (result.success) {
         Swal.fire({
@@ -214,6 +355,27 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
           <Label htmlFor="title">Class Title</Label>
           <Input id="title" {...register("title")} className="mt-1" placeholder="Enter class title" />
           {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="slug">Slug</Label>
+          <div className="flex gap-2 mt-1">
+            <Input id="slug" {...register("slug")} placeholder="enter-slug-here" onChange={handleSlugChange} />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={regenerateSlug}
+              title="Regenerate slug from title"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          {errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug.message}</p>}
+          <p className="mt-1 text-xs text-muted-foreground">
+            The slug is used in the URL: https://example.com/courses/
+            <span className="font-mono">{slug || "your-slug"}</span>
+          </p>
         </div>
 
         <div>
@@ -293,13 +455,51 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
             <option value="">Pilih level</option>
             <option value="Beginner">Pemula</option>
             <option value="Intermediate">Menengah</option>
-            <option value="Advanced">Lanjutan</option>
+            <option value="Expert">Lanjutan</option>
           </select>
           {errors.level && <p className="mt-1 text-sm text-red-500">{errors.level.message}</p>}
         </div>
 
         <div>
-          <Label htmlFor="meetings">Number of Meetings</Label>
+          <Label>Kategori Kelas</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Badge
+                key={category.id}
+                variant={selectedCategories.includes(category.id) ? "default" : "outline"}
+                className={`cursor-pointer ${
+                  selectedCategories.includes(category.id) ? "bg-blue-500 hover:bg-blue-600" : ""
+                }`}
+                onClick={() => toggleCategory(category.id)}
+              >
+                {selectedCategories.includes(category.id) && <X className="mr-1 h-3 w-3" />}
+                {category.name}
+              </Badge>
+            ))}
+          </div>
+          <input type="hidden" {...register("categories")} value={selectedCategories.join(",")} />
+        </div>
+
+        <div>
+          <Label>Tools</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {tools.map((tool) => (
+              <Badge
+                key={tool.id}
+                variant={selectedTools.includes(tool.id) ? "default" : "outline"}
+                className={`cursor-pointer ${selectedTools.includes(tool.id) ? "bg-blue-500 hover:bg-blue-600" : ""}`}
+                onClick={() => toggleTool(tool.id)}
+              >
+                {selectedTools.includes(tool.id) && <X className="mr-1 h-3 w-3" />}
+                {tool.name}
+              </Badge>
+            ))}
+          </div>
+          <input type="hidden" {...register("tools")} value={selectedTools.join(",")} />
+        </div>
+
+        <div>
+          <Label htmlFor="meetings">Jumlah Pertemuan</Label>
           <Input
             id="meetings"
             type="number"
@@ -309,6 +509,78 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
             placeholder="Enter number of meetings"
           />
           {errors.meetings && <p className="mt-1 text-sm text-red-500">{errors.meetings.message}</p>}
+        </div>
+
+        <div>
+          <Label>Silabus</Label>
+          <div className="mt-2 space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Judul materi"
+                value={newSyllabusTitle}
+                onChange={(e) => setNewSyllabusTitle(e.target.value)}
+              />
+              <Button
+                type="button"
+                size="icon"
+                onClick={addSyllabusItem}
+                className="bg-blue-500 hover:bg-blue-600"
+                disabled={!newSyllabusTitle.trim()}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {syllabusItems.length > 0 && (
+              <div className="space-y-2 border rounded-md p-4">
+                {syllabusItems.map((item, index) => (
+                  <div key={item.id} className="bg-gray-50 p-4 rounded-md">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">Materi</div>
+                        <Input
+                          value={item.title}
+                          onChange={(e) => {
+                            const updatedItems = syllabusItems.map((i) =>
+                              i.id === item.id ? { ...i, title: e.target.value } : i,
+                            )
+                            setSyllabusItems(updatedItems)
+                            setValue("syllabus", updatedItems)
+                          }}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <div className="font-medium">Urutan</div>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={item.sort}
+                          onChange={(e) => {
+                            const updatedItems = syllabusItems.map((i) =>
+                              i.id === item.id ? { ...i, sort: Number.parseInt(e.target.value) || 1 } : i,
+                            )
+                            setSyllabusItems(updatedItems)
+                            setValue("syllabus", updatedItems)
+                          }}
+                          className="mt-1 w-20"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeSyllabusItem(item.id)}
+                        className="ml-4 self-end"
+                      >
+                        Hapus
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -375,7 +647,7 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
               checked={watch("is_popular")}
               onCheckedChange={(checked) => setValue("is_popular", checked as boolean)}
             />
-            <Label htmlFor="is_popular">Mark as Popular Class</Label>
+            <Label htmlFor="is_popular">Kelas Populer</Label>
             <input type="hidden" {...register("is_popular")} />
           </div>
 
@@ -385,7 +657,7 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
               checked={watch("is_request") || false}
               onCheckedChange={(checked) => setValue("is_request", checked as boolean | null)}
             />
-            <Label htmlFor="is_request">Mark as Request Class</Label>
+            <Label htmlFor="is_request">Kelas Request</Label>
             <input type="hidden" {...register("is_request")} />
           </div>
 
@@ -395,7 +667,7 @@ export function ListClassForm({ initialData, mentors, onSubmit, isSubmitting }: 
               checked={watch("is_active")}
               onCheckedChange={(checked) => setValue("is_active", checked as boolean)}
             />
-            <Label htmlFor="is_active">Active Class</Label>
+            <Label htmlFor="is_active">Kelas Aktif</Label>
             <input type="hidden" {...register("is_active")} />
           </div>
         </div>

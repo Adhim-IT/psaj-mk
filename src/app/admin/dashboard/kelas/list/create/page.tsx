@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { createListClass, getMentors } from "@/lib/list-kelas"
+import { getCourseCategories } from "@/lib/ketagori-kelas"
+import { getTools } from "@/lib/tools"
 import type { ListClassFormData } from "@/types"
 import { ListClassForm } from "@/components/admin/list-kelas/ListClass-form"
 import { HomeIcon } from "lucide-react"
@@ -21,25 +23,45 @@ interface Mentor {
   specialization: string
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
+interface Tool {
+  id: string
+  name: string
+}
+
 export default function CreateListClassPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [mentors, setMentors] = useState<Mentor[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [tools, setTools] = useState<Tool[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchMentors = async () => {
+    const fetchData = async () => {
       setIsLoading(true)
       try {
-        const { mentors } = await getMentors()
-        setMentors(mentors || [])
+        // Fetch mentors, categories, and tools in parallel
+        const [mentorsResult, categoriesResult, toolsResult] = await Promise.all([
+          getMentors(),
+          getCourseCategories(),
+          getTools(),
+        ])
+
+        setMentors(mentorsResult.mentors || [])
+        setCategories(categoriesResult.categories || [])
+        setTools(toolsResult.tools || [])
       } catch (error) {
-        console.error("Error fetching mentors:", error)
+        console.error("Error fetching data:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchMentors()
+    fetchData()
   }, [])
 
   const handleCreateListClass = async (data: ListClassFormData) => {
@@ -98,7 +120,13 @@ export default function CreateListClassPage() {
               </div>
             </div>
           ) : (
-            <ListClassForm mentors={mentors} onSubmit={handleCreateListClass} isSubmitting={isSubmitting} />
+            <ListClassForm
+              mentors={mentors}
+              categories={categories}
+              tools={tools}
+              onSubmit={handleCreateListClass}
+              isSubmitting={isSubmitting}
+            />
           )}
         </CardContent>
       </Card>

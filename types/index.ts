@@ -18,24 +18,32 @@ export interface ListClass {
   level: string
   meetings: number
   is_popular: boolean
-  is_request: boolean | null
+  is_request?: boolean | null
   is_active: boolean
-  created_at: Date | null
-  updated_at: Date | null
-  deleted_at: Date | null
+  categories?: { id: string; name: string }[]
+  tools?: { id: string; name: string }[]
+  syllabus?: { id: string; title: string; sort: number }[]
 }
 
 export interface ListClassFormData {
   mentor_id: string
   title: string
+  slug: string
   description: string
   thumbnail: string
   trailer: string
-  level: "Beginner" | "Intermediate" | "Advanced"
+  level: "Beginner" | "Intermediate" | "Expert"
   meetings: number
   is_popular: boolean
   is_request: boolean | null
   is_active: boolean
+  categories: string[]
+  tools: string[]
+  syllabus: {
+    id: string
+    title: string
+    sort: number
+  }[]
 }
 
 export type CourseTypeType = "group" | "private" | "batch"

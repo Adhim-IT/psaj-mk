@@ -10,6 +10,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
+    maxAge: 3600,
   },
   pages: {
     signIn: "/login",
@@ -63,7 +64,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role
         token.role_id = user.role_id
       }
-      // If the session was updated, update the token
       if (trigger === "update" && session) {
         token.name = session.user.name
         token.email = session.user.email

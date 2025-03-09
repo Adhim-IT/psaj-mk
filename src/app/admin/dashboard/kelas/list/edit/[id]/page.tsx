@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { getListClassById, updateListClass, getMentors } from "@/lib/list-kelas"
+import { getCourseCategories } from "@/lib/ketagori-kelas"
+import { getTools } from "@/lib/tools"
 import { ListClassForm } from "@/components/admin/list-kelas/ListClass-form"
 import { HomeIcon, AlertCircle } from "lucide-react"
 import type { ListClassFormData } from "@/types"
@@ -23,12 +25,24 @@ interface Mentor {
   specialization: string
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
+interface Tool {
+  id: string
+  name: string
+}
+
 export default function EditListClassPage() {
   const params = useParams()
   const id = params.id as string
 
   const [listClass, setListClass] = useState<any>(null)
   const [mentors, setMentors] = useState<Mentor[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [tools, setTools] = useState<Tool[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,8 +51,13 @@ export default function EditListClassPage() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        // Fetch list class and mentors in parallel
-        const [listClassResult, mentorsResult] = await Promise.all([getListClassById(id), getMentors()])
+        // Fetch list class, mentors, categories, and tools in parallel
+        const [listClassResult, mentorsResult, categoriesResult, toolsResult] = await Promise.all([
+          getListClassById(id),
+          getMentors(),
+          getCourseCategories(),
+          getTools(),
+        ])
 
         if (listClassResult.error) {
           setError(listClassResult.error)
@@ -47,6 +66,8 @@ export default function EditListClassPage() {
         }
 
         setMentors(mentorsResult.mentors || [])
+        setCategories(categoriesResult.categories || [])
+        setTools(toolsResult.tools || [])
       } catch (err) {
         setError("Gagal mengambil data")
       } finally {
@@ -125,6 +146,8 @@ export default function EditListClassPage() {
               <ListClassForm
                 initialData={listClass}
                 mentors={mentors}
+                categories={categories}
+                tools={tools}
                 onSubmit={handleUpdateListClass}
                 isSubmitting={isSubmitting}
               />

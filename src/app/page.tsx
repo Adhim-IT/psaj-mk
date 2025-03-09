@@ -1,5 +1,7 @@
 "use client"
 
+
+import { useSession, signOut } from "next-auth/react";
 import Image from "next/image"
 import Link from "next/link"
 import { Star, ArrowRight, Users, BookOpen, Award } from "lucide-react"
@@ -12,6 +14,13 @@ import Navbar from "../components/user/Navbar"
 import Footer from "../components/user/Footer"
 
 export default function Home() {
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      signOut({ callbackUrl: "/login" });
+    }
+  }, [status]);
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {

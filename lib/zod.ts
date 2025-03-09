@@ -39,24 +39,37 @@ export const CategoryCourseSchema = object({
 })
 export type CourseCategoryFormData = z.infer<typeof CategoryCourseSchema>
 
+
 export const listClassSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  thumbnail: z.string().min(1, "Thumbnail is required"),
-  trailer: z.string().min(1, "Trailer URL is required").refine(isValidYouTubeUrl, {
-    message: "Please enter a valid YouTube URL",
+  mentor_id: z.string().min(1, { message: "Mentor is required" }),
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  slug: z.string().min(3, { message: "Slug must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  thumbnail: z.string().min(1, { message: "Thumbnail is required" }),
+  trailer: z.string().url({ message: "Please enter a valid URL" }),
+  level: z.enum(["Beginner", "Intermediate", "Expert"], {
+    required_error: "Level is required",
   }),
-  level: z.enum(["Beginner", "Intermediate", "Advanced"], {
-    errorMap: () => ({ message: "Please select a valid level" }),
-  }),
-  meetings: z.coerce.number().int("Number of meetings must be an integer").min(1, "At least one meeting is required"),
-  mentor_id: z.string().min(1, "Mentor is required"),
+  meetings: z.coerce.number().min(1, { message: "At least 1 meeting is required" }),
   is_popular: z.boolean().default(false),
   is_request: z.boolean().nullable().default(null),
   is_active: z.boolean().default(true),
+  categories: z.array(z.string()).default([]),
+  tools: z.array(z.string()).default([]),
+  syllabus: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1, { message: "Syllabus title is required" }),
+        sort: z.number().min(1),
+      }),
+    )
+    .default([]),
 })
 
 export type ListClassFormData = z.infer<typeof listClassSchema>
+
+
 
 
 export const courseTypeSchema = z

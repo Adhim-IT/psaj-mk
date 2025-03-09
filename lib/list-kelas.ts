@@ -10,21 +10,25 @@ import { prisma } from "@/lib/prisma"
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\w\s]/gi, "")
+    .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
+    .replace(/--+/g, "-")
+    .trim()
 }
 
-// Get all mentors (for dropdown selection)
+/**
+ * Fetch mentors from the database
+ */
 export async function getMentors() {
   try {
     const mentors = await prisma.mentors.findMany({
-      where: {
-        deleted_at: null,
-      },
       select: {
         id: true,
         name: true,
         specialization: true,
+      },
+      where: {
+        deleted_at: null,
       },
       orderBy: {
         name: "asc",
@@ -34,7 +38,7 @@ export async function getMentors() {
     return { mentors }
   } catch (error) {
     console.error("Error fetching mentors:", error)
-    return { error: "Failed to fetch mentors" }
+    return { mentors: [], error: "Failed to load mentors" }
   }
 }
 
@@ -57,178 +61,231 @@ export async function getListClasses() {
   }
 }
 
-// Get a single list class by ID
+/**
+ * Fetch a list class by ID
+ */
 export async function getListClassById(id: string) {
   try {
     const listClass = await prisma.courses.findUnique({
       where: { id },
+      include: {
+        course_category_pivot: {
+          include: {
+            course_categories: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+        course_tool_pivot: {
+          include: {
+            tools: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+        course_syllabus: {
+          select: { id: true, title: true, sort: true },
+          orderBy: { sort: "asc" },
+        },
+      },
     })
 
-    if (!listClass) {
-      return { error: "List class not found" }
-    }
+    if (!listClass) return { error: "List class not found" }
 
-    return { listClass }
+    return {
+      listClass: {
+        ...listClass,
+        categories: listClass.course_category_pivot.map((pivot) => pivot.course_categories),
+        tools: listClass.course_tool_pivot.map((pivot) => pivot.tools),
+        syllabus: listClass.course_syllabus,
+      },
+    }
   } catch (error) {
     console.error("Error fetching list class:", error)
-    return { error: "Failed to fetch list class" }
+    return { error: "Failed to load list class" }
   }
 }
 
-// Create a new list class
+/**
+ * Create a new list class
+ */
 export async function createListClass(data: ListClassFormData) {
   try {
-    // Validate the data
     if (!data.title || !data.description || !data.thumbnail || !data.trailer) {
       return { error: "Missing required fields" }
     }
 
-    // Upload thumbnail to Cloudinary if it's a base64 string
     let thumbnailUrl = data.thumbnail
-
     if (data.thumbnail.startsWith("data:image")) {
       const uploadResult = await uploadImage(data.thumbnail)
       thumbnailUrl = uploadResult.url
     }
 
-    // Generate slug from title
-    const slug = generateSlug(data.title)
+    const courseId = uuidv4()
 
-    // Create new list class
-    const listClass = await prisma.courses.create({
+    const course = await prisma.courses.create({
       data: {
-        id: uuidv4(),
+        id: courseId,
         mentor_id: data.mentor_id,
         title: data.title,
-        slug,
+        slug: data.slug || generateSlug(data.title),
         description: data.description,
         thumbnail: thumbnailUrl,
         trailer: data.trailer,
         level: data.level,
         meetings: data.meetings,
         is_popular: data.is_popular,
-        is_request: data.is_request,
+        is_request: data.is_request || false,
         is_active: data.is_active,
         created_at: new Date(),
         updated_at: new Date(),
       },
     })
 
+    if (data.categories?.length) {
+      await prisma.course_category_pivot.createMany({
+        data: data.categories.map((course_category_id) => ({
+          course_category_id,
+          course_id: courseId,
+        })),
+      })
+    }
+
+    if (data.tools?.length) {
+      await prisma.course_tool_pivot.createMany({
+        data: data.tools.map((toolId) => ({
+          course_id: courseId,
+          tool_id: toolId,
+        })),
+      });
+      
+    }
+
+    if (data.syllabus?.length) {
+      await prisma.course_syllabus.createMany({
+        data: data.syllabus.map((item) => ({
+          id: uuidv4(),
+          course_id: courseId,
+          title: item.title,
+          sort: item.sort,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })),
+      })
+    }
+
     revalidatePath("/admin/dashboard/kelas/list")
-    return { success: true, listClass }
+    return { success: true, courseId }
   } catch (error) {
     console.error("Error creating list class:", error)
-    return { error: "Failed to create list class. Please try again later." }
+    return { error: "Failed to create list class" }
   }
 }
 
-// Update an existing list class
+/**
+ * Update an existing list class
+ */
 export async function updateListClass(id: string, data: ListClassFormData) {
   try {
-    // Validate the data
     if (!data.title || !data.description || !data.thumbnail || !data.trailer) {
       return { error: "Missing required fields" }
     }
 
-    // Get the existing list class
     const existingListClass = await prisma.courses.findUnique({
       where: { id },
       select: { thumbnail: true, title: true },
     })
 
-    if (!existingListClass) {
-      return { error: "List class not found" }
-    }
+    if (!existingListClass) return { error: "List class not found" }
 
-    // Upload thumbnail to Cloudinary if it's a base64 string
     let thumbnailUrl = data.thumbnail
-
     if (data.thumbnail.startsWith("data:image")) {
-      // Delete the old image if it exists and is a Cloudinary URL
-      if (existingListClass.thumbnail && existingListClass.thumbnail.includes("cloudinary.com")) {
+      if (existingListClass.thumbnail.includes("cloudinary.com")) {
         await deleteImage(existingListClass.thumbnail)
       }
-
-      // Upload the new image
       const uploadResult = await uploadImage(data.thumbnail)
       thumbnailUrl = uploadResult.url
     }
 
-    // Generate slug from title if title has changed
-    const slug = existingListClass.title !== data.title ? generateSlug(data.title) : undefined
+    return await prisma.$transaction(async (tx) => {
+      await tx.courses.update({
+        where: { id },
+        data: {
+          mentor_id: data.mentor_id,
+          title: data.title,
+          slug: data.slug || (existingListClass.title !== data.title ? generateSlug(data.title) : undefined),
+          description: data.description,
+          thumbnail: thumbnailUrl,
+          trailer: data.trailer,
+          level: data.level,
+          meetings: data.meetings,
+          is_popular: data.is_popular,
+          is_request: data.is_request || false,
+          is_active: data.is_active,
+          updated_at: new Date(),
+        },
+      })
 
-    // Update the list class
-    const listClass = await prisma.courses.update({
-      where: { id },
-      data: {
-        mentor_id: data.mentor_id,
-        title: data.title,
-        slug,
-        description: data.description,
-        thumbnail: thumbnailUrl,
-        trailer: data.trailer,
-        level: data.level,
-        meetings: data.meetings,
-        is_popular: data.is_popular,
-        is_request: data.is_request,
-        is_active: data.is_active,
-        updated_at: new Date(),
-      },
+      await tx.course_category_pivot.deleteMany({ where: { course_id: id } })
+      if (data.categories?.length) {
+        await tx.course_category_pivot.createMany({
+          data: data.categories.map((course_category_id) => ({
+            course_category_id,
+            course_id: id,
+          })),
+        })
+      }
+
+      await tx.course_tool_pivot.deleteMany({ where: { course_id: id } })
+      if (data.tools?.length) {
+        await tx.course_tool_pivot.createMany({
+          data: data.tools.map((toolId) => ({
+            course_tool_id: uuidv4(),
+            course_id: id,
+            tool_id: toolId,
+          })),
+        })
+      }
+
+      await tx.course_syllabus.deleteMany({ where: { course_id: id } })
+      if (data.syllabus?.length) {
+        await tx.course_syllabus.createMany({
+          data: data.syllabus.map((item) => ({
+            id: uuidv4(),
+            course_id: id,
+            title: item.title,
+            sort: item.sort,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })),
+        })
+      }
+
+      revalidatePath("/admin/dashboard/kelas/list")
+      return { success: true }
     })
-
-    revalidatePath("/admin/dashboard/kelas/list")
-    return { success: true, listClass }
   } catch (error) {
     console.error("Error updating list class:", error)
     return { error: "Failed to update list class" }
   }
 }
 
-// Soft delete a list class
-export async function deleteListClass(id: string) {
+export async function deleteListClass(courseId: string) {
   try {
     await prisma.courses.update({
-      where: { id },
-      data: {
-        deleted_at: new Date(),
-      },
-    })
+      where: { id: courseId },
+      data: { deleted_at: new Date() }, 
+    });
 
-    revalidatePath("/admin/dashboard/kelas/list")
-    return { success: true }
+    return { success: true };
   } catch (error) {
-    console.error("Error deleting list class:", error)
-    return { error: "Failed to delete list class" }
-  }
-}
-
-// Hard delete a list class (for admin purposes)
-export async function hardDeleteListClass(id: string) {
-  try {
-    const listClass = await prisma.courses.findUnique({
-      where: { id },
-      select: { thumbnail: true },
-    })
-
-    if (!listClass) {
-      return { error: "List class not found" }
+    if (error instanceof Error) {
+      console.error("Error deleting class:", error);
+      return { success: false, error: error.message };
+    } else {
+      console.error("Unknown error:", error);
+      return { success: false, error: "An unknown error occurred" };
     }
-
-    // Delete the thumbnail from Cloudinary if it exists
-    if (listClass.thumbnail && listClass.thumbnail.includes("cloudinary.com")) {
-      await deleteImage(listClass.thumbnail)
-    }
-
-    // Hard delete the list class
-    await prisma.courses.delete({
-      where: { id },
-    })
-
-    revalidatePath("/admin/dashboard/kelas/list")
-    return { success: true }
-  } catch (error) {
-    console.error("Error permanently deleting list class:", error)
-    return { error: "Failed to permanently delete list class" }
   }
 }
 

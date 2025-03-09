@@ -129,3 +129,4 @@ export async function hardDeleteCourseCategory(id: string) {
     return { error: "Gagal menghapus kategori kursus secara permanen" }
   }
 }
+

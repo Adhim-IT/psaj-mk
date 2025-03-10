@@ -21,21 +21,9 @@ import Swal from "sweetalert2"
 import { deleteTool } from "@/lib/tools"
 import { Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
 import Image from "next/image"
+import { ToolListProps } from "@/types"
 
-interface Tool {
-  id: string
-  logo: string
-  logo_public_id?: string
-  name: string
-  description: string | null
-  url: string
-  created_at: Date | null
-  updated_at: Date | null
-}
 
-interface ToolListProps {
-  tools: Tool[]
-}
 
 // Helper function to validate image URL
 const getValidImageUrl = (imageUrl: string): string => {

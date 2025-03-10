@@ -144,6 +144,7 @@ export function ListClassList({ listClasses }: ListClassListProps) {
               <TableHead>Title</TableHead>
               <TableHead className="hidden md:table-cell">Level</TableHead>
               <TableHead className="hidden md:table-cell">Meetings</TableHead>
+              <TableHead className="hidden md:table-cell">Jumlah Siswa</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
@@ -198,6 +199,9 @@ export function ListClassList({ listClasses }: ListClassListProps) {
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     {listClass.meetings} {listClass.meetings === 1 ? "meeting" : "meetings"}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {listClass.transactions?.length ?? 0}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     {listClass.is_active ? (

@@ -52,6 +52,14 @@ export async function getListClasses() {
       orderBy: {
         created_at: "desc",
       },
+      include: {
+        course_transactions: {
+          select: {
+            id: true,
+            student_id: true,
+          },
+        },
+      },
     })
 
     return { listClasses }

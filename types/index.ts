@@ -109,7 +109,7 @@ export interface StudentGroup {
   course_type_id: string
   mentor_id: string
   name: string
-  remarks?: string | null
+  remarks?: string | undefined
   start_date: Date
   end_date: Date
   total_meeting: number
@@ -131,11 +131,12 @@ export interface StudentGroup {
   }[]
 }
 
+
 export interface StudentGroupFormData {
   course_type_id: string
   mentor_id: string
   name: string
-  remarks?: string | null
+  remarks?: string | undefined
   start_date: Date
   end_date: Date
   total_meeting: number

@@ -125,3 +125,18 @@ export const courseTypeSchema = z
   )
 
 export type CourseTypeFormData = z.infer<typeof courseTypeSchema>
+
+export const studentGroupSchema = z.object({
+  course_type_id: z.string().min(1, { message: "Course type is required" }),
+  mentor_id: z.string().min(1, { message: "Mentor is required" }),
+  name: z.string().min(3, { message: "Name must be at least 3 characters" }),
+  remarks: z.string().optional(),
+  start_date: z.date({ required_error: "Start date is required" }),
+  end_date: z.date({ required_error: "End date is required" }),
+  total_meeting: z.coerce.number().min(1, { message: "At least 1 meeting is required" }),
+}).refine(data => data.start_date <= data.end_date, {
+  message: "End date must be after start date",
+  path: ["end_date"],
+})
+
+export type StudentGroupFormData = z.infer<typeof studentGroupSchema>

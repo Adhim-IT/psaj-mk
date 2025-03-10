@@ -156,3 +156,17 @@ export const courseReviewSchema = z.object({
 export type CourseReviewFormData = z.infer<typeof courseReviewSchema>
 
 export default courseReviewSchema
+
+export const eventSchema = z.object({
+  id: z.string().optional(),
+  mentor_id: z.string().min(1, "Mentor is required"),
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  slug: z.string().optional(),
+  thumbnail: z.string().min(1, "Thumbnail is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  start_date: z.coerce.date(),
+  end_date: z.coerce.date(),
+  price: z.union([z.string(), z.number()]).optional(), // Hapus `z.null()`
+  whatsapp_group_link: z.string().min(1, "WhatsApp group link is required"),
+  is_active: z.boolean().default(true),
+});

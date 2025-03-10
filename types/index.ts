@@ -142,3 +142,21 @@ export interface StudentGroupFormData {
   total_meeting: number
 }
 
+export interface EventFormData {
+  id?: string;
+  mentor_id: string;
+  title: string;
+  slug?: string; 
+  thumbnail: string;
+  description: string;
+  start_date: Date;
+  end_date: Date;
+  price?: string | number; 
+  whatsapp_group_link: string;
+  is_active: boolean;
+}
+
+
+
+
+

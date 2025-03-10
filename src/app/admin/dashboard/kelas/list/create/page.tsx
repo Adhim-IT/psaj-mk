@@ -5,7 +5,7 @@ import { createListClass, getMentors } from "@/lib/list-kelas"
 import { getCourseCategories } from "@/lib/ketagori-kelas"
 import { getTools } from "@/lib/tools"
 import type { ListClassFormData } from "@/types"
-import { ListClassForm } from "@/components/admin/list-kelas/ListClass-form"
+import { ListClassForm } from "@/src/components/admin/kelas/list-kelas/ListClass-form"
 import { HomeIcon } from "lucide-react"
 import {
   Breadcrumb,

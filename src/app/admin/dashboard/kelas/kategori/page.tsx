@@ -1,5 +1,5 @@
 import { getCourseCategories } from "@/lib/ketagori-kelas"
-import { CourseCategoryList } from "@/src/components/admin/categoryclass/categoryclass-list"
+import { CourseCategoryList } from "@/src/components/admin/kelas/categoryclass/categoryclass-list"
 
 export default async function ToolsPage() {
   const { categories: CourseCategory, error } = await getCourseCategories()

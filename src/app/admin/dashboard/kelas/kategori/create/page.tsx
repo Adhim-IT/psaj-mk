@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { createCourseCategory } from "@/lib/ketagori-kelas"
 import type { CourseCategoryFormData } from "@/lib/zod"
-import { CourseCategoryForm } from "@/components/admin/categoryclass/categoryclass-form"
+import { CourseCategoryForm } from "@/src/components/admin/kelas/categoryclass/categoryclass-form"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { HomeIcon } from 'lucide-react'
 

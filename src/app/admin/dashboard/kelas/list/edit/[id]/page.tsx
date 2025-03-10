@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { getListClassById, updateListClass, getMentors } from "@/lib/list-kelas"
 import { getCourseCategories } from "@/lib/ketagori-kelas"
 import { getTools } from "@/lib/tools"
-import { ListClassForm } from "@/components/admin/list-kelas/ListClass-form"
+import { ListClassForm } from "@/src/components/admin/kelas/list-kelas/ListClass-form"
 import { HomeIcon, AlertCircle } from "lucide-react"
 import type { ListClassFormData } from "@/types"
 import {

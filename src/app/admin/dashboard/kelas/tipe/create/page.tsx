@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { createCourseType, getCourses } from "@/lib/course-types"
 import type { CourseTypeFormData } from "@/lib/zod"
-import { CourseTypeForm } from "@/components/admin/tipe-kelas/course-type-form"
+import { CourseTypeForm } from "@/src/components/admin/kelas/tipe-kelas/course-type-form"
 import { HomeIcon } from "lucide-react"
 import {
   Breadcrumb,

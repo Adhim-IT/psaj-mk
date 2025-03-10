@@ -1,5 +1,5 @@
 import { getListClasses } from "@/lib/list-kelas"
-import { ListClassList } from "@/components/admin/list-kelas/ListClass-list"
+import { ListClassList } from "@/src/components/admin/kelas/list-kelas/ListClass-list"
 import {
   Breadcrumb,
   BreadcrumbItem,

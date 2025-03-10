@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { createStudentGroup, getCourseTypesForDropdown, getMentorsForDropdown } from "@/lib/kelompok-kelas"
 import type { StudentGroupFormData } from "@/types"
-import { StudentGroupForm } from "@/components/admin/kelompok-kelas/GroupClass-form"
+import { StudentGroupForm } from "@/src/components/admin/kelas/kelompok-kelas/GroupClass-form"
 import { HomeIcon } from "lucide-react"
 import {
   Breadcrumb,

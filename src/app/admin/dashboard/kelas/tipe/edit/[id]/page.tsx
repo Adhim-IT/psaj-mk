@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { getCourseTypeById, updateCourseType, getCourses } from "@/lib/course-types"
-import { CourseTypeForm } from "@/components/admin/tipe-kelas/course-type-form"
+import { CourseTypeForm } from "@/src/components/admin/kelas/tipe-kelas/course-type-form"
 import { HomeIcon, AlertCircle } from "lucide-react"
 import type { CourseTypeFormData } from "@/lib/zod"
 import {

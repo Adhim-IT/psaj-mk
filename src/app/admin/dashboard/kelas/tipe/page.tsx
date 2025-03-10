@@ -1,5 +1,5 @@
 import { getCourseTypes } from "@/lib/course-types"
-import { CourseTypeList } from "@/components/admin/tipe-kelas/course-type-list"
+import { CourseTypeList } from "@/src/components/admin/kelas/tipe-kelas/course-type-list"
 import {
   Breadcrumb,
   BreadcrumbItem,

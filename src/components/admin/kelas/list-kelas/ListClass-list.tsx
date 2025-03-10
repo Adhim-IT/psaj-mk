@@ -201,6 +201,7 @@ export function ListClassList({ listClasses }: ListClassListProps) {
                     {listClass.meetings} {listClass.meetings === 1 ? "meeting" : "meetings"}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
+                    
                     {listClass.transactions?.length ?? 0}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">

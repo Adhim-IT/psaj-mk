@@ -1,5 +1,5 @@
 import { getStudentGroups } from "@/lib/kelompok-kelas"
-import { StudentGroupList } from "@/components/admin/kelompok-kelas/GroupCLass-list"
+import { StudentGroupList } from "@/src/components/admin/kelas/kelompok-kelas/GroupCLass-list"
 import {
   Breadcrumb,
   BreadcrumbItem,

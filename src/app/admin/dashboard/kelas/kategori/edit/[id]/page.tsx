@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { getCourseCategoryById, updateCourseCategory } from "@/lib/ketagori-kelas"
-import { CourseCategoryForm } from "@/components/admin/categoryclass/categoryclass-form"
+import { CourseCategoryForm } from "@/src/components/admin/kelas/categoryclass/categoryclass-form"
 import { HomeIcon, AlertCircle } from "lucide-react"
 import type { CourseCategoryFormData } from "@/lib/zod"
 import {

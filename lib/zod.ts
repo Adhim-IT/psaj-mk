@@ -140,3 +140,19 @@ export const studentGroupSchema = z.object({
 })
 
 export type StudentGroupFormData = z.infer<typeof studentGroupSchema>
+
+export const courseReviewSchema = z.object({
+  id: z.string().optional(),
+  course_id: z.string().min(1, { message: "Course is required" }),
+  student_id: z.string().min(1, { message: "Student is required" }),
+  rating: z.number().min(1, { message: "Rating must be at least 1" }).max(5, { message: "Rating cannot exceed 5" }),
+  review: z
+    .string()
+    .min(1, { message: "Review is required" })
+    .max(255, { message: "Review cannot exceed 255 characters" }),
+  is_approved: z.boolean().default(false),
+})
+
+export type CourseReviewFormData = z.infer<typeof courseReviewSchema>
+
+export default courseReviewSchema

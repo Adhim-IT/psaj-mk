@@ -8,7 +8,7 @@ import {
   getCourseTypesForDropdown,
   getMentorsForDropdown,
 } from "@/lib/kelompok-kelas"
-import { StudentGroupForm } from "@/components/admin/kelompok-kelas/GroupClass-form"
+import { StudentGroupForm } from "@/src/components/admin/kelas/kelompok-kelas/GroupClass-form"
 import { HomeIcon, AlertCircle } from "lucide-react"
 import type { StudentGroupFormData } from "@/types"
 import {

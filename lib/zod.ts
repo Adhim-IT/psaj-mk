@@ -1,6 +1,6 @@
 import { isValidYouTubeUrl } from "./youtube"
 import { object, string, z } from "zod"
-
+import { CourseTransactionStatus, CourseTransactionType } from "@/types"
 
 export const LoginSchema = object({
   email: string().email("Email tidak valid"),
@@ -178,3 +178,33 @@ export const promoCodeSchema = z.object({
   valid_until: z.string().min(1, "Valid until date is required"),
   is_used: z.boolean().default(false),
 })
+
+export const courseTransactionSchema = z.object({
+  id: z.string().length(36),
+  code: z.string().max(255),
+  course_id: z.string().length(36),
+  student_id: z.string().length(36),
+  type: z.nativeEnum(CourseTransactionType),
+  batch_number: z.number().nullable(),
+  status: z.nativeEnum(CourseTransactionStatus).default(CourseTransactionStatus.UNPAID),
+  original_price: z.number().positive(),
+  discount: z.number().nullable(),
+  final_price: z.number().positive(),
+  deleted_at: z.date().nullable(),
+  created_at: z.date().nullable(),
+  updated_at: z.date().nullable(),
+})
+
+export const courseTransactionDeleteSchema = z.object({
+  id: z.string().length(36),
+})
+
+export const courseTransactionFilterSchema = z.object({
+  status: z.nativeEnum(CourseTransactionStatus).optional(),
+  course_id: z.string().optional(),
+  student_id: z.string().optional(),
+  search: z.string().optional(),
+  page: z.number().default(1),
+  limit: z.number().default(10),
+})
+

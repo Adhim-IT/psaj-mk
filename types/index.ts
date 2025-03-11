@@ -1,4 +1,5 @@
 import { ToolFormData } from "@/lib/zod"
+import { Decimal } from "@prisma/client/runtime/library"
 
 
 export interface Mentor {
@@ -178,6 +179,53 @@ export interface PromoCodeFormData {
   valid_until: string // Changed from Date to string for form handling
   is_used: boolean
 }
+
+export enum CourseTransactionType {
+  GROUP = "group",
+  PRIVATE = "private",
+  BATCH = "batch",
+}
+
+export enum CourseTransactionStatus {
+  PAID = "paid",
+  UNPAID = "unpaid",
+  FAILED = "failed",
+}
+
+export interface CourseTransaction {
+  id: string
+  code: string
+  course_id: string
+  student_id: string
+  type: CourseTransactionType
+  batch_number: number | null
+  status: CourseTransactionStatus
+  original_price: Decimal
+  discount: Decimal | null
+  final_price: Decimal
+  deleted_at: Date | null
+  created_at: Date | null
+  updated_at: Date | null
+  courses: {
+    id: string
+    title: string
+    // Add other course fields you need
+  }
+  students: {
+    id: string
+    name: string
+    email: string
+    // Add other student fields you need
+  }
+}
+
+export interface MidtransConfig {
+  clientKey: string
+  serverKey: string
+  merchantId: string
+  isProduction: boolean
+}
+
 
 
 

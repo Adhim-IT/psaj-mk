@@ -1,12 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Loader2 } from "lucide-react"
+import { Loader2, Search, Filter } from "lucide-react"
 import Swal from "sweetalert2"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 interface CourseReview {
   id: string
@@ -28,27 +39,37 @@ interface CourseReview {
 }
 
 interface CourseReviewListProps {
-  initialData: CourseReview[]
+  initialReviews: CourseReview[]
+  totalReviews: number
   onApprove: (id: string) => Promise<{ success: boolean; error?: string }>
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>
 }
 
-export function CourseReviewList({ initialData, onApprove, onDelete }: CourseReviewListProps) {
-  const [reviews, setReviews] = useState<CourseReview[]>(initialData)
+export function CourseReviewList({ initialReviews, totalReviews, onApprove, onDelete }: CourseReviewListProps) {
+  const [reviews, setReviews] = useState<CourseReview[]>(initialReviews)
+  const [filteredReviews, setFilteredReviews] = useState<CourseReview[]>(initialReviews)
   const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({})
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  // Filter reviews based on search term
-  const filteredReviews = reviews.filter(
-    (review) =>
-      review.courses.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.students.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.review.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  useEffect(() => {
+    // Filter reviews based on search term and status
+    const filtered = reviews.filter(
+      (review) =>
+        (review.courses.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          review.students.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          review.review.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (statusFilter === "all" ||
+          (statusFilter === "approved" && review.is_approved) ||
+          (statusFilter === "pending" && !review.is_approved)),
+    )
+    setFilteredReviews(filtered)
+    setCurrentPage(1) // Reset to first page when search or filter changes
+  }, [searchTerm, statusFilter, reviews])
 
-  // Pagination
+  // Get current page items
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredReviews.slice(indexOfFirstItem, indexOfLastItem)
@@ -56,32 +77,16 @@ export function CourseReviewList({ initialData, onApprove, onDelete }: CourseRev
 
   const handleApprove = async (id: string) => {
     setIsLoading((prev) => ({ ...prev, [id]: true }))
-
     try {
       const result = await onApprove(id)
-
       if (result.success) {
         setReviews((prev) => prev.map((review) => (review.id === id ? { ...review, is_approved: true } : review)))
-
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: "Review berhasil disetujui",
-          timer: 1500,
-        })
+        Swal.fire({ icon: "success", title: "Berhasil", text: "Review berhasil disetujui", timer: 1500 })
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Gagal",
-          text: result.error || "Gagal menyetujui review",
-        })
+        Swal.fire({ icon: "error", title: "Gagal", text: result.error || "Gagal menyetujui review" })
       }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Terjadi kesalahan saat menyetujui review",
-      })
+    } catch {
+      Swal.fire({ icon: "error", title: "Error", text: "Terjadi kesalahan saat menyetujui review" })
     } finally {
       setIsLoading((prev) => ({ ...prev, [id]: false }))
     }
@@ -100,32 +105,16 @@ export function CourseReviewList({ initialData, onApprove, onDelete }: CourseRev
     }).then(async (result) => {
       if (result.isConfirmed) {
         setIsLoading((prev) => ({ ...prev, [id]: true }))
-
         try {
           const result = await onDelete(id)
-
           if (result.success) {
             setReviews((prev) => prev.filter((review) => review.id !== id))
-
-            Swal.fire({
-              icon: "success",
-              title: "Berhasil",
-              text: "Review berhasil dihapus",
-              timer: 1500,
-            })
+            Swal.fire({ icon: "success", title: "Berhasil", text: "Review berhasil dihapus", timer: 1500 })
           } else {
-            Swal.fire({
-              icon: "error",
-              title: "Gagal",
-              text: result.error || "Gagal menghapus review",
-            })
+            Swal.fire({ icon: "error", title: "Gagal", text: result.error || "Gagal menghapus review" })
           }
-        } catch (error) {
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Terjadi kesalahan saat menghapus review",
-          })
+        } catch {
+          Swal.fire({ icon: "error", title: "Error", text: "Terjadi kesalahan saat menghapus review" })
         } finally {
           setIsLoading((prev) => ({ ...prev, [id]: false }))
         }
@@ -133,148 +122,187 @@ export function CourseReviewList({ initialData, onApprove, onDelete }: CourseRev
     })
   }
 
+  // Generate pagination items
+  const renderPaginationItems = () => {
+    const items = []
+    const maxVisiblePages = 5
+
+    // Always show first page
+    items.push(
+      <PaginationItem key="first">
+        <PaginationLink isActive={currentPage === 1} onClick={() => setCurrentPage(1)}>
+          1
+        </PaginationLink>
+      </PaginationItem>,
+    )
+
+    // Show ellipsis if needed
+    if (currentPage > 3) {
+      items.push(
+        <PaginationItem key="ellipsis-1">
+          <PaginationEllipsis />
+        </PaginationItem>,
+      )
+    }
+
+    // Show pages around current page
+    const startPage = Math.max(2, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 2)
+
+    for (let i = startPage; i <= endPage; i++) {
+      items.push(
+        <PaginationItem key={i}>
+          <PaginationLink isActive={currentPage === i} onClick={() => setCurrentPage(i)}>
+            {i}
+          </PaginationLink>
+        </PaginationItem>,
+      )
+    }
+
+    // Show ellipsis if needed
+    if (endPage < totalPages - 1) {
+      items.push(
+        <PaginationItem key="ellipsis-2">
+          <PaginationEllipsis />
+        </PaginationItem>,
+      )
+    }
+
+    // Always show last page if there's more than one page
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key="last">
+          <PaginationLink isActive={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)}>
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>,
+      )
+    }
+
+    return items
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span>Show</span>
-          <select
-            className="h-8 w-16 rounded-md border border-input bg-background px-2"
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value))
-              setCurrentPage(1)
-            }}
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-          <span>entries</span>
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cari kelas, siswa, atau ulasan..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
         </div>
-        <Input
-          placeholder="Search"
-          className="max-w-xs"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value)
-            setCurrentPage(1)
-          }}
-        />
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Review</SelectItem>
+              <SelectItem value="approved">Disetujui</SelectItem>
+              <SelectItem value="pending">Menunggu</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Items per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 per halaman</SelectItem>
+              <SelectItem value="10">10 per halaman</SelectItem>
+              <SelectItem value="25">25 per halaman</SelectItem>
+              <SelectItem value="50">50 per halaman</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>NO</TableHead>
+            <TableHead>NAMA KELAS</TableHead>
+            <TableHead>NAMA SISWA</TableHead>
+            <TableHead>ULASAN</TableHead>
+            <TableHead>STATUS</TableHead>
+            <TableHead>AKSI</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {currentItems.length === 0 ? (
             <TableRow>
-              <TableHead className="w-12 text-center">NO</TableHead>
-              <TableHead>NAMA KELAS</TableHead>
-              <TableHead>NAMA SISWA</TableHead>
-              <TableHead>ULASAN</TableHead>
-              <TableHead>STATUS</TableHead>
-              <TableHead className="text-center">AKSI</TableHead>
+              <TableCell colSpan={6} className="text-center">
+                Tidak ada data review
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
-                  Tidak ada data review
+          ) : (
+            currentItems.map((review, index) => (
+              <TableRow key={review.id}>
+                <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+                <TableCell>{review.courses.title}</TableCell>
+                <TableCell>{review.students.name}</TableCell>
+                <TableCell>{review.review}</TableCell>
+                <TableCell>
+                  {review.is_approved ? (
+                    <Badge className="bg-green-500">Disetujui</Badge>
+                  ) : (
+                    <Badge variant="outline">Menunggu</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="space-x-2">
+                  {!review.is_approved && (
+                    <Button
+                      onClick={() => handleApprove(review.id)}
+                      disabled={isLoading[review.id]}
+                      size="sm"
+                      className="mr-2"
+                    >
+                      {isLoading[review.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : "Setujui"}
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => handleDelete(review.id)}
+                    disabled={isLoading[review.id]}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    {isLoading[review.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : "Hapus"}
+                  </Button>
                 </TableCell>
               </TableRow>
-            ) : (
-              currentItems.map((review, index) => (
-                <TableRow key={review.id}>
-                  <TableCell className="text-center">{indexOfFirstItem + index + 1}</TableCell>
-                  <TableCell>{review.courses.title}</TableCell>
-                  <TableCell>{review.students.name}</TableCell>
-                  <TableCell>{review.review}</TableCell>
-                  <TableCell>
-                    {review.is_approved ? (
-                      <Badge className="bg-green-500">Disetujui</Badge>
-                    ) : (
-                      <Badge variant="outline">Menunggu</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-center gap-2">
-                      {!review.is_approved && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="bg-green-500 text-white hover:bg-green-600"
-                          onClick={() => handleApprove(review.id)}
-                          disabled={isLoading[review.id]}
-                        >
-                          {isLoading[review.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : "Setujui"}
-                        </Button>
-                      )}
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(review.id)}
-                        disabled={isLoading[review.id]}
-                      >
-                        {isLoading[review.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : "Hapus"}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
-      <div className="flex items-center justify-between">
-        <div>
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredReviews.length)} of{" "}
-          {filteredReviews.length} entries
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </Button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-            let pageNumber
-            if (totalPages <= 5) {
-              pageNumber = i + 1
-            } else {
-              if (currentPage <= 3) {
-                pageNumber = i + 1
-              } else if (currentPage >= totalPages - 2) {
-                pageNumber = totalPages - 4 + i
-              } else {
-                pageNumber = currentPage - 2 + i
-              }
-            }
-            return (
-              <Button
-                key={pageNumber}
-                variant={currentPage === pageNumber ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNumber)}
-                className={currentPage === pageNumber ? "bg-blue-500" : ""}
-              >
-                {pageNumber}
-              </Button>
-            )
-          })}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            Next
-          </Button>
-        </div>
+      {filteredReviews.length > itemsPerPage && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                aria-disabled={currentPage === 1}
+                className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                aria-disabled={currentPage === totalPages}
+                className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+
+      <div className="text-sm text-muted-foreground">
+        Menampilkan {currentItems.length > 0 ? indexOfFirstItem + 1 : 0} sampai{" "}
+        {Math.min(indexOfLastItem, filteredReviews.length)} dari {filteredReviews.length} ulasan
       </div>
     </div>
   )

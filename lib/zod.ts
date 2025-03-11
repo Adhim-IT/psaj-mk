@@ -1,4 +1,3 @@
-import { isValidYouTubeUrl } from "./youtube"
 import { object, string, z } from "zod"
 import { CourseTransactionStatus, CourseTransactionType, EventRegistrantStatus } from "@/types"
 
@@ -68,9 +67,6 @@ export const listClassSchema = z.object({
 })
 
 export type ListClassFormData = z.infer<typeof listClassSchema>
-
-
-
 
 export const courseTypeSchema = z
   .object({
@@ -232,4 +228,11 @@ export const eventRegistrantFilterSchema = z.object({
   search: z.string().optional(),
   page: z.number().default(1),
   limit: z.number().default(10),
+})
+
+export const TagScehma = z.object({
+  id: z.string().length(36),
+  name: z.string().min(1, "Name is required"),
+  slug: z.string().min(1, "Slug is required"),
+  
 })

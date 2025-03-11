@@ -1,4 +1,3 @@
-import { ToolFormData } from "@/lib/zod"
 import { Decimal } from "@prisma/client/runtime/library"
 
 
@@ -255,4 +254,15 @@ export interface EventRegistrant {
 }
 
 
+export interface Tag {
+  id: string
+  name: string
+  slug: string
+  url: string
+  created_at: Date | null
+  updated_at: Date | null
+}
 
+export interface TagListProps {
+  tags: Tag[]
+}

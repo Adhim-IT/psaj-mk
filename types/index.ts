@@ -157,6 +157,28 @@ export interface EventFormData {
 }
 
 
+// Update the PromoCode interface
+export interface PromoCode {
+  id: number
+  code: string
+  discount_type: "percentage" | "fixed"
+  discount: number
+  valid_until: Date
+  is_used: boolean
+  created_at: Date | null
+  updated_at: Date | null
+  deleted_at: Date | null
+}
+
+// Update the PromoCodeFormData interface to use string for valid_until
+export interface PromoCodeFormData {
+  code: string
+  discount_type: "percentage" | "fixed"
+  discount: number
+  valid_until: string // Changed from Date to string for form handling
+  is_used: boolean
+}
+
 
 
 

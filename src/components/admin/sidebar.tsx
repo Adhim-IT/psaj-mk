@@ -71,7 +71,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/transaksi",
     icon: DollarSign,
     submenu: [
-      { title: "Kode Promo", href: "/admin/dashboard/transaksi/promo" },
+      { title: "Kode Promo", href: "/admin/dashboard/transaksi/code" },
       { title: "Transaksi Kelas", href: "/admin/dashboard/transaksi/kelas" },
       { title: "Transaksi Event", href: "/admin/dashboard/transaksi/event" },
     ],

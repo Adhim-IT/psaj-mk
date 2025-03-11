@@ -170,3 +170,11 @@ export const eventSchema = z.object({
   whatsapp_group_link: z.string().min(1, "WhatsApp group link is required"),
   is_active: z.boolean().default(true),
 });
+
+export const promoCodeSchema = z.object({
+  code: z.string().min(1, "Code is required"),
+  discount_type: z.enum(["percentage", "fixed"]),
+  discount: z.number().min(0, "Discount must be a positive number"),
+  valid_until: z.string().min(1, "Valid until date is required"),
+  is_used: z.boolean().default(false),
+})

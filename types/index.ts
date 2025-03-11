@@ -226,7 +226,33 @@ export interface MidtransConfig {
   isProduction: boolean
 }
 
+export enum EventRegistrantStatus {
+  PENDING = "pending",
+  PAID = "paid",
+}
 
+export interface EventRegistrant {
+  id: string
+  event_id: string
+  student_id: string
+  instagram_follow: string | null
+  payment_proof: string | null
+  status: EventRegistrantStatus
+  deleted_at: Date | null
+  created_at: Date | null
+  updated_at: Date | null
+  events: {
+    id: string
+    title: string
+    // Add other event fields you need
+  }
+  students: {
+    id: string
+    name: string
+    phone: string
+    // Add other student fields you need
+  }
+}
 
 
 

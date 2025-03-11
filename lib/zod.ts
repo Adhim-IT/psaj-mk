@@ -1,6 +1,6 @@
 import { isValidYouTubeUrl } from "./youtube"
 import { object, string, z } from "zod"
-import { CourseTransactionStatus, CourseTransactionType } from "@/types"
+import { CourseTransactionStatus, CourseTransactionType, EventRegistrantStatus } from "@/types"
 
 export const LoginSchema = object({
   email: string().email("Email tidak valid"),
@@ -208,3 +208,28 @@ export const courseTransactionFilterSchema = z.object({
   limit: z.number().default(10),
 })
 
+export const eventRegistrantSchema = z.object({
+  id: z.string().length(36),
+  event_id: z.string().length(36),
+  student_id: z.string().length(36),
+  instagram_follow: z.string().nullable(),
+  payment_proof: z.string().nullable(),
+  status: z.nativeEnum(EventRegistrantStatus).default(EventRegistrantStatus.PENDING),
+  deleted_at: z.date().nullable(),
+  created_at: z.date().nullable(),
+  updated_at: z.date().nullable(),
+})
+
+export const updateRegistrantStatusSchema = z.object({
+  id: z.string().length(36),
+  status: z.nativeEnum(EventRegistrantStatus),
+})
+
+export const eventRegistrantFilterSchema = z.object({
+  event_id: z.string().optional(),
+  student_id: z.string().optional(),
+  status: z.nativeEnum(EventRegistrantStatus).optional(),
+  search: z.string().optional(),
+  page: z.number().default(1),
+  limit: z.number().default(10),
+})

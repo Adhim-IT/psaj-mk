@@ -127,10 +127,26 @@ export function AdminSidebar() {
   }, [pathname])
 
   const toggleMenu = (title: string) => {
-    setOpenMenus((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }))
+    setOpenMenus((prev) => {
+      // If this menu is already open, just close it
+      if (prev[title]) {
+        return {
+          ...prev,
+          [title]: false,
+        }
+      }
+
+      // Otherwise, close all menus and open only this one
+      const newState: Record<string, boolean> = {}
+      Object.keys(prev).forEach((key) => {
+        newState[key] = false
+      })
+
+      return {
+        ...newState,
+        [title]: true,
+      }
+    })
   }
 
   // Check if a menu item or any of its submenu items is active

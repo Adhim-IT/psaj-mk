@@ -236,3 +236,8 @@ export const TagScehma = z.object({
   slug: z.string().min(1, "Slug is required"),
   
 })
+export const CategoryArticleSchema = object({
+  name: string().min(1, "Nama kategori harus diisi"),
+  slug: string().min(1, "Slug harus diisi"),
+})
+export type ArticleCategoryFormData = z.infer<typeof CategoryArticleSchema>

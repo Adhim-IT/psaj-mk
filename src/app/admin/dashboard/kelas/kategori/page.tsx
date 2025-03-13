@@ -3,7 +3,7 @@ import { CourseCategoryList } from "@/src/components/admin/kelas/categoryclass/c
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { HomeIcon } from "lucide-react";
 
-export default async function ToolsPage() {
+export default async function CategoriesPage() {
   const { categories: CourseCategory, error } = await getCourseCategories();
 
   return (

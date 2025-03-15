@@ -266,3 +266,24 @@ export interface Tag {
 export interface TagListProps {
   tags: Tag[]
 }
+
+export interface ListArticle {
+  id: string
+  writer_id: string
+  title: string
+  slug: string
+  content: string
+  thumbnail: string
+  categories?: { id: string; name: string }[]
+  tag?: { id: string; name: string }[]
+}
+
+export interface ListArticleFormData {
+  writer_id: string
+  title: string
+  slug?: string 
+  content: string
+  thumbnail: string
+  tag: string[]
+  categories: string[]
+}

@@ -241,3 +241,22 @@ export const CategoryArticleSchema = object({
   slug: string().min(1, "Slug harus diisi"),
 })
 export type ArticleCategoryFormData = z.infer<typeof CategoryArticleSchema>
+
+export const listArticleSchema = z.object({
+  writer_id: z.string().min(1, { message: "Writer is required" }),
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  slug: z.string().optional(),
+  content: z.string().min(10, { message: "Content must be at least 10 characters" }),
+  thumbnail: z.string().min(1, { message: "Thumbnail is required" }),
+  categories: z.array(z.string()).default([]),
+  tag: z.array(z.string()).default([]),
+})
+
+export type ListArticleFormData = z.infer<typeof listArticleSchema>
+
+export const articleTagSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  slug: z.string().min(1, { message: "Slug is required" }),
+})
+
+export type ArticleTagFormData = z.infer<typeof articleTagSchema>

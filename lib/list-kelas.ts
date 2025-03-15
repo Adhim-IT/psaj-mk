@@ -166,7 +166,7 @@ export async function createListClass(data: ListClassFormData) {
           tool_id: toolId,
         })),
       });
-      
+
     }
 
     if (data.syllabus?.length) {
@@ -183,16 +183,14 @@ export async function createListClass(data: ListClassFormData) {
     }
 
     revalidatePath("/admin/dashboard/kelas/list")
-    return { success: true, courseId }
+    return { success: true, courseId, course }
   } catch (error) {
     console.error("Error creating list class:", error)
     return { error: "Failed to create list class" }
   }
 }
 
-/**
- * Update an existing list class
- */
+
 export async function updateListClass(id: string, data: ListClassFormData) {
   try {
     if (!data.title || !data.description || !data.thumbnail || !data.trailer) {
@@ -244,16 +242,17 @@ export async function updateListClass(id: string, data: ListClassFormData) {
         })
       }
 
-      await tx.course_tool_pivot.deleteMany({ where: { course_id: id } })
+      await tx.course_tool_pivot.deleteMany({ where: { course_id: id } });
+
       if (data.tools?.length) {
         await tx.course_tool_pivot.createMany({
           data: data.tools.map((toolId) => ({
-            course_tool_id: uuidv4(),
             course_id: id,
             tool_id: toolId,
           })),
-        })
+        });
       }
+
 
       await tx.course_syllabus.deleteMany({ where: { course_id: id } })
       if (data.syllabus?.length) {
@@ -282,7 +281,7 @@ export async function deleteListClass(courseId: string) {
   try {
     await prisma.courses.update({
       where: { id: courseId },
-      data: { deleted_at: new Date() }, 
+      data: { deleted_at: new Date() },
     });
 
     return { success: true };

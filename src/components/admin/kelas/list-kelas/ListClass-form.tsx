@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -10,13 +8,13 @@ import { listClassSchema, type ListClassFormData } from "@/lib/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import Swal from "sweetalert2"
-import { Loader2, Upload, Bold, Italic, List, LinkIcon, X, Plus, RefreshCw } from "lucide-react"
+import { Loader2, Upload, Plus, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import { YouTubePreview } from "./youtube-preview"
+import { RichTextEditor } from "@/components/rich-text-editor"
+import { MultiSelect } from "@/components/ui/multi-select"
 
 interface Category {
   id: string
@@ -462,39 +460,35 @@ export function ListClassForm({ initialData, mentors, categories, tools, onSubmi
 
         <div>
           <Label>Kategori Kelas</Label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Badge
-                key={category.id}
-                variant={selectedCategories.includes(category.id) ? "default" : "outline"}
-                className={`cursor-pointer ${
-                  selectedCategories.includes(category.id) ? "bg-blue-500 hover:bg-blue-600" : ""
-                }`}
-                onClick={() => toggleCategory(category.id)}
-              >
-                {selectedCategories.includes(category.id) && <X className="mr-1 h-3 w-3" />}
-                {category.name}
-              </Badge>
-            ))}
+          <div className="mt-2">
+            <MultiSelect
+              options={categories.map((category) => ({ value: category.id, label: category.name }))}
+              selected={selectedCategories}
+              onChange={(values) => {
+                setSelectedCategories(values)
+                setValue("categories", values)
+              }}
+              placeholder="Pilih kategori..."
+            />
           </div>
+          <p className="mt-1 text-xs text-muted-foreground">Klik untuk memilih beberapa kategori</p>
           <input type="hidden" {...register("categories")} value={selectedCategories.join(",")} />
         </div>
 
         <div>
           <Label>Tools</Label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {tools.map((tool) => (
-              <Badge
-                key={tool.id}
-                variant={selectedTools.includes(tool.id) ? "default" : "outline"}
-                className={`cursor-pointer ${selectedTools.includes(tool.id) ? "bg-blue-500 hover:bg-blue-600" : ""}`}
-                onClick={() => toggleTool(tool.id)}
-              >
-                {selectedTools.includes(tool.id) && <X className="mr-1 h-3 w-3" />}
-                {tool.name}
-              </Badge>
-            ))}
+          <div className="mt-2">
+            <MultiSelect
+              options={tools.map((tool) => ({ value: tool.id, label: tool.name }))}
+              selected={selectedTools}
+              onChange={(values) => {
+                setSelectedTools(values)
+                setValue("tools", values)
+              }}
+              placeholder="Pilih tools..."
+            />
           </div>
+          <p className="mt-1 text-xs text-muted-foreground">Klik untuk memilih beberapa tools</p>
           <input type="hidden" {...register("tools")} value={selectedTools.join(",")} />
         </div>
 
@@ -586,58 +580,16 @@ export function ListClassForm({ initialData, mentors, categories, tools, onSubmi
         <div>
           <Label htmlFor="description">Description</Label>
           <div className="mt-1">
-            <div className="bg-white rounded-md border border-input mb-2 p-1 flex gap-1">
-              <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting("bold")} title="Bold">
-                <Bold className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting("italic")} title="Italic">
-                <Italic className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting("list")} title="List">
-                <List className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting("link")} title="Link">
-                <LinkIcon className="h-4 w-4" />
-              </Button>
-            </div>
-            <Textarea
+            <RichTextEditor
               id="description"
-              {...register("description")}
-              ref={textareaRef}
-              className="min-h-[200px] font-mono"
+              value={description}
+              onChange={(value) => setValue("description", value)}
+              minHeight="200px"
               placeholder="Masukkan deskripsi kelas (Gunakan Markdown: **tebal**, *miring*, - daftar item, [tautan](url))"
-              defaultValue={initialData?.description || ""}
+              error={errors.description?.message}
             />
           </div>
           {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>}
-
-          {description && (
-            <div className="mt-4">
-              <Label>Preview</Label>
-              <div className="mt-1 p-3 border rounded-md bg-gray-50">
-                <div className="prose prose-sm max-w-none">
-                  {description.split("\n").map((line, i) => {
-                    // Basic markdown rendering
-                    let content = line
-                    // Bold
-                    content = content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                    // Italic
-                    content = content.replace(/\*(.*?)\*/g, "<em>$1</em>")
-                    // Links
-                    content = content.replace(
-                      /\[(.*?)\]$$(.*?)$$/g,
-                      '<a href="$2" class="text-blue-600 hover:underline">$1</a>',
-                    )
-                    // List items
-                    if (content.startsWith("- ")) {
-                      return <li key={i} dangerouslySetInnerHTML={{ __html: content.substring(2) }} />
-                    }
-                    return <p key={i} dangerouslySetInnerHTML={{ __html: content }} />
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="space-y-2">

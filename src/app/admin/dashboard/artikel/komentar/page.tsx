@@ -1,4 +1,4 @@
-import { getComments } from "@/lib/article-comments"
+import { getComments } from "@/lib/article-comments-admin"
 import { CommentList } from "@/src/components/admin/artikel/komentar/comment-list"
 import {
   Breadcrumb,

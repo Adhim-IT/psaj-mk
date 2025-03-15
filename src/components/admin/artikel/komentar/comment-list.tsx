@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Check, X, Trash2 } from "lucide-react"
-import { deleteComment, updateCommentStatus } from "@/lib/article-comments"
+import { deleteComment, updateCommentStatus } from "@/lib/article-comments-admin"
 import Swal from "sweetalert2"
 
 interface Comment {

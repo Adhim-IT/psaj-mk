@@ -95,7 +95,15 @@ export async function getListClassById(id: string) {
         course_tool_pivot: {
           include: {
             tools: {
-              select: { id: true, name: true },
+              select: {
+                id: true,
+                name: true,
+                logo: true,
+                description: true,
+                url: true,
+                created_at: true,
+                updated_at: true,
+              },
             },
           },
         },
@@ -121,6 +129,7 @@ export async function getListClassById(id: string) {
     return { error: "Failed to load list class" }
   }
 }
+
 
 /**
  * Create a new list class

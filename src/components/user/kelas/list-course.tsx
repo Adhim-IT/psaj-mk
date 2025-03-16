@@ -80,7 +80,7 @@ const CourseCard = ({ course }: { course: CourseData }) => (
         <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
             <Image
-              src={getDefaultMentorImage(course.mentor.profile_picture) || "/placeholder.svg"}
+              src={getDefaultMentorImage(course.mentor.profile_picture) || "/images/mentor.png"}
               alt={`Mentor ${course.mentor.name}`}
               width={40}
               height={40}
@@ -117,26 +117,11 @@ const CourseCard = ({ course }: { course: CourseData }) => (
   </div>
 )
 
-const PageHeader = ({ title }: { title: string }) => (
-  <div className="bg-gradient-to-r from-[#5596DF] to-[#6ba5e7] text-white py-16 px-6 mt-24">
-    <div className="container mx-auto max-w-7xl">
-      <h1 className="text-4xl md:text-5xl font-bold mb-4">{title}</h1>
-      <div className="flex items-center gap-2 text-[#e6f0fc]">
-        <Link href="/" className="hover:text-white">
-          Home
-        </Link>
-        <span>›</span>
-        <span>{title}</span>
-      </div>
-    </div>
-  </div>
-)
-
-// Main component
+// Main component - Removed PageHeader and display count div
 export default function CourseList({
   maxCourses,
   courses: initialCourses,
-  title = "Kelas",
+  title,
 }: {
   maxCourses?: number
   courses?: CourseData[]
@@ -216,35 +201,20 @@ export default function CourseList({
   }
 
   return (
-    <section className="min-h-screen">
-      {/* Page Header */}
-      <PageHeader title={title} />
-
-      {/* Course List */}
-      <div className="container mx-auto px-6 py-12 max-w-7xl">
-        <div className="flex justify-between items-center mb-8">
-          <p className="text-gray-600">
-            Menampilkan {displayedCourses.length > 0 ? 1 : 0} - {displayedCourses.length} dari {displayedCourses.length}{" "}
-            kelas
-          </p>
-
-          {/* You could add filters here */}
+    <>
+      {displayedCourses.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-xl">
+          <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Tidak ada kursus yang tersedia saat ini.</p>
         </div>
-
-        {displayedCourses.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Tidak ada kursus yang tersedia saat ini.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {displayedCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {displayedCourses.map((course) => (
+            <CourseCard key={course.id} course={course} />
+          ))}
+        </div>
+      )}
+    </>
   )
 }
 

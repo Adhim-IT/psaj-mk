@@ -33,6 +33,37 @@ export async function getCourseTypes() {
   }
 }
 
+// Get course types by course ID
+export async function getCourseTypesByCourseId(courseId: string) {
+  try {
+    const courseTypesRaw = await prisma.course_types.findMany({
+      where: {
+        course_id: courseId,
+        is_active: true,
+        deleted_at: null,
+      },
+      include: {
+        courses: {
+          select: {
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        normal_price: "asc", // Order by price, lowest first
+      },
+    })
+
+    // Convert Decimal to plain objects using JSON serialization
+    const courseTypes = JSON.parse(JSON.stringify(courseTypesRaw))
+
+    return { courseTypes, error: null }
+  } catch (error) {
+    console.error("Error fetching course types by course ID:", error)
+    return { courseTypes: [], error: "Gagal mengambil data tipe kelas" }
+  }
+}
+
 // Get a single course type by ID
 export async function getCourseTypeById(id: string) {
   try {
@@ -148,7 +179,6 @@ export async function createCourseType(data: CourseTypeFormData) {
     return { error: "Gagal membuat tipe kelas" };
   }
 }
-
 
 // Update course type
 export async function updateCourseType(id: string, data: CourseTypeFormData) {

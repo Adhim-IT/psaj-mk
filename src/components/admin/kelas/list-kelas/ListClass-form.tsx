@@ -36,6 +36,7 @@ interface Mentor {
   id: string
   name: string
   specialization: string
+  profile_picture: string
 }
 
 interface ListClassFormProps {

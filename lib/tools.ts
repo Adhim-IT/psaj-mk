@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { v4 as uuidv4 } from "uuid"
 import { uploadImage, deleteImage } from "@/lib/cloudinary"
+import { Tool } from "@/types"
 
 // Create a new file for the schema
 export type ToolFormData = {
@@ -46,6 +47,34 @@ export async function getToolById(id: string) {
   } catch (error) {
     console.error("Error fetching tool:", error)
     return { error: "Failed to fetch tool" }
+  }
+}
+export async function getToolsById(ids: string[]): Promise<{ tools: Tool[]; error?: string }> {
+  try {
+    if (!ids || ids.length === 0) {
+      return { tools: [] }
+    }
+
+    const tools = await prisma.tools.findMany({
+      where: {
+        id: { in: ids },
+        deleted_at: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        description: true,
+        url: true,
+        created_at: true,
+        updated_at: true,
+      },
+    })
+
+    return { tools }
+  } catch (error) {
+    console.error("Error fetching tools:", error)
+    return { tools: [], error: "Failed to load tools" }
   }
 }
 

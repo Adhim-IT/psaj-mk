@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import CourseList from "@/components/user/kelas/list-course"
 import { getListClasses } from "@/lib/list-kelas"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from 'lucide-react'
 
 type CourseData = {
   id: string
@@ -22,6 +23,22 @@ type CourseData = {
     specialization?: string
   }
 }
+
+// Moved PageHeader component from course-list to here
+const PageHeader = ({ title }: { title: string }) => (
+  <div className="bg-gradient-to-r from-[#5596DF] to-[#6ba5e7] text-white py-16 px-6 mt-24 ">
+    <div className="container mx-auto max-w-7xl">
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 md:ml-5" >{title}</h1>
+      <div className="flex items-center gap-2 text-[#e6f0fc]">
+        <Link href="/" className="hover:text-white md:ml-5">
+          Home
+        </Link>
+        <span>›</span>
+        <span>{title}</span>
+      </div>
+    </div>
+  </div>
+)
 
 export default function Kelas() {
   const [courses, setCourses] = useState<CourseData[]>([])
@@ -111,6 +128,24 @@ export default function Kelas() {
     )
   }
 
-  return <CourseList courses={courses} title="Kelas" />
-}
+  return (
+    <section className="min-h-screen">
+      {/* Moved PageHeader from course-list to here */}
+      <PageHeader title="Kelas" />
 
+      <div className="container mx-auto px-6 py-12 max-w-7xl">
+        {/* Moved display count div from course-list to here */}
+        <div className="flex justify-between items-center mb-8">
+          <p className="text-gray-600">
+            Menampilkan {courses.length > 0 ? 1 : 0} - {courses.length} dari {courses.length}{" "}
+            kelas
+          </p>
+          {/* You could add filters here */}
+        </div>
+
+        {/* Pass courses to CourseList without title since we're handling the header here */}
+        <CourseList courses={courses} />
+      </div>
+    </section>
+  )
+}

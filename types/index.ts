@@ -1,18 +1,16 @@
 import { Decimal } from "@prisma/client/runtime/library"
 
-
+// Basic interfaces
 export interface Mentor {
   id: string
   name: string
-  specialization: string
+  specialization?: string
+  profile_picture?: string | null
 }
-
-
 
 export interface Tool {
   id: string
-  logo: string
-  logo_public_id?: string
+  logo: string  
   name: string
   description: string | null
   url: string
@@ -20,10 +18,24 @@ export interface Tool {
   updated_at: Date | null
 }
 
-export interface ToolListProps {
-  tools: Tool[]
+export interface Category {
+  id: string
+  name: string
+  slug?: string
 }
 
+export interface SyllabusItem {
+  id: string
+  title: string
+  sort: number
+}
+
+export interface Transaction {
+  id: string
+  student_id: string
+}
+
+// Main course interface that matches your database schema
 export interface ListClass {
   id: string
   mentor_id: string
@@ -37,12 +49,13 @@ export interface ListClass {
   is_popular: boolean
   is_request?: boolean | null
   is_active: boolean
-  categories?: { id: string; name: string }[]
-  tools?: { id: string; name: string }[]
-  syllabus?: { id: string; title: string; sort: number }[]
-  transactions?: { id: string; student_id: string;}[]
+  categories?: Category[]
+  tools?: Tool[]  
+  syllabus?: SyllabusItem[]
+  transactions?: Transaction[]
 }
 
+// Form data interfaces
 export interface ListClassFormData {
   mentor_id: string
   title: string
@@ -57,11 +70,7 @@ export interface ListClassFormData {
   is_active: boolean
   categories: string[]
   tools: string[]
-  syllabus: {
-    id: string
-    title: string
-    sort: number
-  }[]
+  syllabus: SyllabusItem[]
 }
 
 export type CourseTypeType = "group" | "private" | "batch"
@@ -131,7 +140,6 @@ export interface StudentGroup {
   }[]
 }
 
-
 export interface StudentGroupFormData {
   course_type_id: string
   mentor_id: string
@@ -156,8 +164,6 @@ export interface EventFormData {
   is_active: boolean;
 }
 
-
-// Update the PromoCode interface
 export interface PromoCode {
   id: number
   code: string
@@ -170,12 +176,11 @@ export interface PromoCode {
   deleted_at: Date | null
 }
 
-// Update the PromoCodeFormData interface to use string for valid_until
 export interface PromoCodeFormData {
   code: string
   discount_type: "percentage" | "fixed"
   discount: number
-  valid_until: string // Changed from Date to string for form handling
+  valid_until: string
   is_used: boolean
 }
 
@@ -208,13 +213,11 @@ export interface CourseTransaction {
   courses: {
     id: string
     title: string
-    // Add other course fields you need
   }
   students: {
     id: string
     name: string
     email: string
-    // Add other student fields you need
   }
 }
 
@@ -243,16 +246,13 @@ export interface EventRegistrant {
   events: {
     id: string
     title: string
-    // Add other event fields you need
   }
   students: {
     id: string
     name: string
     phone: string
-    // Add other student fields you need
   }
 }
-
 
 export interface Tag {
   id: string
@@ -274,8 +274,8 @@ export interface ListArticle {
   slug: string
   content: string
   thumbnail: string
-  categories?: { id: string; name: string }[]
-  tag?: { id: string; name: string }[]
+  categories?: Category[]
+  tag?: Tag[]
 }
 
 export interface ListArticleFormData {

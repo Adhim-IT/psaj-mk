@@ -30,8 +30,8 @@ interface CourseTypeFormProps {
     normal_price: number
     discount_type?: string | null
     discount?: number | null
-    start_date?: Date | null
-    end_date?: Date | null
+    start_date?: string | Date | null
+    end_date?: string | Date | null
     is_active: boolean
     is_discount: boolean
     is_voucher: boolean
@@ -50,6 +50,13 @@ export function CourseTypeForm({ initialData, courses, onSubmit, isSubmitting }:
   today.setHours(0, 0, 0, 0)
   const todayStr = format(today, "yyyy-MM-dd")
 
+  // Helper function to convert string dates to Date objects
+  const parseDate = (dateValue: string | Date | null | undefined): Date | null => {
+    if (!dateValue) return null
+    if (dateValue instanceof Date) return dateValue
+    return new Date(dateValue)
+  }
+
   const {
     register,
     handleSubmit,
@@ -67,8 +74,8 @@ export function CourseTypeForm({ initialData, courses, onSubmit, isSubmitting }:
       normal_price: initialData?.normal_price || 0,
       discount_type: (initialData?.discount_type as "percentage" | "fixed" | null) || null,
       discount: initialData?.discount || null,
-      start_date: initialData?.start_date || null,
-      end_date: initialData?.end_date || null,
+      start_date: parseDate(initialData?.start_date),
+      end_date: parseDate(initialData?.end_date),
       is_active: initialData?.is_active ?? true,
       is_discount: initialData?.is_discount || false,
       is_voucher: initialData?.is_voucher || false,
@@ -107,8 +114,8 @@ export function CourseTypeForm({ initialData, courses, onSubmit, isSubmitting }:
         normal_price: initialData.normal_price,
         discount_type: (initialData.discount_type as "percentage" | "fixed" | null) || null,
         discount: initialData.discount,
-        start_date: initialData.start_date,
-        end_date: initialData.end_date,
+        start_date: parseDate(initialData.start_date),
+        end_date: parseDate(initialData.end_date),
         is_active: initialData.is_active,
         is_discount: initialData.is_discount,
         is_voucher: initialData.is_voucher,

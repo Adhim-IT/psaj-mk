@@ -31,12 +31,15 @@ interface SyllabusItem {
   title: string
   sort: number
 }
-
+interface MentorUser {
+  id: string
+  name: string
+  specialization: string
+}
 interface Mentor {
   id: string
   name: string
   specialization: string
-  profile_picture: string
 }
 
 interface ListClassFormProps {

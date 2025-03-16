@@ -53,6 +53,14 @@ export async function getListClasses() {
         created_at: "desc",
       },
       include: {
+        mentors: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            profile_picture: true,
+          },
+        },
         course_transactions: {
           select: {
             id: true,

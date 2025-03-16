@@ -21,7 +21,7 @@ export async function getDashboardStats() {
           },
         },
       }),
-      prisma.articles ? prisma.articles.count() : 0, // Check if article table exists
+      prisma.articles ? prisma.articles.count() : 0,
     ])
 
     return {

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache"
 import { v4 as uuidv4 } from "uuid"
 import { prisma } from "@/lib/prisma"
 import type { CourseTypeFormData } from "@/lib/zod"
+import { CourseTypeTransaction } from "@/types"
 
 // Get all course types
 export async function getCourseTypes() {
@@ -257,5 +258,46 @@ export async function deleteCourseType(id: string) {
   } catch (error) {
     console.error("Error deleting course type:", error)
     return { error: "Gagal menghapus tipe kelas" }
+  }
+}
+
+export async function getCourseTypeBySlug(slug: string): Promise<CourseTypeTransaction | null> {
+  try {
+    const courseType = await prisma.course_types.findUnique({
+      where: {
+        slug,
+        is_active: true,
+      },
+      include: {
+        courses: {
+          select: {
+            title: true,
+            description: true,
+            thumbnail: true,
+          },
+        },
+      },
+    })
+
+    if (!courseType) return null
+
+    return {
+      id: courseType.id,
+      course_id: courseType.course_id,
+      type: courseType.type,
+      batch_number: courseType.batch_number,
+      slug: courseType.slug,
+      normal_price: Number(courseType.normal_price),
+      discount_type: courseType.discount_type || undefined,
+      discount: courseType.discount ? Number(courseType.discount) : undefined,
+      is_active: courseType.is_active,
+      is_discount: courseType.is_discount,
+      course_title: courseType.courses.title,
+      course_description: courseType.courses.description,
+      course_thumbnail: courseType.courses.thumbnail,
+    }
+  } catch (error) {
+    console.error("Error fetching course type:", error)
+    return null
   }
 }

@@ -1,62 +1,50 @@
 import { type NextRequest, NextResponse } from "next/server"
-import crypto from "crypto" // Untuk verifikasi signature
-import prisma from "@/lib/prisma"
-import { CourseTransactionStatus } from "@/types"
 import { getMidtransConfig } from "@/lib/midtrans"
+import { prisma } from "@/lib/prisma"
+import crypto from "crypto"
+import { v4 as uuidv4 } from "uuid"
 
 export async function POST(request: NextRequest) {
   try {
-    const { serverKey } = getMidtransConfig()
     const body = await request.json()
+    const { serverKey } = await getMidtransConfig()
 
-    // Ambil signature dari header Midtrans
-    const notificationSignature = request.headers.get("x-signature") || ""
+    // Verify signature
+    const signatureKey = request.headers.get("x-signature-key")
+    if (signatureKey) {
+      const expectedSignature = crypto
+        .createHash("sha512")
+        .update(body.order_id + body.status_code + body.gross_amount + serverKey)
+        .digest("hex")
 
-    // Verifikasi signature Midtrans
-    const isValidSignature = verifyMidtransSignature(notificationSignature, body, serverKey)
-    if (!isValidSignature) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 403 })
+      if (signatureKey !== expectedSignature) {
+        return NextResponse.json({ error: "Invalid signature" }, { status: 403 })
+      }
     }
 
-    const orderId = body.order_id
-    const transactionStatus = body.transaction_status
-    const fraudStatus = body.fraud_status
-
-    if (!orderId || !transactionStatus) {
-      return NextResponse.json({ error: "Invalid request payload" }, { status: 400 })
-    }
-
-    // Cari transaksi berdasarkan order_id
+    // Find transaction by order_id (transaction code)
     const transaction = await prisma.course_transactions.findFirst({
-      where: { code: orderId },
+      where: { code: body.order_id },
     })
 
     if (!transaction) {
       return NextResponse.json({ error: "Transaction not found" }, { status: 404 })
     }
 
-    let status: CourseTransactionStatus
+    // Update transaction status based on Midtrans notification
+    let status: "paid" | "unpaid" | "failed" = "unpaid"
 
-    // Map status Midtrans ke sistem kita
-    switch (transactionStatus) {
-      case "capture":
-      case "settlement":
-        status = CourseTransactionStatus.PAID
-        break
-
-      case "deny":
-      case "cancel":
-      case "expire":
-        status = CourseTransactionStatus.FAILED
-        break
-
-      case "pending":
-      default:
-        status = CourseTransactionStatus.UNPAID
-        break
+    if (body.transaction_status === "capture" || body.transaction_status === "settlement") {
+      status = "paid"
+    } else if (
+      body.transaction_status === "deny" ||
+      body.transaction_status === "cancel" ||
+      body.transaction_status === "expire"
+    ) {
+      status = "failed"
     }
 
-    // Update status transaksi di database
+    // Update transaction in database
     await prisma.course_transactions.update({
       where: { id: transaction.id },
       data: {
@@ -65,26 +53,57 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // If payment is successful, add student to course
+    if (status === "paid") {
+      // For batch courses, add student to the appropriate batch group
+      if (transaction.type === "batch" && transaction.batch_number) {
+        // Find the course student group for this batch
+        const courseType = await prisma.course_types.findFirst({
+          where: {
+            course_id: transaction.course_id,
+            type: "batch",
+            batch_number: transaction.batch_number,
+          },
+        })
+
+        if (courseType) {
+          // Find student group for this course type
+          const studentGroup = await prisma.course_student_groups.findFirst({
+            where: {
+              course_type_id: courseType.id,
+            },
+          })
+
+          if (studentGroup) {
+            // Check if student is already in the group
+            const existingStudent = await prisma.course_students.findFirst({
+              where: {
+                course_student_group_id: studentGroup.id,
+                student_id: transaction.student_id,
+              },
+            })
+
+            // Add student to group if not already added
+            if (!existingStudent) {
+              await prisma.course_students.create({
+                data: {
+                  id: uuidv4(),
+                  course_student_group_id: studentGroup.id,
+                  student_id: transaction.student_id,
+                  created_at: new Date(),
+                  updated_at: new Date(),
+                },
+              })
+            }
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error processing Midtrans notification:", error)
+    console.error("Notification error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-/**
- * Fungsi untuk memverifikasi signature dari Midtrans
- */
-function verifyMidtransSignature(signature: string, body: any, serverKey: string): boolean {
-  const orderId = body.order_id
-  const statusCode = body.status_code
-  const grossAmount = body.gross_amount
-  const inputSignature = body.signature_key
-
-  const hash = crypto
-    .createHash("sha512")
-    .update(orderId + statusCode + grossAmount + serverKey)
-    .digest("hex")
-
-  return hash === inputSignature
-}

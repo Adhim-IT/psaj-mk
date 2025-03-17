@@ -5,15 +5,33 @@ import { useActionState } from "react"
 import { LoginButton } from "./button"
 import { Eye, EyeOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const LoginForm = () => {
   const [state, formAction, isPending] = useActionState(signInCredentials, null)
   const [showPassword, setShowPassword] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // This helps prevent hydration errors by ensuring the component
+  // only fully renders on the client side
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword)
+
+  if (!isClient) {
+    return (
+      <div className="w-full mx-auto min-h-[400px] flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <div className="h-6 w-32 bg-gray-200 rounded mx-auto mb-4"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full mx-auto">
@@ -51,6 +69,7 @@ const LoginForm = () => {
             placeholder="Masukkan alamat email Anda"
             className="w-full h-10 sm:h-12 px-3 sm:px-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-gray-200 focus:border-[#3182CE] focus:ring-[#3182CE] pr-10 transition-all duration-200"
             autoComplete="email"
+            suppressHydrationWarning
           />
           {state?.error && typeof state.error !== "string" && state.error.fieldErrors?.email && (
             <p className="text-xs sm:text-sm font-medium text-red-500 mt-1">{state.error.fieldErrors.email[0]}</p>
@@ -78,7 +97,8 @@ const LoginForm = () => {
               type={showPassword ? "text" : "password"}
               placeholder="Buat password Anda"
               className="w-full h-10 sm:h-12 px-3 sm:px-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-gray-200 focus:border-[#3182CE] focus:ring-[#3182CE] pr-10 transition-all duration-200"
-              autoComplete="new-password"
+              autoComplete="current-password"
+              suppressHydrationWarning
             />
             <button
               type="button"

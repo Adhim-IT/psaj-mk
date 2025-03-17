@@ -98,6 +98,22 @@ export interface CourseType {
   }
 }
 
+export interface CourseTypeTransaction{
+  id: string
+  course_id: string
+  type: "batch" | "private" | "group"
+  batch_number?: number | null
+  slug: string
+  normal_price: number
+  discount_type?: "percentage" | "fixed" | null
+  discount?: number
+  is_active: boolean
+  is_discount: boolean
+  course_title?: string
+  course_description?: string
+  course_thumbnail?: string
+}
+
 export interface CourseTypeFormData {
   course_id: string
   type: CourseTypeType

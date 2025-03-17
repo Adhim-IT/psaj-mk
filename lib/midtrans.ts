@@ -1,23 +1,12 @@
 "use server"
 
-import type { MidtransConfig } from "@/types"
-
 // Initialize Midtrans configuration
-export function getMidtransConfig(): MidtransConfig {
-  const clientKey = process.env.MIDTRANS_CLIENT_KEY
-  const serverKey = process.env.MIDTRANS_SERVER_KEY
-  const merchantId = process.env.MIDTRANS_MERCHANT_ID
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!clientKey || !serverKey || !merchantId) {
-    throw new Error("Midtrans configuration is incomplete")
-  }
-
+export async function getMidtransConfig() {
   return {
-    clientKey,
-    serverKey,
-    merchantId,
-    isProduction,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY || "",
+    serverKey: process.env.MIDTRANS_SERVER_KEY || "",
+    merchantId: process.env.MIDTRANS_MERCHANT_ID || "",
+    isProduction: false, // Always use sandbox for now
   }
 }
 
@@ -30,9 +19,10 @@ export async function createMidtransTransaction(params: {
 }) {
   try {
     const { orderId, amount, customerName, customerEmail, description } = params
-    const { serverKey, isProduction } = getMidtransConfig()
+    const { serverKey, isProduction } = await getMidtransConfig()
 
-    const apiUrl = isProduction ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com"
+    // Always use sandbox URL
+    const apiUrl = "https://api.sandbox.midtrans.com"
 
     const auth = Buffer.from(`${serverKey}:`).toString("base64")
 

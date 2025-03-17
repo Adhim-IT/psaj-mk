@@ -60,7 +60,7 @@ export function PromoCodeForm({ initialData, isEditing }: PromoCodeFormProps) {
           title: isEditing ? "Promo code updated" : "Promo code created",
           text: isEditing ? "The promo code has been successfully updated." : "A new promo code has been created.",
         }).then(() => {
-          router.push("/admin/dashboard/transaksi/promo-code")
+          router.push("/admin/dashboard/transaksi/code")
           router.refresh()
         })
       } else {

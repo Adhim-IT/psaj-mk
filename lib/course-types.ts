@@ -291,6 +291,7 @@ export async function getCourseTypeBySlug(slug: string): Promise<CourseTypeTrans
       discount_type: courseType.discount_type || undefined,
       discount: courseType.discount ? Number(courseType.discount) : undefined,
       is_active: courseType.is_active,
+      is_voucher: courseType.is_voucher,
       is_discount: courseType.is_discount,
       course_title: courseType.courses.title,
       course_description: courseType.courses.description,

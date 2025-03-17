@@ -91,3 +91,26 @@ export async function deletePromoCode(id: number) {
   }
 }
 
+export async function validatePromoCode(code: string) {
+  try {
+    const promoCode = await prisma.promo_codes.findFirst({
+      where: {
+        code: code,
+        deleted_at: null,
+        valid_until: {
+          gte: new Date(), 
+        },
+        is_used: false, 
+      },
+    })
+
+    if (!promoCode) {
+      return { success: false, error: "Kode promo tidak valid atau sudah kadaluarsa" }
+    }
+
+    return { success: true, data: promoCode }
+  } catch (error) {
+    console.error("Failed to validate promo code:", error)
+    return { success: false, error: "Gagal memvalidasi kode promo" }
+  }
+}

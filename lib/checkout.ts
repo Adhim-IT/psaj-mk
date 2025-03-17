@@ -9,9 +9,12 @@ import type { course_transactions_type } from "@prisma/client"
 interface CheckoutData {
   courseType: CourseTypeTransaction
   promoCode?: string
+  promoDiscountType?: "percentage" | "fixed" | null
+  promoDiscount?: number
 }
 
 export async function initiateCheckout(data: CheckoutData) {
+  console.log("Input Checkout Data:", data);
   const user = await getCurrentUser()
 
   if (!user || !user.studentId) {

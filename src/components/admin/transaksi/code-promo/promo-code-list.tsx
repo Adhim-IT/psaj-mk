@@ -74,7 +74,7 @@ export function PromoCodeList({ promoCodes }: PromoCodeListProps) {
           />
         </div>
         <Button asChild>
-          <Link href="/admin/dashboard/transaksi/promo-code/create">
+          <Link href="/admin/dashboard/transaksi/code/create">
             <Plus className="mr-2 h-4 w-4" /> Add New Promo Code
           </Link>
         </Button>
@@ -121,7 +121,7 @@ export function PromoCodeList({ promoCodes }: PromoCodeListProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.push(`/admin/dashboard/transaksi/promo-code/edit/${promoCode.id}`)}
+                          onClick={() => router.push(`/admin/dashboard/transaksi/code/edit/${promoCode.id}`)}
                         >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit

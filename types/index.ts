@@ -107,6 +107,7 @@ export interface CourseTypeTransaction{
   normal_price: number
   discount_type?: "percentage" | "fixed" | null
   discount?: number
+  is_voucher: boolean
   is_active: boolean
   is_discount: boolean
   course_title?: string

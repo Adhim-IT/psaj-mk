@@ -233,7 +233,6 @@ export interface CourseTransaction {
   students: {
     id: string
     name: string
-    email: string
   }
 }
 

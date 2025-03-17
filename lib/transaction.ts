@@ -118,7 +118,15 @@ export async function getTransactions(studentId?: string) {
       },
     })
 
-    return { transactions: JSON.parse(JSON.stringify(transactions)) }
+    // Convert Decimal objects to numbers
+    const serializedTransactions = transactions.map((transaction) => ({
+      ...transaction,
+      original_price: Number(transaction.original_price),
+      discount: Number(transaction.discount),
+      final_price: Number(transaction.final_price),
+    }))
+
+    return { transactions: serializedTransactions }
   } catch (error) {
     console.error("Error fetching transactions:", error)
     return { error: "Failed to fetch transactions" }

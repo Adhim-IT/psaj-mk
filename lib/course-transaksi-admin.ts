@@ -1,22 +1,23 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import prisma from "@/lib/prisma"
-import type { CourseTransaction, CourseTransactionStatus } from "@/types"
-import { courseTransactionDeleteSchema, type courseTransactionFilterSchema } from "@/lib/zod"
+import { prisma } from "@/lib/prisma"
+import type { courseTransactionFilterSchema } from "@/lib/zod"
 import type { z } from "zod"
 
-export async function getCourseTransactions(filters: z.infer<typeof courseTransactionFilterSchema>) {
+type Filters = z.infer<typeof courseTransactionFilterSchema>
+
+export async function getCourseTransactions(filters: Filters) {
   try {
     const { status, course_id, student_id, search, page, limit } = filters
-
     const skip = (page - 1) * limit
 
+    // Build where clause
     const where: any = {
       deleted_at: null,
     }
 
-    if (status) {
+    if (status && status !== "unpaid") {
       where.status = status
     }
 
@@ -30,24 +31,28 @@ export async function getCourseTransactions(filters: z.infer<typeof courseTransa
 
     if (search) {
       where.OR = [
-        { code: { contains: search } },
-        { courses: { title: { contains: search } } },
-        { students: { name: { contains: search } } },
+        { code: { contains: search, mode: "insensitive" } },
+        { courses: { title: { contains: search, mode: "insensitive" } } },
+        { students: { name: { contains: search, mode: "insensitive" } } },
+        { students: { email: { contains: search, mode: "insensitive" } } },
       ]
     }
 
+    // Get total count
+    const total = await prisma.course_transactions.count({ where })
+
+    // Get transactions
     const transactions = await prisma.course_transactions.findMany({
       where,
       include: {
         courses: {
           select: {
-            id: true,
             title: true,
+            thumbnail: true,
           },
         },
         students: {
           select: {
-            id: true,
             name: true,
           },
         },
@@ -59,10 +64,16 @@ export async function getCourseTransactions(filters: z.infer<typeof courseTransa
       take: limit,
     })
 
-    const total = await prisma.course_transactions.count({ where })
+    // Convert Decimal objects to numbers
+    const serializedTransactions = transactions.map((transaction) => ({
+      ...transaction,
+      original_price: Number(transaction.original_price),
+      discount: Number(transaction.discount),
+      final_price: Number(transaction.final_price),
+    }))
 
     return {
-      data: transactions as CourseTransaction[],
+      data: serializedTransactions,
       meta: {
         total,
         page,
@@ -71,7 +82,7 @@ export async function getCourseTransactions(filters: z.infer<typeof courseTransa
       },
     }
   } catch (error) {
-    console.error("Error getting course transactions:", error)
+    console.error("Error fetching course transactions:", error)
     throw new Error("Failed to fetch course transactions")
   }
 }
@@ -79,17 +90,16 @@ export async function getCourseTransactions(filters: z.infer<typeof courseTransa
 export async function getCourseTransactionById(id: string) {
   try {
     const transaction = await prisma.course_transactions.findUnique({
-      where: { id, deleted_at: null },
+      where: { id },
       include: {
         courses: {
           select: {
-            id: true,
             title: true,
+            thumbnail: true,
           },
         },
         students: {
           select: {
-            id: true,
             name: true,
           },
         },
@@ -97,29 +107,24 @@ export async function getCourseTransactionById(id: string) {
     })
 
     if (!transaction) {
-      throw new Error("Course transaction not found")
+      throw new Error("Transaction not found")
     }
 
-    return transaction as CourseTransaction
+    // Convert Decimal objects to numbers
+    return {
+      ...transaction,
+      original_price: Number(transaction.original_price),
+      discount: Number(transaction.discount),
+      final_price: Number(transaction.final_price),
+    }
   } catch (error) {
-    console.error("Error getting course transaction:", error)
+    console.error("Error fetching course transaction:", error)
     throw new Error("Failed to fetch course transaction")
   }
 }
 
-export async function deleteCourseTransaction(data: z.infer<typeof courseTransactionDeleteSchema>) {
+export async function deleteCourseTransaction({ id }: { id: string }) {
   try {
-    const { id } = courseTransactionDeleteSchema.parse(data)
-
-    const transaction = await prisma.course_transactions.findUnique({
-      where: { id, deleted_at: null },
-    })
-
-    if (!transaction) {
-      throw new Error("Course transaction not found")
-    }
-
-    // Soft delete by updating deleted_at field
     await prisma.course_transactions.update({
       where: { id },
       data: {
@@ -132,53 +137,6 @@ export async function deleteCourseTransaction(data: z.infer<typeof courseTransac
   } catch (error) {
     console.error("Error deleting course transaction:", error)
     return { success: false, error: "Failed to delete course transaction" }
-  }
-}
-
-export async function getMidtransStatus(orderId: string) {
-  try {
-    const midtransServerKey = process.env.MIDTRANS_SERVER_KEY
-
-    if (!midtransServerKey) {
-      throw new Error("Midtrans server key is not configured")
-    }
-
-    const auth = Buffer.from(`${midtransServerKey}:`).toString("base64")
-
-    const response = await fetch(`${process.env.MIDTRANS_API_URL}/v2/${orderId}/status`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${auth}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error("Failed to get transaction status from Midtrans")
-    }
-
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error("Error getting Midtrans status:", error)
-    throw new Error("Failed to get transaction status")
-  }
-}
-
-export async function updateTransactionStatus(id: string, status: CourseTransactionStatus) {
-  try {
-    await prisma.course_transactions.update({
-      where: { id },
-      data: {
-        status,
-        updated_at: new Date(),
-      },
-    })
-
-    revalidatePath("/admin/transaksi/kelas")
-    return { success: true }
-  } catch (error) {
-    console.error("Error updating transaction status:", error)
-    throw new Error("Failed to update transaction status")
   }
 }
 

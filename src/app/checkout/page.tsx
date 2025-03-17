@@ -12,13 +12,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import type { CourseTypeTransaction } from "@/types"
-import { useSession } from "next-auth/react" // Gunakan useSession untuk cek status login di client-side
+import { useSession } from "next-auth/react"
+import Script from "next/script"
+
+// Deklarasi tipe untuk Midtrans Snap
+declare global {
+  interface Window {
+    snap?: {
+      pay: (token: string, options: any) => void
+    }
+  }
+}
 
 export default function CheckoutPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const courseTypeSlug = searchParams.get("course")
-  const { data: session, status } = useSession() // Tambahkan status
+  const { data: session, status } = useSession()
 
   const [courseType, setCourseType] = useState<CourseTypeTransaction | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,6 +38,7 @@ export default function CheckoutPage() {
   const [processingPayment, setProcessingPayment] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [midtransLoaded, setMidtransLoaded] = useState(false)
 
   // Cek session dari client-side
   useEffect(() => {
@@ -37,7 +48,6 @@ export default function CheckoutPage() {
 
     if (status === "unauthenticated") {
       console.log("User is not authenticated")
-      // Tidak redirect otomatis, biarkan user melihat halaman checkout
     } else if (status === "authenticated" && session) {
       console.log("User is authenticated:", session.user)
     }
@@ -109,6 +119,17 @@ export default function CheckoutPage() {
       return
     }
 
+    // Cek apakah Midtrans sudah dimuat
+    if (!window.snap) {
+      Swal.fire({
+        title: "Checkout gagal",
+        text: "Sistem pembayaran belum siap. Silakan coba lagi.",
+        icon: "error",
+        confirmButtonColor: "#4A90E2",
+      })
+      return
+    }
+
     setProcessingPayment(true)
     setError(null) // Reset error state
 
@@ -123,40 +144,63 @@ export default function CheckoutPage() {
         promoCode: promoApplied ? promoCode : undefined,
       })
 
+      // Dapatkan token Midtrans dari server
+      const response = await fetch("/api/midtrans/create-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseType,
+          promoCode: promoApplied ? promoCode : undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "Gagal memproses pembayaran")
+      }
+
+      // Simpan transaksi ke database
       const result = await initiateCheckout({
         courseType,
         promoCode: promoApplied ? promoCode : undefined,
       })
 
-      console.log("Checkout result:", result)
-
       if (result.error) {
-        setError(result.error)
-        Swal.fire({
-          title: "Checkout gagal",
-          text: result.error,
-          icon: "error",
-          confirmButtonColor: "#4A90E2",
-        })
-
-        if (result.redirectUrl) {
-          router.push(result.redirectUrl)
-        }
-        return
+        throw new Error(result.error)
       }
 
-      if (result.success) {
-        if (result.paymentUrl) {
-          // Redirect to Midtrans payment page
-          window.location.href = result.paymentUrl
-        } else if (result.bankTransfer) {
-          // Redirect to payment instructions page
-          router.push(`/checkout/payment?id=${result.transactionId}`)
-        } else {
-          // Fallback to success page
-          router.push(`/checkout/success?id=${result.transactionId}`)
-        }
-      }
+      // Tampilkan popup Midtrans Snap
+      window.snap.pay(data.token, {
+        onSuccess: (result: any) => {
+          console.log("Payment success:", result)
+          router.push(`/checkout/success?id=${result.transactionId || result.order_id}`)
+        },
+        onPending: (result: any) => {
+          console.log("Payment pending:", result)
+          router.push(`/checkout/payment?id=${result.transactionId || result.order_id}`)
+        },
+        onError: (result: any) => {
+          console.error("Payment error:", result)
+          Swal.fire({
+            title: "Pembayaran gagal",
+            text: "Terjadi kesalahan saat memproses pembayaran",
+            icon: "error",
+            confirmButtonColor: "#4A90E2",
+          })
+        },
+        onClose: () => {
+          console.log("Customer closed the popup without finishing the payment")
+          Swal.fire({
+            title: "Pembayaran dibatalkan",
+            text: "Anda menutup halaman pembayaran sebelum menyelesaikan transaksi",
+            icon: "warning",
+            confirmButtonColor: "#4A90E2",
+          })
+        },
+      })
     } catch (err) {
       console.error("Checkout error:", err)
       const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan saat memproses pembayaran"
@@ -207,169 +251,178 @@ export default function CheckoutPage() {
   const finalPrice = Math.max(courseType.normal_price - discountAmount - (promoApplied ? promoDiscount : 0), 0)
 
   return (
-    <div className="container max-w-6xl py-12 px-4 md:px-6 mt-16">
-      <h1 className="text-3xl font-bold mb-8 text-center">Checkout</h1>
+    <>
+      {/* Load Midtrans Snap JavaScript */}
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        onLoad={() => setMidtransLoaded(true)}
+      />
 
-      {/* Tampilkan peringatan jika tidak ada session */}
-      {status === "unauthenticated" && authChecked && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-          <p className="text-yellow-700 flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2" />
-            Anda belum login. Silakan{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto text-blue-600"
-              onClick={() => router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)}
-            >
-              login terlebih dahulu
-            </Button>{" "}
-            untuk melanjutkan checkout.
-          </p>
-        </div>
-      )}
+      <div className="container max-w-6xl py-12 px-4 md:px-6 mt-16">
+        <h1 className="text-3xl font-bold mb-8 text-center">Checkout</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Order Summary */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ringkasan Pesanan</CardTitle>
-              <CardDescription>Detail kelas yang akan Anda beli</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="relative w-full md:w-48 h-32 rounded-lg overflow-hidden">
-                  <Image
-                    src={courseType.course_thumbnail || "/placeholder.svg?height=200&width=400"}
-                    alt={courseType.course_title || "Course"}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold">{courseType.course_title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                    {courseType.course_description || "Tidak ada deskripsi"}
-                  </p>
+        {/* Tampilkan peringatan jika tidak ada session */}
+        {status === "unauthenticated" && authChecked && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-yellow-700 flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              Anda belum login. Silakan{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto text-blue-600"
+                onClick={() => router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)}
+              >
+                login terlebih dahulu
+              </Button>{" "}
+              untuk melanjutkan checkout.
+            </p>
+          </div>
+        )}
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {courseType.type === "batch" ? "Batch" : courseType.type === "private" ? "Private" : "Group"}
-                    </div>
-                    {courseType.batch_number && (
-                      <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                        Batch {courseType.batch_number}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Order Summary */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ringkasan Pesanan</CardTitle>
+                <CardDescription>Detail kelas yang akan Anda beli</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="relative w-full md:w-48 h-32 rounded-lg overflow-hidden">
+                    <Image
+                      src={courseType.course_thumbnail || "/placeholder.svg?height=200&width=400"}
+                      alt={courseType.course_title || "Course"}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold">{courseType.course_title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {courseType.course_description || "Tidak ada deskripsi"}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                        {courseType.type === "batch" ? "Batch" : courseType.type === "private" ? "Private" : "Group"}
                       </div>
-                    )}
+                      {courseType.batch_number && (
+                        <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                          Batch {courseType.batch_number}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Promo Code */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Kode Promo</CardTitle>
-              <CardDescription>Masukkan kode promo jika Anda memilikinya</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Masukkan kode promo"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    disabled={promoApplied}
-                  />
+            {/* Promo Code */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Kode Promo</CardTitle>
+                <CardDescription>Masukkan kode promo jika Anda memilikinya</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Masukkan kode promo"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      disabled={promoApplied}
+                    />
+                  </div>
+                  <Button
+                    variant={promoApplied ? "outline" : "default"}
+                    onClick={handleApplyPromo}
+                    disabled={promoApplied || !promoCode.trim()}
+                  >
+                    {promoApplied ? (
+                      <>
+                        <CheckCircle className="mr-2 h-4 w-4" /> Diterapkan
+                      </>
+                    ) : (
+                      "Terapkan"
+                    )}
+                  </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Payment Summary */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Ringkasan Pembayaran</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Harga Kelas</span>
+                    <span>Rp {courseType.normal_price.toLocaleString("id-ID")}</span>
+                  </div>
+
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Diskon Kelas</span>
+                      <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
+                    </div>
+                  )}
+
+                  {promoApplied && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Diskon Promo</span>
+                      <span>- Rp {promoDiscount.toLocaleString("id-ID")}</span>
+                    </div>
+                  )}
+
+                  <Separator />
+
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total</span>
+                    <span>Rp {finalPrice.toLocaleString("id-ID")}</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
                 <Button
-                  variant={promoApplied ? "outline" : "default"}
-                  onClick={handleApplyPromo}
-                  disabled={promoApplied || !promoCode.trim()}
+                  className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]"
+                  size="lg"
+                  onClick={handleCheckout}
+                  disabled={processingPayment || status === "unauthenticated" || !midtransLoaded}
                 >
-                  {promoApplied ? (
+                  {processingPayment ? (
                     <>
-                      <CheckCircle className="mr-2 h-4 w-4" /> Diterapkan
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses
                     </>
                   ) : (
-                    "Terapkan"
+                    "Bayar Sekarang"
                   )}
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardFooter>
+            </Card>
 
-        {/* Payment Summary */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Ringkasan Pembayaran</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Harga Kelas</span>
-                  <span>Rp {courseType.normal_price.toLocaleString("id-ID")}</span>
-                </div>
-
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Diskon Kelas</span>
-                    <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
-                  </div>
-                )}
-
-                {promoApplied && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Diskon Promo</span>
-                    <span>- Rp {promoDiscount.toLocaleString("id-ID")}</span>
-                  </div>
-                )}
-
-                <Separator />
-
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>Rp {finalPrice.toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]"
-                size="lg"
-                onClick={handleCheckout}
-                disabled={processingPayment || status === "unauthenticated"}
-              >
-                {processingPayment ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses
-                  </>
-                ) : (
-                  "Bayar Sekarang"
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <div className="mt-6 text-sm text-muted-foreground">
-            <p>
-              Dengan melakukan pembayaran, Anda menyetujui{" "}
-              <a href="#" className="text-blue-600 hover:underline">
-                Syarat dan Ketentuan
-              </a>{" "}
-              serta{" "}
-              <a href="#" className="text-blue-600 hover:underline">
-                Kebijakan Privasi
-              </a>{" "}
-              kami.
-            </p>
+            <div className="mt-6 text-sm text-muted-foreground">
+              <p>
+                Dengan melakukan pembayaran, Anda menyetujui{" "}
+                <a href="#" className="text-blue-600 hover:underline">
+                  Syarat dan Ketentuan
+                </a>{" "}
+                serta{" "}
+                <a href="#" className="text-blue-600 hover:underline">
+                  Kebijakan Privasi
+                </a>{" "}
+                kami.
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

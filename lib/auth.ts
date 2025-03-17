@@ -1,6 +1,6 @@
 "use server"
+import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth" // Import auth dari konfigurasi NextAuth utama
 
 interface User {
   id: string
@@ -14,22 +14,15 @@ interface User {
  */
 export async function getCurrentUser(): Promise<User | null> {
   try {
-    // Gunakan auth() dari NextAuth untuk mendapatkan session
+    // Use the auth() function from NextAuth
     const session = await auth()
 
-    // Jika tidak ada session, return null
-    if (!session || !session.user) {
-      console.log("No session found via auth()")
+    if (!session || !session.user || !session.user.id) {
+      console.log("No valid session found")
       return null
     }
 
-    // Log session untuk debugging
-    console.log("Session found:", {
-      userId: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-    })
-
+    // Fetch the user from the database to get the studentId
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: {
@@ -42,7 +35,7 @@ export async function getCurrentUser(): Promise<User | null> {
     })
 
     if (!user) {
-      console.log("User not found in database with ID:", session.user.id)
+      console.log("User not found in database")
       return null
     }
 

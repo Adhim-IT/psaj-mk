@@ -207,7 +207,6 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
                   <TableCell>
                     <div>
                       <div>{transaction.students.name}</div>
-                      <div className="text-sm text-muted-foreground">{transaction.students.email}</div>
                     </div>
                   </TableCell>
                   <TableCell>{formatPrice(transaction.final_price)}</TableCell>

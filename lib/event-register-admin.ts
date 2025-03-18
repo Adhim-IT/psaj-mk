@@ -104,4 +104,22 @@ export async function updateRegistrantStatus(data: z.infer<typeof updateRegistra
     return { success: false, error: "Failed to update registrant status" }
   }
 }
+export async function deleteRegistrant(id: string) {
+  try {
+    await prisma.event_registrants.update({
+      where: { id },
+      data: {
+        deleted_at: new Date(),
+        updated_at: new Date(),
+      },
+    })
+
+    revalidatePath("/admin/transaksi/event")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting registrant:", error)
+    return { success: false, error: "Failed to delete registrant" }
+  }
+}
+
 

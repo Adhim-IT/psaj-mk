@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/pagination"
 import { Badge } from "@/components/ui/badge"
 import { DialogImage } from "@/components/ui/dialog-image"
-import { updateRegistrantStatus } from "@/lib/event-register-admin"
+import { updateRegistrantStatus, deleteRegistrant } from "@/lib/event-register-admin"
 import { type EventRegistrant, EventRegistrantStatus } from "@/types"
 
 interface RegistrantTableProps {
@@ -100,6 +100,38 @@ export function EventRegistrantTable({ registrants, meta }: RegistrantTableProps
     }
   }
 
+  const handleDelete = async (registrant: EventRegistrant) => {
+    const result = await Swal.fire({
+      title: "Hapus Pendaftar",
+      text: `Apakah Anda yakin ingin menghapus pendaftaran untuk ${registrant.students.name}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        setIsUpdating(true)
+        const result = await deleteRegistrant(registrant.id)
+
+        if (result.success) {
+          Swal.fire("Berhasil!", "Pendaftar telah dihapus.", "success")
+          router.refresh()
+        } else {
+          Swal.fire("Error!", "Gagal menghapus pendaftar.", "error")
+        }
+      } catch (error) {
+        console.error("Error deleting registrant:", error)
+        Swal.fire("Error!", "Gagal menghapus pendaftar.", "error")
+      } finally {
+        setIsUpdating(false)
+      }
+    }
+  }
+
   const getStatusBadge = (status: EventRegistrantStatus) => {
     switch (status) {
       case EventRegistrantStatus.PAID:
@@ -125,7 +157,6 @@ export function EventRegistrantTable({ registrants, meta }: RegistrantTableProps
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-     
         <form onSubmit={handleSearch} className="flex items-center gap-2 w-full">
           <Input
             placeholder="Cari event, nama, atau nomor telepon..."
@@ -147,7 +178,6 @@ export function EventRegistrantTable({ registrants, meta }: RegistrantTableProps
             <SelectItem value={EventRegistrantStatus.PAID}>Dibayar</SelectItem>
           </SelectContent>
         </Select>
-        
       </div>
 
       <div className="rounded-md border">
@@ -194,16 +224,26 @@ export function EventRegistrantTable({ registrants, meta }: RegistrantTableProps
                   <TableCell>{formatDate(registrant.created_at)}</TableCell>
                   <TableCell>{getStatusBadge(registrant.status)}</TableCell>
                   <TableCell className="text-right">
-                    {registrant.status === EventRegistrantStatus.PENDING && (
+                    <div className="flex justify-end gap-2">
+                      {registrant.status === EventRegistrantStatus.PENDING && (
+                        <Button
+                          onClick={() => handleConfirmPayment(registrant)}
+                          disabled={isUpdating}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Konfirmasi Pembayaran
+                        </Button>
+                      )}
                       <Button
-                        onClick={() => handleConfirmPayment(registrant)}
+                        onClick={() => handleDelete(registrant)}
                         disabled={isUpdating}
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
                       >
-                        Konfirmasi Pembayaran
+                        Hapus
                       </Button>
-                    )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

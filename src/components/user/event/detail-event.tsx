@@ -1,11 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Share2, User, Users } from "lucide-react"
-import Link from "next/link"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { EventRegistrationModal } from "./event-registration-modal"
+import Swal from "sweetalert2"
+import { isAuthenticated, isStudent } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 
 interface Mentor {
   id: string
@@ -43,12 +46,241 @@ const formatPrice = (price: number) => {
 
 export default function EventDetail({ event }: { event: Event }) {
   const [copied, setCopied] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [registrationStatus, setRegistrationStatus] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false)
+  const [isUserStudent, setIsUserStudent] = useState(false)
+  const router = useRouter()
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const handleRegister = async () => {
+    // If user is already registered and payment is confirmed, redirect to WhatsApp
+    if (registrationStatus === "paid") {
+      window.open(event.whatsapp_group_link, "_blank")
+      return
+    }
+
+    // If user already has a pending registration, show message
+    if (registrationStatus === "pending") {
+      Swal.fire({
+        title: "Pendaftaran Dalam Proses",
+        text: "Anda sudah mendaftar untuk event ini. Menunggu konfirmasi admin.",
+        icon: "info",
+        confirmButtonColor: "#4A90E2",
+      })
+      return
+    }
+
+    // If user's registration was rejected, show message
+    if (registrationStatus === "rejected") {
+      Swal.fire({
+        title: "Pendaftaran Ditolak",
+        text: "Pendaftaran Anda untuk event ini telah ditolak. Silakan hubungi admin untuk informasi lebih lanjut.",
+        icon: "error",
+        confirmButtonColor: "#4A90E2",
+      })
+      return
+    }
+
+    // Check if user is authenticated
+    if (!isUserAuthenticated) {
+      Swal.fire({
+        title: "Login Diperlukan",
+        text: "Anda harus login terlebih dahulu untuk mendaftar event ini",
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonText: "Login Sekarang",
+        cancelButtonText: "Batal",
+        confirmButtonColor: "#4A90E2",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirect to login page with return URL
+          router.push(`/login?returnUrl=/events/${event.slug}`)
+        }
+      })
+      return
+    }
+
+    // Check if user is a student
+    if (!isUserStudent) {
+      Swal.fire({
+        title: "Profil Belum Lengkap",
+        text: "Anda harus melengkapi profil sebagai student terlebih dahulu",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Lengkapi Profil",
+        cancelButtonText: "Batal",
+        confirmButtonColor: "#4A90E2",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirect to complete profile page
+          router.push("/profile/complete")
+        }
+      })
+      return
+    }
+
+    try {
+      // Use the event status API instead of a separate check registration API
+      // This avoids having to create a new API endpoint
+      const response = await fetch(`/api/event-status/${event.id}`)
+      if (!response.ok) {
+        throw new Error("Failed to check registration status")
+      }
+
+      const data = await response.json()
+
+      if (data.registered) {
+        // User is already registered, show appropriate message based on status
+        if (data.status === "pending") {
+          Swal.fire({
+            title: "Pendaftaran Dalam Proses",
+            text: "Anda sudah mendaftar untuk event ini. Menunggu konfirmasi admin.",
+            icon: "info",
+            confirmButtonColor: "#4A90E2",
+          })
+        } else if (data.status === "paid") {
+          Swal.fire({
+            title: "Sudah Terdaftar",
+            text: "Anda sudah terdaftar dan pembayaran sudah dikonfirmasi.",
+            icon: "success",
+            confirmButtonColor: "#4A90E2",
+          })
+        } else if (data.status === "rejected") {
+          Swal.fire({
+            title: "Pendaftaran Ditolak",
+            text: "Pendaftaran Anda untuk event ini telah ditolak.",
+            icon: "error",
+            confirmButtonColor: "#4A90E2",
+          })
+        }
+        return
+      }
+
+      // If not registered, open the registration modal
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error("Error checking registration:", error)
+      Swal.fire({
+        title: "Error",
+        text: "Terjadi kesalahan saat memeriksa status pendaftaran",
+        icon: "error",
+        confirmButtonColor: "#4A90E2",
+      })
+    }
+  }
+
+  const handleSubmitRegistration = async (phoneNumber: string, paymentProof: File | null) => {
+    const formData = new FormData()
+    formData.append("eventId", event.id)
+    formData.append("phoneNumber", phoneNumber)
+
+    if (paymentProof) {
+      formData.append("paymentProof", paymentProof)
+    }
+
+    try {
+      const response = await fetch("/api/event-registration", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+
+        // Handle specific error cases
+        if (response.status === 409) {
+          throw new Error("Anda sudah terdaftar untuk event ini")
+        } else {
+          throw new Error(errorData.error || "Gagal mendaftar")
+        }
+      }
+
+      // Update registration status
+      await checkRegistrationStatus()
+    } catch (error) {
+      console.error("Registration error:", error)
+      throw error
+    }
+  }
+
+  const checkRegistrationStatus = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/event-status/${event.id}`)
+      const data = await response.json()
+
+      if (data.registered) {
+        setRegistrationStatus(data.status)
+      } else {
+        setRegistrationStatus(null)
+      }
+    } catch (error) {
+      console.error("Error checking registration status:", error)
+      Swal.fire({
+        title: "Error",
+        text: "Gagal memeriksa status pendaftaran",
+        icon: "error",
+        confirmButtonColor: "#4A90E2",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // Check authentication status
+    const checkAuth = async () => {
+      try {
+        const authenticated = await isAuthenticated()
+        setIsUserAuthenticated(authenticated)
+
+        if (authenticated) {
+          const studentStatus = await isStudent()
+          setIsUserStudent(studentStatus)
+
+          // If user is authenticated and is a student, check registration status
+          if (studentStatus) {
+            await checkRegistrationStatus()
+          } else {
+            setIsLoading(false)
+          }
+        } else {
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error)
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
+
+    // Poll for status updates every 30 seconds if pending
+    const intervalId = setInterval(() => {
+      if (isUserAuthenticated && isUserStudent && registrationStatus === "pending") {
+        checkRegistrationStatus()
+      }
+    }, 30000)
+
+    return () => clearInterval(intervalId)
+  }, [event.id, registrationStatus])
+
+  const getButtonText = () => {
+    if (isLoading) return "Memuat..."
+    if (registrationStatus === "paid") return "Masuk Grup WhatsApp"
+    if (registrationStatus === "pending") return "Menunggu Konfirmasi"
+    if (registrationStatus === "rejected") return "Pendaftaran Ditolak"
+    return "Daftar Sekarang"
+  }
+
+  const isButtonDisabled = isLoading || registrationStatus === "rejected"
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl mt-10">
@@ -181,12 +413,38 @@ export default function EventDetail({ event }: { event: Event }) {
               )}
             </div>
 
-            <Button asChild className="w-full bg-[#4A90E2] hover:bg-[#3178c6]">
-              <Link href={`/checkout?event_id=${event.id}`}>Daftar Sekarang</Link>
+            <Button
+              onClick={handleRegister}
+              disabled={isButtonDisabled}
+              className={`w-full ${
+                registrationStatus === "paid" ? "bg-green-500 hover:bg-green-600" : "bg-[#4A90E2] hover:bg-[#3178c6]"
+              } ${registrationStatus === "pending" ? "opacity-70" : ""} ${
+                registrationStatus === "rejected" ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              {getButtonText()}
             </Button>
+
+            {registrationStatus === "rejected" && (
+              <p className="text-red-500 text-sm mt-2 text-center">
+                Pembayaran Anda ditolak. Silakan hubungi admin untuk informasi lebih lanjut.
+              </p>
+            )}
+
+            {registrationStatus === "pending" && (
+              <p className="text-amber-500 text-sm mt-2 text-center">Menunggu konfirmasi pembayaran dari admin.</p>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Registration Modal */}
+      <EventRegistrationModal
+        event={event}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmitRegistration}
+      />
     </div>
   )
 }

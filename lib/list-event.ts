@@ -98,6 +98,90 @@ export async function getEventById(id: string) {
     return { success: false, error: "Failed to fetch event" }
   }
 }
+export async function getEventBySlug(slug: string) {
+  try {
+    const event = await prisma.events.findFirst({
+      where: {
+        slug: slug,
+        is_active: true, 
+      },
+      include: {
+        mentors: { select: { id: true, name: true, specialization: true, profile_picture: true } },
+        event_registrants: { select: { id: true } },
+      },
+    });
+
+    if (!event) {
+      return {
+        success: false,
+        error: "Event not found",
+      }
+    }
+
+    // ✅ Convert Decimal to number
+    const serializedEvent = serializeData(event);
+
+    return {
+      success: true,
+      data: serializedEvent,
+    }
+  } catch (error) {
+    console.error("Error fetching event by slug:", error)
+    return {
+      success: false,
+      error: "Failed to fetch event",
+    }
+  }
+}
+
+
+export async function getUpcomingEvents(limit?: number) {
+  try {
+    const now = new Date()
+
+    const events = await prisma.events.findMany({
+      where: {
+        is_active: true,
+        start_date: {
+          gte: now,
+        },
+      },
+      include: {
+        mentors: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            profile_picture: true,
+          },
+        },
+        event_registrants: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        start_date: "asc",
+      },
+      take: limit || undefined,
+    })
+
+    // Serialize the data to handle Decimal objects
+    const serializedEvents = serializeData(events)
+
+    return {
+      success: true,
+      data: serializedEvents,
+    }
+  } catch (error) {
+    console.error("Error fetching upcoming events:", error)
+    return {
+      success: false,
+      error: "Failed to fetch upcoming events",
+    }
+  }
+}
 
 // Create a new event
 export async function createEvent(data: EventFormData) {

@@ -1,3 +1,4 @@
+"use server"
 import type { Mentor } from "@/types"
 import prisma from "./prisma"
 

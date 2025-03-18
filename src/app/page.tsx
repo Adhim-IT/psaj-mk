@@ -8,9 +8,10 @@ import { useState, useEffect } from "react"
 import CoursePopular from "@/src/components/user/kelas/Populer-course"
 import MentorSection from "@/components/user/Mentor"
 import AboutSection from "@/components/user/About"
-import UpcomingEvents from "@/components/user/upcoming-events"
 import Navbar from "../components/user/Navbar"
 import Footer from "../components/user/Footer"
+import UpcomingEvents from "@/components/user/event/upcoming-events"
+// import ListEventsPage from "@/components/user/event/list-event"
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -19,7 +20,6 @@ export default function Home() {
     const hadPreviousSession = typeof window !== "undefined" && localStorage.getItem("previouslyLoggedIn") === "false"
 
     if (status === "authenticated") {
-      
       localStorage.setItem("previouslyLoggedIn", "true")
     } else if (status === "unauthenticated" && hadPreviousSession) {
       signOut({ callbackUrl: "/login" })

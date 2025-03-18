@@ -38,7 +38,7 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
   }
 
   return (
-    <div className="min-h-screen bg-background mt-24">
+    <div className="min-h-screen bg-background mt-10">
       {/* Hero Section - Modern gradient with smoother transition */}
       <div className="bg-gradient-to-r from-[#4a89dc] via-[#5596DF] to-[#5596DF] text-primary-foreground py-20 px-6 shadow-md relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/placeholder.svg?height=100&width=100')] opacity-5 bg-repeat"></div>

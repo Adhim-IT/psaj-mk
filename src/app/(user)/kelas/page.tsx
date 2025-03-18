@@ -26,7 +26,7 @@ type CourseData = {
 
 // Enhanced PageHeader component with animations
 const PageHeader = ({ title }: { title: string }) => (
-  <div className="bg-gradient-to-r from-[#5596DF] to-[#6ba5e7] text-white py-32 px-6 mt-24 min-h-[300px] flex items-center relative overflow-hidden">
+  <div className="bg-gradient-to-r from-[#5596DF] to-[#6ba5e7] text-white py-32 px-6 mt-10 min-h-[300px] flex items-center relative overflow-hidden">
     {/* Animated background circles */}
     <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-white/10 rounded-full blur-xl animate-pulse"></div>
     <div className="absolute bottom-[-100px] left-[-20px] w-80 h-80 bg-white/5 rounded-full blur-xl animate-pulse delay-700"></div>

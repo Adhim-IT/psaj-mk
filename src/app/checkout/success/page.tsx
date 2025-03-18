@@ -7,6 +7,8 @@ import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { getTransactionById } from "@/lib/checkout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import Navbar from "@/components/user/Navbar"
+import Footer from "@/components/user/Footer"
 
 export default function CheckoutSuccessPage() {
   const router = useRouter()
@@ -45,32 +47,32 @@ export default function CheckoutSuccessPage() {
     loadTransaction()
   }, [transactionId])
 
-  if (loading) {
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <Loader2 className="h-12 w-12 animate-spin text-[#4A90E2]" />
+          <p className="mt-4 text-lg text-gray-600">Memuat data transaksi...</p>
+        </div>
+      )
+    }
+
+    if (error || !transaction) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <AlertCircle className="h-12 w-12 text-red-500" />
+          <p className="mt-4 text-lg text-gray-800 font-medium">{error || "Transaksi tidak ditemukan"}</p>
+          <Button className="mt-6" onClick={() => router.push("/kelas")}>
+            Kembali ke Daftar Kelas
+          </Button>
+        </div>
+      )
+    }
+
+    const isPaid = transaction.status === "paid"
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-[#4A90E2]" />
-        <p className="mt-4 text-lg text-gray-600">Memuat data transaksi...</p>
-      </div>
-    )
-  }
-
-  if (error || !transaction) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="mt-4 text-lg text-gray-800 font-medium">{error || "Transaksi tidak ditemukan"}</p>
-        <Button className="mt-6" onClick={() => router.push("/kelas")}>
-          Kembali ke Daftar Kelas
-        </Button>
-      </div>
-    )
-  }
-
-  const isPaid = transaction.status === "paid"
-
-  return (
-    <div className="container max-w-3xl py-12 px-4 md:px-6 mt-16">
-      <Card className="border-2 border-green-100">
+      <Card className="border-2 border-green-100 w-full max-w-3xl mx-auto mt-24">
         <CardHeader className="bg-green-50 text-center">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
@@ -154,7 +156,15 @@ export default function CheckoutSuccessPage() {
           </div>
         </CardFooter>
       </Card>
-    </div>
+    )
+  }
+
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen flex items-center justify-center py-12 px-4">{renderContent()}</main>
+      <Footer />
+    </>
   )
 }
 

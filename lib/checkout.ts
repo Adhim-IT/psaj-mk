@@ -116,4 +116,48 @@ export async function initiateCheckout(data: CheckoutData) {
     return { error: "Gagal memproses pembayaran" }
   }
 }
+export async function getTransactionById(transactionId: string) {
+  try {
+    if (!transactionId) {
+      return { error: "Transaksi ID diperlukan" }
+    }
+    const transaction = await prisma.course_transactions.findUnique({
+      where: {
+        id: transactionId,
+      },
+      include: {
+        courses: {
+          select: {
+            id: true,
+            title: true,
+            thumbnail: true,
+          },
+        },
+        students: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if (!transaction) {
+      return { error: "Transaksi tidak ditemukan" }
+    }
+    return {
+      transaction: {
+        ...transaction,
+      original_price: Number(transaction.original_price),
+      discount: Number(transaction.discount),
+      final_price: Number(transaction.final_price),
+      },
+    };
+
+    return { transaction }
+  } catch (error) {
+    console.error("Error fetching transaction:", error)
+    return { error: "Gagal memuat data transaksi" }
+  }
+}
 

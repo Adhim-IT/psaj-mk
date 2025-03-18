@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { CalendarDays, Users, User, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { CourseType } from "@/types"
 
 interface CourseTypeSelectionProps {
@@ -75,21 +74,30 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
     const typeLabel = courseType.type === "batch" ? "Batch" : courseType.type === "private" ? "Private" : "Group"
 
     return (
-      <Card key={courseType.id} className="overflow-hidden transition-all duration-200 hover:shadow-md">
-        <CardHeader className="pb-2">
+      <Card
+        key={courseType.id}
+        className="overflow-hidden transition-all duration-200 hover:shadow-lg border-[#E5E7EB] group min-h-[380px] flex flex-col"
+      >
+        <CardHeader className="pb-2 bg-gradient-to-r from-[#F9FAFB] to-[#F3F4F6]">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-full bg-blue-100 text-blue-700">{typeIcon}</div>
-            <CardTitle className="text-lg">{typeLabel} Class</CardTitle>
+            <div className="p-2 rounded-full bg-[#EBF5FF] text-[#4A90E2] shadow-sm">{typeIcon}</div>
+            <div>
+              <CardTitle className="text-lg font-semibold text-gray-800">{typeLabel} Class</CardTitle>
+              {courseType.batch_number && (
+                <CardDescription className="text-sm font-medium text-gray-600">
+                  Batch {courseType.batch_number}
+                </CardDescription>
+              )}
+            </div>
           </div>
-          {courseType.batch_number && <CardDescription>Batch {courseType.batch_number}</CardDescription>}
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6 pb-4 flex-grow">
           {renderPrice(courseType)}
 
           <div className="mt-4 space-y-2">
             {courseType.start_date && courseType.end_date && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CalendarDays className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-[#F9FAFB] p-2 rounded-md">
+                <CalendarDays className="h-4 w-4 text-[#4A90E2]" />
                 <span>
                   {new Date(courseType.start_date).toLocaleDateString("id-ID", {
                     day: "numeric",
@@ -107,9 +115,12 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
             )}
           </div>
         </CardContent>
-        <CardFooter>
-          <Button className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]" onClick={() => handleSelectCourseType(courseType)}>
-            Pilih Kelas <ChevronRight className="ml-2 h-4 w-4" />
+        <CardFooter className="pt-4 pb-6">
+          <Button
+            className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8] transition-all duration-300 shadow-sm group-hover:shadow-md"
+            onClick={() => handleSelectCourseType(courseType)}
+          >
+            Pilih Kelas <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </CardFooter>
       </Card>
@@ -117,49 +128,28 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
   }
 
   return (
-    <div className="bg-gray-50 py-16 px-4">
+    <div className="bg-gradient-to-b from-gray-50 to-white py-16 px-4">
       <div className="container max-w-6xl mx-auto">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900">Pilih Tipe Kelas</h2>
-          <p className="mt-2 text-lg text-muted-foreground">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Pilih Tipe Kelas</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Pilih tipe kelas yang sesuai dengan kebutuhan belajar Anda
           </p>
         </div>
 
-        <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
-          <div className="flex justify-center mb-8">
-            <TabsList className="grid grid-cols-4 w-full max-w-md">
-              <TabsTrigger value="all">Semua</TabsTrigger>
-              {batchTypes.length > 0 && <TabsTrigger value="batch">Batch</TabsTrigger>}
-              {privateTypes.length > 0 && <TabsTrigger value="private">Private</TabsTrigger>}
-              {groupTypes.length > 0 && <TabsTrigger value="group">Group</TabsTrigger>}
-            </TabsList>
+        <div className="space-y-8">
+          <div className="flex justify-center">
+            <div className="bg-gray-100 p-1 rounded-xl w-full max-w-md">
+              <div className="bg-white text-[#4A90E2] shadow-sm rounded-lg p-2 text-center font-medium">Semua</div>
+            </div>
           </div>
 
-          <TabsContent value="all">
+          <div className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {allTypes.map((courseType) => renderCourseTypeCard(courseType))}
             </div>
-          </TabsContent>
-
-          <TabsContent value="batch">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {batchTypes.map((courseType) => renderCourseTypeCard(courseType))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="private">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {privateTypes.map((courseType) => renderCourseTypeCard(courseType))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="group">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {groupTypes.map((courseType) => renderCourseTypeCard(courseType))}
-            </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   )

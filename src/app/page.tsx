@@ -16,7 +16,7 @@ export default function Home() {
   const { data: session, status } = useSession()
 
   useEffect(() => {
-    const hadPreviousSession = typeof window !== "undefined" && localStorage.getItem("previouslyLoggedIn") === "true"
+    const hadPreviousSession = typeof window !== "undefined" && localStorage.getItem("previouslyLoggedIn") === "false"
 
     if (status === "authenticated") {
       

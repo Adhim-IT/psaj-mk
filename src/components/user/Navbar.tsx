@@ -26,6 +26,7 @@ export default function Navbar() {
   const [userName, setUserName] = useState("")
   const [userEmail, setUserEmail] = useState("")
   const [userImage, setUserImage] = useState("")
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     if (session?.user) {
@@ -35,10 +36,19 @@ export default function Navbar() {
     }
   }, [session])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   const getLinkClass = (path: string) =>
     pathname === path
-      ? "text-[#5596DF] font-semibold text-base"
-      : "text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-base"
+      ? "text-[#5596DF] font-semibold text-sm md:text-base"
+      : "text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-sm md:text-base"
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" })
@@ -55,22 +65,24 @@ export default function Navbar() {
   }
 
   return (
-    <header className="w-full border-b border-black bg-white/80 backdrop-blur-md fixed top-0 z-50 transition-all duration-300 shadow-md">
-      <div className="w-full max-w-[1400px] px-4 md:px-8 lg:px-12 mx-auto flex h-24 items-center justify-between">
+    <header
+      className={`w-full border-b border-black/10 bg-white/80 backdrop-blur-md fixed top-0 z-50 transition-all duration-300 ${scrolled ? "shadow-md h-14 md:h-16" : "h-16 md:h-18"}`}
+    >
+      <div className="w-full max-w-[1400px] px-4 md:px-8 lg:px-12 mx-auto flex h-full items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <Image src="/images/logo/logo-teencode.png" alt="TeenCode Logo" width={90} height={90} priority />
+          <Image src="/images/logo/logo-teencode.png" alt="TeenCode Logo" width={70} height={70} priority />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center space-x-8 md:flex md:ml-10 lg:ml-16">
+        <nav className="hidden items-center space-x-6 md:flex md:ml-6 lg:ml-10">
           <Link href="/" className={getLinkClass("/")}>
             Home
           </Link>
           <DropdownMenu modal={false}>
-            <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-base">
+            <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-sm md:text-base">
               Program
-              <ChevronDown className="ml-1 h-5 w-5" />
+              <ChevronDown className="ml-1 h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" sideOffset={8} className="overflow-auto max-h-[calc(100vh-100px)]">
               {programItems.map((item) => (
@@ -97,23 +109,23 @@ export default function Navbar() {
         </nav>
 
         {/* Auth Buttons or User Profile */}
-        <div className="hidden items-center space-x-6 md:flex md:ml-auto">
+        <div className="hidden items-center space-x-4 md:flex md:ml-auto">
           {isAuthenticated ? (
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 px-4 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
+                  className="flex items-center gap-2 px-3 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
                 >
-                  <Avatar className="h-8 w-8 border border-[#5596DF]">
+                  <Avatar className="h-7 w-7 border border-[#5596DF]">
                     <AvatarImage src={userImage} alt={userName || "User"} />
                     <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start">
-                    <span className="text-sm font-medium">{userName}</span>
+                    <span className="text-xs font-medium">{userName}</span>
                     <span className="text-xs text-gray-500">{userEmail}</span>
                   </div>
-                  <ChevronDown className="ml-1 h-4 w-4" />
+                  <ChevronDown className="ml-1 h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -142,13 +154,13 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="rounded-md px-8 py-3 h-12 border border-gray-300 text-base text-gray-600 hover:bg-gray-100 hover:text-[#5596DF] hover:border-[#5596DF] transition-all duration-200 flex items-center justify-center"
+                className="rounded-md px-5 py-2 h-9 border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 hover:text-[#5596DF] hover:border-[#5596DF] transition-all duration-200 flex items-center justify-center"
               >
                 Masuk
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-[#5596DF] px-8 py-3 h-12 text-base text-white hover:bg-[#3E7BBF] transition-transform duration-200 transform hover:scale-105 flex items-center justify-center"
+                className="rounded-md bg-[#5596DF] px-5 py-2 h-9 text-sm text-white hover:bg-[#3E7BBF] transition-transform duration-200 transform hover:scale-105 flex items-center justify-center"
               >
                 Daftar
               </Link>
@@ -165,7 +177,7 @@ export default function Navbar() {
               className="md:hidden hover:bg-[#EBF3FC] hover:text-[#5596DF] transition-colors duration-200"
               aria-label="Open menu"
             >
-              <Menu className="h-7 w-7" />
+              <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px] p-0">

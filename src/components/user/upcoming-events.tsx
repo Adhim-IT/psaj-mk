@@ -25,34 +25,6 @@ const events = [
     price: 150000,
     registrationUrl: "/event/web-development-workshop",
   },
-  {
-    id: 2,
-    title: "Tech Talk: Future of AI",
-    description:
-      "Diskusi mendalam tentang perkembangan AI terkini dan bagaimana pengaruhnya terhadap industri teknologi di masa depan.",
-    image: "/placeholder.svg?height=200&width=400",
-    date: "22 April 2025",
-    time: "19:00 - 21:00 WIB",
-    location: "Online via Zoom",
-    category: "Webinar",
-    isFree: true,
-    price: 0,
-    registrationUrl: "/event/tech-talk-ai",
-  },
-  {
-    id: 3,
-    title: "Hackathon: Solusi Teknologi untuk Pendidikan",
-    description:
-      "Kompetisi pengembangan aplikasi untuk memecahkan masalah di bidang pendidikan dengan hadiah total Rp 50 juta.",
-    image: "/placeholder.svg?height=200&width=400",
-    date: "5-7 Mei 2025",
-    time: "48 jam non-stop",
-    location: "Jakarta Digital Valley",
-    category: "Competition",
-    isFree: false,
-    price: 200000,
-    registrationUrl: "/event/hackathon-edtech",
-  },
 ]
 
 interface UpcomingEventsProps {

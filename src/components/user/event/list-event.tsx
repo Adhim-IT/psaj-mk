@@ -120,17 +120,6 @@ export default function ListEventsPage({ events, maxEvents }: { events: Event[];
           </div>
         ))}
       </div>
-      {!maxEvents && events.length > 0 && (
-        <div className="mt-12 text-center">
-          <Link
-            href="/event"
-            className="inline-flex items-center text-[#4A90E2] font-medium hover:text-[#3178c6] transition-colors"
-          >
-            Lihat Semua Event
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Link>
-        </div>
-      )}
     </>
   )
 }

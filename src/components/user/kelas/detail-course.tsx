@@ -147,7 +147,9 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
                 <div>
                   <h2 className="text-xl font-semibold mb-4 text-[#5596DF]">Deskripsi Kelas</h2>
                   <div className="prose prose-gray max-w-none dark:prose-invert">
-                    <p className="leading-relaxed">{course.description}</p>
+                    <p className="leading-relaxed" style={{ whiteSpace: "pre-line" }}>
+                      {course.description}
+                    </p>
                   </div>
                 </div>
 

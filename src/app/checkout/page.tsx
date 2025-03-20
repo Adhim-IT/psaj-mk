@@ -407,9 +407,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-800">{courseType.course_title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {courseType.course_description || "Tidak ada deskripsi"}
-                    </p>
+                    
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">

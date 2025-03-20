@@ -10,7 +10,27 @@ async function hashPassword(password: string) {
 }
 
 async function main() {
-  // Data Users
+  console.log("Seeding database...");
+
+  // Step 1: Insert roles first
+  const rolesData = [
+    { id: "cm7wzebij0000fgngw776djak", name: "Admin" },
+    { id: "cm7wzebj10002fgngkkc6rkdk", name: "Mentor" },
+    { id: "cm7wzebj60003fgngf5yl85ka", name: "Writer" },
+    { id: "cm7wzebiv0001fgnglebnmv99", name: "Student" },
+  ];
+
+  for (const role of rolesData) {
+    await prisma.role.upsert({
+      where: { id: role.id },
+      update: {},
+      create: role,
+    });
+  }
+
+  console.log("Roles inserted!");
+
+  // Step 2: Insert Users
   const usersData = await Promise.all([
     {
       id: uuidv4(),
@@ -50,22 +70,20 @@ async function main() {
     },
   ]);
 
-  // Insert Users
   for (const user of usersData) {
     console.log("Inserting user:", user);
     await prisma.user.create({ data: user });
 
-    // Cek role_id untuk menentukan apakah user adalah mentor atau writer
+    // Insert Mentor if the role matches
     if (user.role_id === "cm7wzebj10002fgngkkc6rkdk") {
-      // Insert Mentor
       await prisma.mentors.create({
         data: {
           id: uuidv4(),
           user_id: user.id,
-          username: user.email.split("@")[0], // Username dari email
+          username: user.email.split("@")[0],
           name: user.name,
           profile_picture: user.image,
-          gender: "male", // Sesuaikan jika ada pilihan
+          gender: "male",
           phone: "08123456789",
           city: "Jakarta",
           specialization: "Web Development",
@@ -76,13 +94,13 @@ async function main() {
       });
     }
 
+    // Insert Writer if the role matches
     if (user.role_id === "cm7wzebj60003fgngf5yl85ka") {
-      // Insert Writer
       await prisma.writers.create({
         data: {
           id: uuidv4(),
           user_id: user.id,
-          username: user.email.split("@")[0], // Username dari email
+          username: user.email.split("@")[0],
           name: user.name,
           profile_picture: user.image,
           created_at: new Date(),
@@ -92,13 +110,12 @@ async function main() {
     }
   }
 
-  console.log("Seeding selesai!");
+  console.log("Seeding complete!");
 }
-
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("Seeding error:", e);
     process.exit(1);
   })
   .finally(async () => {

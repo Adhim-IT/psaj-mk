@@ -14,11 +14,23 @@ interface CheckoutData {
 }
 
 export async function initiateCheckout(data: CheckoutData) {
-  console.log("Input Checkout Data:", data);
+  console.log("Input Checkout Data:", data)
   const user = await getCurrentUser()
 
   if (!user || !user.studentId) {
     return { error: "Anda harus login terlebih dahulu", redirectUrl: "/login?redirect=/checkout" }
+  }
+
+  const existingTransaction = await prisma.course_transactions.findFirst({
+    where: {
+      student_id: user.studentId,
+      course_id: data.courseType.course_id,
+      status: { not: "failed" },
+    },
+  })
+
+  if (existingTransaction) {
+    return { error: "Anda sudah membeli kelas ini." }
   }
 
   try {
@@ -116,11 +128,13 @@ export async function initiateCheckout(data: CheckoutData) {
     return { error: "Gagal memproses pembayaran" }
   }
 }
+
 export async function getTransactionById(transactionId: string) {
   try {
     if (!transactionId) {
       return { error: "Transaksi ID diperlukan" }
     }
+
     const transaction = await prisma.course_transactions.findUnique({
       where: {
         id: transactionId,
@@ -145,16 +159,15 @@ export async function getTransactionById(transactionId: string) {
     if (!transaction) {
       return { error: "Transaksi tidak ditemukan" }
     }
+
     return {
       transaction: {
         ...transaction,
-      original_price: Number(transaction.original_price),
-      discount: Number(transaction.discount),
-      final_price: Number(transaction.final_price),
+        original_price: Number(transaction.original_price),
+        discount: Number(transaction.discount),
+        final_price: Number(transaction.final_price),
       },
-    };
-
-    return { transaction }
+    }
   } catch (error) {
     console.error("Error fetching transaction:", error)
     return { error: "Gagal memuat data transaksi" }

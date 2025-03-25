@@ -133,7 +133,10 @@ export default function CoursesPage() {
                   </CardContent>
                   <CardFooter>
                     <Button className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]" asChild>
-                      <Link href={`/dashboard/courses/${transaction.id}`}>Akses Kelas</Link>
+                      <Link href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer">
+                        Hubungi Admin
+                      </Link>
+
                     </Button>
                   </CardFooter>
                 </Card>

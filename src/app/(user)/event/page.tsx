@@ -44,6 +44,21 @@ const PageHeader = ({ title }: { title: string }) => (
 export default async function EventsPage() {
   const response = await getEvents()
 
+  // Filter out past events
+  const currentDate = new Date()
+  currentDate.setHours(0, 0, 0, 0) // Set to beginning of today
+
+  const upcomingEvents = response.success
+    ? response.data.filter((event: any) => {
+        // Assuming event.date is a string in a format like "YYYY-MM-DD"
+        const eventDate = new Date(event.date)
+        eventDate.setHours(0, 0, 0, 0) // Set to beginning of event day
+
+        // Keep events that are today or in the future
+        return eventDate >= currentDate
+      })
+    : []
+
   return (
     <>
       <PageHeader title="Events" />
@@ -62,7 +77,7 @@ export default async function EventsPage() {
             }
           >
             {response.success ? (
-              <ListEventsPage events={response.data} />
+              <ListEventsPage events={upcomingEvents} />
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500">Failed to load events. Please try again later.</p>

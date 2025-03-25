@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import type { User } from "next-auth"
-import { toast } from "@/components/ui/use-toast"
 import { ProfileForm } from "./profile-form"
 import { PasswordForm } from "./password-form"
 import { updateProfile, updatePassword } from "@/lib/settings"
 import { UserCircle, KeyRound } from "lucide-react"
 import { useSession } from "next-auth/react"
+import Swal from "sweetalert2"
 
 interface SettingsFormProps {
   user: User & {
@@ -40,18 +40,23 @@ export default function SettingsForm({ user }: SettingsFormProps) {
           },
         })
 
-        toast({
+        Swal.fire({
+          icon: "success",
           title: "Profile updated",
-          description: "Your profile has been updated successfully.",
+          text: "Your profile has been updated successfully.",
+          confirmButtonColor: "#3085d6",
+          timer: 3000,
         })
+
         router.refresh()
       }
     } catch (error) {
       console.error(error)
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+        text: "Something went wrong. Please try again.",
+        confirmButtonColor: "#d33",
       })
     } finally {
       setIsLoading(false)
@@ -62,16 +67,20 @@ export default function SettingsForm({ user }: SettingsFormProps) {
     setIsLoading(true)
     try {
       await updatePassword(data)
-      toast({
+      Swal.fire({
+        icon: "success",
         title: "Password updated",
-        description: "Your password has been updated successfully.",
+        text: "Your password has been updated successfully.",
+        confirmButtonColor: "#3085d6",
+        timer: 3000,
       })
     } catch (error) {
       console.error(error)
-      toast({
+      Swal.fire({
+        icon: "error",
         title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+        text: "Something went wrong. Please try again.",
+        confirmButtonColor: "#d33",
       })
     } finally {
       setIsLoading(false)

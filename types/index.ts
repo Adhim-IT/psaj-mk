@@ -282,7 +282,47 @@ export interface Tag {
 export interface TagListProps {
   tags: Tag[]
 }
+export interface Writer {
+  id: string
+  name: string
+  email?: string
+  bio?: string
+  avatar?: string
+  created_at?: Date | null
+  updated_at?: Date | null
+}
+export interface Article {
+  id: string
+  writer_id: string
+  title: string
+  slug: string
+  content: string
+  thumbnail: string
+  created_at: Date | null
+  updated_at: Date | null
+  deleted_at?: Date | null
+  // Relations
+  categories?: CategoryArticle[]
+  tags?: TagArticle[]
+  writer?: Writer
+}
+export interface CategoryArticle {
+  id: string
+  name: string
+  slug: string
+  created_at?: Date | null
+  updated_at?: Date | null
+  deleted_at?: Date | null
+}
 
+export interface TagArticle {
+  id: string
+  name: string
+  slug: string
+  created_at?: Date | null
+  updated_at?: Date | null
+  deleted_at?: Date | null
+}
 export interface ListArticle {
   id: string
   writer_id: string
@@ -290,8 +330,38 @@ export interface ListArticle {
   slug: string
   content: string
   thumbnail: string
-  categories?: Category[]
-  tag?: Tag[]
+  created_at: Date | null
+  updated_at: Date | null
+  deleted_at?: Date | null
+  // Relations
+  categories?: CategoryArticle[]
+  tags?: TagArticle[]
+  writer?: Writer
+}
+
+export interface ArticleCategoryPivot {
+  id: bigint
+  article_id: string
+  article_category_id: string
+  created_at: Date | null
+  updated_at: Date | null
+  deleted_at: Date | null
+  article_categories?: Category
+}
+
+export interface ArticleTagPivot {
+  id: bigint
+  article_id: string
+  article_tag_id: string
+  created_at: Date | null
+  updated_at: Date | null
+  deleted_at: Date | null
+  article_tags?: Tag
+}
+
+// API response interfaces
+export interface ListArticlesResponse {
+  ListArticles: any[] // We'll transform this to ListArticle[]
 }
 
 export interface ListArticleFormData {

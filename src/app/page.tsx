@@ -6,11 +6,12 @@ import Link from "next/link"
 import { Star, ArrowRight, Users, BookOpen, Award } from "lucide-react"
 import { useState, useEffect } from "react"
 import CoursePopular from "@/src/components/user/kelas/Populer-course"
-import MentorSection from "@/components/user/Mentor"
+import MentorSection from "@/src/components/user/mentor/Mentor"
 import AboutSection from "@/components/user/About"
 import Navbar from "../components/user/Navbar"
 import Footer from "../components/user/Footer"
 import UpcomingEvents from "@/components/user/event/upcoming-events"
+import MentorContainer from "../components/user/mentor/MentorContainer"
 // import ListEventsPage from "@/components/user/event/list-event"
 
 export default function Home() {
@@ -211,7 +212,7 @@ export default function Home() {
               </p>
             </div>
 
-            <MentorSection maxMentors={1} />
+            {/* <MentorContainer maxMentors={1} /> */}
 
             <div className="mt-12 text-center">
               <Link

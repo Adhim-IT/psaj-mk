@@ -51,7 +51,7 @@ async function main() {
       email_verified_at: new Date(),
       password: await hashPassword("mentor"),
       remember_token: null,
-      image: "https://example.com/mentor.jpg",
+      image: "https://res.cloudinary.com/dljcrothp/image/upload/v1742906418/Group_33_2_q4adl9.png",
       role_id: "cm7wzebj10002fgngkkc6rkdk",
       created_at: new Date(),
       updated_at: new Date(),

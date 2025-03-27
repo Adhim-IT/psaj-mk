@@ -4,8 +4,12 @@ import { Decimal } from "@prisma/client/runtime/library"
 export interface Mentor {
   id: string
   name: string
-  specialization?: string
+  specialization: string
   profile_picture?: string | null
+  bio?: string
+  city?: string
+  gender?: string
+  phone?: string
 }
 
 export interface Tool {

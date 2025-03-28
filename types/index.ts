@@ -3,6 +3,7 @@ import { Decimal } from "@prisma/client/runtime/library"
 // Basic interfaces
 export interface Mentor {
   id: string
+  username?: string
   name: string
   specialization: string
   profile_picture?: string | null

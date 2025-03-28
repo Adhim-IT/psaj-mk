@@ -1,7 +1,9 @@
 import { getEvents } from "@/lib/list-event"
 import ListEventsPage from "@/components/user/event/list-event"
 import { Suspense } from "react"
-import { ChevronRight, Link } from "lucide-react"
+import { ChevronRight, Calendar, Bell } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export const metadata = {
   title: "Events | Your Platform Name",
@@ -20,15 +22,29 @@ const PageHeader = ({ title }: { title: string }) => (
     <div className="absolute top-1/3 left-1/4 w-6 h-6 bg-white/10 rotate-45 animate-bounce delay-700"></div>
 
     <div className="container mx-auto max-w-7xl relative z-10">
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 md:ml-5">
-        {title}
-      </h1>
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 md:ml-5">{title}</h1>
       <div className="flex items-center gap-2 text-[#e6f0fc] md:ml-5">
         <Link href="/" className="hover:text-white transition-colors duration-300">
           Home
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span>{title}</span>
+      </div>
+    </div>
+  </div>
+)
+
+const NoEventsMessage = () => (
+  <div className="text-center py-16 px-4">
+    <div className="bg-gray-50 rounded-xl p-8 max-w-2xl mx-auto border border-gray-100 shadow-sm">
+      <div className="w-20 h-20 bg-[#EBF3FD] rounded-full flex items-center justify-center mx-auto mb-6">
+        <Calendar className="h-10 w-10 text-[#5596DF]" />
+      </div>
+      <h3 className="text-2xl font-bold text-gray-800 mb-3">No Upcoming Events</h3>
+      <p className="text-gray-600 mb-8 max-w-md mx-auto">
+        We don't have any events scheduled at the moment. Check back soon for new events and workshops!
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
       </div>
     </div>
   </div>
@@ -57,10 +73,7 @@ export default async function EventsPage() {
       <PageHeader title="Events" />
       <main className="py-12">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold">Upcoming Events</h1>
-            <p className="text-gray-600 mt-4">Join our events and workshops to enhance your skills</p>
-          </div>
+          
 
           <Suspense
             fallback={
@@ -70,7 +83,11 @@ export default async function EventsPage() {
             }
           >
             {response.success ? (
-              <ListEventsPage events={upcomingEvents} />
+              upcomingEvents.length > 0 ? (
+                <ListEventsPage events={upcomingEvents} />
+              ) : (
+                <NoEventsMessage />
+              )
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500">Failed to load events. Please try again later.</p>

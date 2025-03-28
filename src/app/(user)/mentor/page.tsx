@@ -1,7 +1,7 @@
 import { getAllMentors } from "@/lib/mentor"
-import ListMentor from "@/components/user/mentor/list-mentor"
+import ListMentor from "@/src/components/user/mentor/list-mentor"
 import Link from "next/link"
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight } from "lucide-react"
 
 export const metadata = {
   title: "Our Mentors | PSAJMK",
@@ -39,17 +39,22 @@ export default async function MentorPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <PageHeader title="Mentors" />
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Learn From Industry Experts</h2>
-          <p className="text-gray-600">
-            Our mentors are industry professionals with years of experience in their respective fields.
-            They are dedicated to helping you achieve your learning goals and advance your career.
-          </p>
+      <PageHeader title="Mentor" />
+
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4">Learn from Industry Professionals</h2>
+            <p className="text-gray-600">
+              Our mentors are dedicated to helping you achieve your learning goals with their years of experience in
+              their respective fields.
+            </p>
+          </div>
+
+          <ListMentor mentors={mentors} />
         </div>
-        <ListMentor mentors={mentors} />
-      </div>
+      </section>
     </main>
   )
 }
+

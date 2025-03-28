@@ -6,13 +6,11 @@ import Link from "next/link"
 import { Star, ArrowRight, Users, BookOpen, Award } from "lucide-react"
 import { useState, useEffect } from "react"
 import CoursePopular from "@/src/components/user/kelas/Populer-course"
-import MentorSection from "@/src/components/user/mentor/Mentor"
 import AboutSection from "@/components/user/About"
 import Navbar from "../components/user/Navbar"
 import Footer from "../components/user/Footer"
 import UpcomingEvents from "@/components/user/event/upcoming-events"
-import MentorContainer from "../components/user/mentor/MentorContainer"
-// import ListEventsPage from "@/components/user/event/list-event"
+import MentorHomepage from "@/components/user/mentor/mentor-homepage"
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -202,29 +200,9 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section className="py-24 bg-gray-50 flex justify-center items-center">
-          <div className="container mx-auto px-6 xl:px-8 max-w-7xl">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-[#4A90E2] font-semibold">Mentor Kami</span>
-              <h2 className="text-3xl md:text-4xl font-bold mt-2">Belajar dari Ahlinya!</h2>
-              <p className="text-gray-600 mt-4 text-lg">
-                Para mentor yang berpengalaman di bidangnya siap membimbing kamu.
-              </p>
-            </div>
 
-            {/* <MentorContainer maxMentors={1} /> */}
-
-            <div className="mt-12 text-center">
-              <Link
-                href="/mentor"
-                className="inline-flex items-center text-[#4A90E2] font-medium hover:text-[#3178c6] transition-colors"
-              >
-                Lihat Semua Mentor
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* Mentor Section */}
+        <MentorHomepage maxMentors={4} />
       </main>
       <Footer />
     </div>

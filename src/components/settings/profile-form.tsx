@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Loader2, Camera } from 'lucide-react'
+import { Loader2, Camera } from "lucide-react"
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -38,6 +38,14 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Set initial preview image from user data
+  useEffect(() => {
+    if (user?.image) {
+      setPreviewImage(user.image)
+      console.log("Setting initial image from user:", user.image)
+    }
+  }, [user?.image])
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -51,8 +59,10 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setPreviewImage(reader.result as string)
-        form.setValue("image", file)
+        const result = reader.result as string
+        setPreviewImage(result)
+        // Set the actual file for upload
+        form.setValue("image", result)
       }
       reader.readAsDataURL(file)
     }
@@ -69,22 +79,32 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">Profile</h2>
-      <p className="text-gray-500 mt-2 mb-8">
-        Update your profile information and email address.
-      </p>
+      <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+        Profile
+      </h2>
+      <p className="text-gray-500 mt-2 mb-8">Update your profile information and email address.</p>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-xl">
           <div className="flex flex-col sm:flex-row gap-8 items-start">
             <div className="relative group">
-              <div 
+              <div
                 onClick={handleImageClick}
                 className="relative cursor-pointer rounded-full overflow-hidden transition-transform duration-200 transform group-hover:scale-105"
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Avatar className="h-24 w-24 ring-2 ring-white shadow-lg">
-                  <AvatarImage src={previewImage || user?.image || ""} alt={user?.name || "User"} />
+                  {previewImage ? (
+                    <AvatarImage
+                      src={previewImage}
+                      alt={user?.name || "User"}
+                      className="object-cover"
+                      onError={(e) => {
+                        console.error("Error loading image:", previewImage)
+                        ;(e.target as HTMLImageElement).style.display = "none"
+                      }}
+                    />
+                  ) : null}
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                     {getUserInitials()}
                   </AvatarFallback>
@@ -93,18 +113,10 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                   <Camera className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleImageChange} 
-                accept="image/*" 
-                className="hidden" 
-              />
-              <p className="text-sm text-gray-500 mt-2 text-center">
-                Click to upload
-              </p>
+              <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+              <p className="text-sm text-gray-500 mt-2 text-center">Click to upload</p>
             </div>
-            
+
             <div className="flex-1 space-y-6 w-full">
               <FormField
                 control={form.control}
@@ -113,10 +125,10 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                   <FormItem>
                     <FormLabel className="text-gray-700">Name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Your name" 
-                        {...field} 
-                        className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                      <Input
+                        placeholder="Your name"
+                        {...field}
+                        className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       />
                     </FormControl>
                     <FormDescription className="text-xs text-gray-500">
@@ -134,10 +146,10 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                   <FormItem>
                     <FormLabel className="text-gray-700">Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Your email address" 
-                        {...field} 
-                        className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                      <Input
+                        placeholder="Your email address"
+                        {...field}
+                        className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       />
                     </FormControl>
                     <FormDescription className="text-xs text-gray-500">
@@ -151,8 +163,8 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
           </div>
 
           <div className="pt-6">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading}
               className="bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
             >
@@ -171,3 +183,4 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
     </div>
   )
 }
+

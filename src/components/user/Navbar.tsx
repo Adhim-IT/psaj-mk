@@ -1,15 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { ChevronDown, LogOut, Menu, Settings, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import Image from "next/image"
+import NextImage from "next/image"
 import { useSession, signOut } from "next-auth/react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/user/avatar"
 
 // Define program items to ensure consistency between mobile and desktop
 const programItems = [
@@ -20,6 +19,7 @@ const programItems = [
 
 export default function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isProgramOpen, setIsProgramOpen] = useState(false)
   const { data: session, status } = useSession()
   const isAuthenticated = status === "authenticated"
@@ -27,14 +27,86 @@ export default function Navbar() {
   const [userEmail, setUserEmail] = useState("")
   const [userImage, setUserImage] = useState("")
   const [scrolled, setScrolled] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const [profileData, setProfileData] = useState<any>(null)
+
+  // Add a debug function to test the image directly
+  const testImageUrl = (url: string) => {
+    if (!url) return
+
+    console.log("Testing image URL:", url)
+    // Use the global Image constructor, not the Next.js Image component
+    const img = new window.Image()
+    img.onload = () => console.log("Image loaded successfully:", url)
+    img.onerror = () => console.error("Image failed to load:", url)
+    img.src = url
+  }
+
+  // Add this function to check if a URL is valid before setting it
+  const isValidImageUrl = (url: string | null | undefined): url is string => {
+    return typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://"))
+  }
+
+  // Update the fetchProfileData function to use this check
+  const fetchProfileData = async () => {
+    if (session?.user?.id) {
+      try {
+        const response = await fetch("/api/dashboard/profile/")
+        if (response.ok) {
+          const data = await response.json()
+          setProfileData(data)
+          console.log("Fetched profile data:", data)
+
+          // Check if student data exists and has profile_picture
+          if (data.students && isValidImageUrl(data.students.profile_picture)) {
+            console.log("Setting profile picture from students:", data.students.profile_picture)
+            setUserImage(data.students.profile_picture)
+            setImageError(false) // Reset error state when setting new image
+          } else if (data.mentor && isValidImageUrl(data.mentor.profile_picture)) {
+            console.log("Setting profile picture from mentor:", data.mentor.profile_picture)
+            setUserImage(data.mentor.profile_picture)
+            setImageError(false)
+          } else if (data.writer && isValidImageUrl(data.writer.profile_picture)) {
+            console.log("Setting profile picture from writer:", data.writer.profile_picture)
+            setUserImage(data.writer.profile_picture)
+            setImageError(false)
+          } else if (isValidImageUrl(session.user.image)) {
+            console.log("Setting profile picture from session:", session.user.image)
+            setUserImage(session.user.image)
+            setImageError(false)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error)
+      }
+    }
+  }
+
+  // Fetch profile data when session changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfileData()
+    }
+  }, [session, isAuthenticated])
 
   useEffect(() => {
     if (session?.user) {
       setUserName(session.user.name || "")
       setUserEmail(session.user.email || "")
-      setUserImage(session.user.image || "")
+
+      // Only set from session if we don't have profile data yet
+      if (!userImage && isValidImageUrl(session.user.image)) {
+        setUserImage(session.user.image)
+        console.log("Setting user image from session:", session.user.image)
+      }
     }
-  }, [session])
+  }, [session, userImage])
+
+  useEffect(() => {
+    if (userImage) {
+      testImageUrl(userImage)
+    }
+  }, [userImage])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,6 +136,15 @@ export default function Navbar() {
       .substring(0, 2)
   }
 
+  const handleImageError = () => {
+    console.error("Error loading navbar image:", userImage)
+    setImageError(true)
+  }
+
+  const refreshPage = () => {
+    router.refresh()
+  }
+
   return (
     <header
       className={`w-full border-b border-black/10 bg-white/80 backdrop-blur-md fixed top-0 z-50 transition-all duration-300 ${scrolled ? "shadow-md h-14 md:h-16" : "h-16 md:h-18"}`}
@@ -71,7 +152,7 @@ export default function Navbar() {
       <div className="w-full max-w-[1400px] px-4 md:px-8 lg:px-12 mx-auto flex h-full items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <Image src="/images/logo/logo-teencode.png" alt="TeenCode Logo" width={70} height={70} priority />
+          <NextImage src="/images/logo/logo-teencode.png" alt="TeenCode Logo" width={70} height={70} priority />
         </Link>
 
         {/* Desktop Navigation */}
@@ -117,15 +198,30 @@ export default function Navbar() {
                   variant="ghost"
                   className="flex items-center gap-2 px-3 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
                 >
-                  <Avatar className="h-7 w-7 border border-[#5596DF]">
-                    <AvatarImage src={userImage} alt={userName || "User"} />
-                    <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs font-medium">{userName}</span>
-                    <span className="text-xs text-gray-500">{userEmail}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="relative h-7 w-7 overflow-hidden rounded-full border border-[#5596DF]">
+                      {userImage && !imageError ? (
+                        <img
+                          src={userImage || "/placeholder.svg"}
+                          alt={userName || "User"}
+                          className="h-full w-full object-cover"
+                          onError={() => {
+                            console.error("Failed to load image in desktop menu:", userImage)
+                            setImageError(true)
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-[#EBF3FC] text-[#5596DF] text-xs font-medium">
+                          {getUserInitials()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-medium">{userName}</span>
+                      <span className="text-xs text-gray-500">{userEmail}</span>
+                    </div>
+                    <ChevronDown className="ml-1 h-3 w-3" />
                   </div>
-                  <ChevronDown className="ml-1 h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -189,10 +285,23 @@ export default function Navbar() {
               {isAuthenticated && (
                 <div className="border-b p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border border-[#5596DF]">
-                      <AvatarImage src={session?.user?.image || ""} alt={userName || "User"} />
-                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF]">{getUserInitials()}</AvatarFallback>
-                    </Avatar>
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#5596DF]">
+                      {userImage && !imageError ? (
+                        <img
+                          src={userImage || "/placeholder.svg"}
+                          alt={userName || "User"}
+                          className="h-full w-full object-cover"
+                          onError={() => {
+                            console.error("Failed to load image in mobile menu:", userImage)
+                            setImageError(true)
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-[#EBF3FC] text-[#5596DF] text-sm font-medium">
+                          {getUserInitials()}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{userName}</span>
                       <span className="text-xs text-gray-500">{userEmail}</span>

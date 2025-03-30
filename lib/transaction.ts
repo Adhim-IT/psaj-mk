@@ -105,6 +105,8 @@ export async function getTransactions(studentId?: string) {
           select: {
             title: true,
             thumbnail: true,
+            level: true,
+            meetings: true,
           },
         },
         students: {
@@ -124,3 +126,4 @@ export async function getTransactions(studentId?: string) {
     return { error: "Failed to fetch transactions" }
   }
 }
+

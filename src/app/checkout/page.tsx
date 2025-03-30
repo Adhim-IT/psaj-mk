@@ -19,6 +19,7 @@ import Script from "next/script"
 import Navbar from "@/components/user/Navbar"
 import Footer from "@/components/user/Footer"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
 
 // Deklarasi tipe untuk Midtrans Snap
 declare global {
@@ -34,6 +35,7 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const courseTypeSlug = searchParams.get("course")
   const { data: session, status } = useSession()
+  const { toast } = useToast()
 
   const [courseType, setCourseType] = useState<CourseTypeTransaction | null>(null)
   const [loading, setLoading] = useState(true)
@@ -147,32 +149,32 @@ export default function CheckoutPage() {
   }
 
   const handleCheckout = async () => {
-    if (!courseType) return;
-  
+    if (!courseType) return
+
     if (status === "unauthenticated") {
       Swal.fire({
         title: "Checkout gagal",
         text: "Anda harus login terlebih dahulu",
         icon: "error",
         confirmButtonColor: "#4A90E2",
-      });
-      router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`);
-      return;
+      })
+      router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)
+      return
     }
-  
+
     if (!window.snap) {
       Swal.fire({
         title: "Checkout gagal",
         text: "Sistem pembayaran belum siap. Silakan coba lagi.",
         icon: "error",
         confirmButtonColor: "#4A90E2",
-      });
-      return;
+      })
+      return
     }
-  
-    setProcessingPayment(true);
-    setError(null);
-  
+
+    setProcessingPayment(true)
+    setError(null)
+
     try {
       // STEP 1: Minta token Midtrans dari server
       const response = await fetch("/api/midtrans/create-token", {
@@ -184,73 +186,99 @@ export default function CheckoutPage() {
           promoDiscountType,
           promoDiscount,
         }),
-      });
-  
-      const data = await response.json();
-  
+      })
+
+      const data = await response.json()
+
       if (!response.ok || data.error) {
-        throw new Error(data.error || "Gagal mendapatkan token pembayaran");
+        throw new Error(data.error || "Gagal mendapatkan token pembayaran")
       }
-  
+
       // STEP 2: Tampilkan Midtrans Snap
       window.snap.pay(data.token, {
         onSuccess: async (result: any) => {
-          console.log("✅ Payment success:", result);
-  
+          console.log("✅ Payment success:", result)
+
           // STEP 3: Simpan transaksi ke database setelah sukses
           const saveResponse = await initiateCheckout({
             courseType,
             promoCode: promoApplied ? promoCode : undefined,
             promoDiscountType,
             promoDiscount,
-          });
-  
+          })
+
+          // Replace this code:
+          // if (saveResponse.error) {
+          //   throw new Error(saveResponse.error);
+          // }
+
+          // With this improved error handling:
           if (saveResponse.error) {
-            throw new Error(saveResponse.error);
+            // Check if the error is about already purchasing the class
+            if (saveResponse.error.includes("sudah membeli kelas ini")) {
+              Swal.fire({
+                title: "Informasi",
+                text: "Anda sudah membeli kelas ini. Anda akan dialihkan ke dashboard.",
+                icon: "info",
+                confirmButtonColor: "#4A90E2",
+                confirmButtonText: "Lihat Dashboard",
+              }).then(() => {
+                router.push("/dashboard")
+              })
+              return
+            } else {
+              // Handle other errors
+              Swal.fire({
+                title: "Error",
+                text: saveResponse.error,
+                icon: "error",
+                confirmButtonColor: "#4A90E2",
+              })
+              setProcessingPayment(false)
+              return
+            }
           }
-  
+
           // Redirect ke halaman sukses
-          router.push(`/checkout/success?id=${saveResponse.transactionId}`);
+          router.push(`/checkout/success?id=${saveResponse.transactionId}`)
         },
         onPending: (result: any) => {
-          console.log("⏳ Payment pending:", result);
-          router.push(`/checkout/payment?id=${result.order_id}`);
+          console.log("⏳ Payment pending:", result)
+          router.push(`/checkout/payment?id=${result.order_id}`)
         },
         onError: (result: any) => {
-          console.error("❌ Payment error:", result);
+          console.error("❌ Payment error:", result)
           Swal.fire({
             title: "Pembayaran gagal",
             text: "Terjadi kesalahan saat memproses pembayaran",
             icon: "error",
             confirmButtonColor: "#4A90E2",
-          });
+          })
         },
         onClose: () => {
-          console.log("⚠️ Customer closed the popup");
+          console.log("⚠️ Customer closed the popup")
           Swal.fire({
             title: "Pembayaran dibatalkan",
             text: "Anda menutup halaman pembayaran sebelum menyelesaikan transaksi",
             icon: "warning",
             confirmButtonColor: "#4A90E2",
-          });
+          })
         },
-      });
+      })
     } catch (err) {
-      console.error("Checkout error:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Terjadi kesalahan saat memproses pembayaran";
-      setError(errorMessage);
+      console.error("Checkout error:", err)
+      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan saat memproses pembayaran"
+      setError(errorMessage)
       Swal.fire({
         title: "Checkout gagal",
         text: errorMessage,
         icon: "error",
         confirmButtonColor: "#4A90E2",
-      });
+      })
     } finally {
-      setProcessingPayment(false);
+      setProcessingPayment(false)
     }
-  };
-  
+  }
 
   if (loading) {
     return (
@@ -407,7 +435,6 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-800">{courseType.course_title}</h3>
-                    
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">

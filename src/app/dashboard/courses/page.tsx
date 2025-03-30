@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Loader2, BookOpen, Clock, AlertCircle } from "lucide-react"
+import { Loader2, BookOpen, Clock, AlertCircle, BookText, Users } from "lucide-react"
 import { getTransactions } from "@/lib/transaction"
 import { getCurrentUser } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -119,25 +119,33 @@ export default function CoursesPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        Dibeli pada{" "}
-                        {new Date(transaction.created_at).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <BookText className="h-4 w-4 text-blue-500" />
+                        <span>Level: {transaction.courses.level}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="h-4 w-4 text-blue-500" />
+                        <span>{transaction.courses.meetings} Pertemuan</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                          Dibeli pada{" "}
+                          {new Date(transaction.created_at).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="flex gap-2">
                     <Button className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]" asChild>
-                      <Link href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer">
-                        Hubungi Admin
-                      </Link>
-
+                      <Link href="https://wa.me/6281234567890">Hubungi Admin</Link>
                     </Button>
+                  
                   </CardFooter>
                 </Card>
               ))}
@@ -183,20 +191,30 @@ export default function CoursesPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        Dibuat pada{" "}
-                        {new Date(transaction.created_at).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <span className="font-medium">Total: </span>
-                      <span>Rp {Number(transaction.final_price).toLocaleString("id-ID")}</span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <BookText className="h-4 w-4 text-blue-500" />
+                        <span>Level: {transaction.courses.level}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="h-4 w-4 text-blue-500" />
+                        <span>{transaction.courses.meetings} Pertemuan</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                          Dibuat pada{" "}
+                          {new Date(transaction.created_at).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        <span className="font-medium">Total: </span>
+                        <span>Rp {Number(transaction.final_price).toLocaleString("id-ID")}</span>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter>

@@ -49,7 +49,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
-          image: user.image,
+          // Don't include the full image URL in the token, just a reference
+          image: user.image ? 'has_image' : null,
           role: user.role?.name,
           role_id: user.role_id || undefined,
         }
@@ -63,11 +64,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id
         token.role = user.role
         token.role_id = user.role_id
+        // Don't store the full image in the token
+        token.has_image = !!user.image
       }
       if (trigger === "update" && session) {
-        token.name = session.user.name
-        token.email = session.user.email
-        token.picture = session.user.image
+        // Make sure we update all relevant fields from the session
+        if (session.user.name) token.name = session.user.name
+        if (session.user.email) token.email = session.user.email
+        // Don't update the image in the token
       }
       return token
     },
@@ -78,7 +82,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role_id = token.role_id as string | undefined
         session.user.name = token.name
         session.user.email = token.email as string
-        session.user.image = token.picture as string | null | undefined
+        
+        // If user has an image, fetch it from the database when needed
+        // instead of storing it in the session
+        if (token.has_image) {
+          // We'll set image to true to indicate there is an image
+          // but we won't store the actual URL in the session
+          session.user.image = true as any;
+        } else {
+          session.user.image = null;
+        }
       }
       return session
     },
@@ -87,4 +100,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 })
-

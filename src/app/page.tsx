@@ -156,21 +156,21 @@ export default function Home() {
                   role: "Siswa SMA",
                   quote:
                     "TeenCode membantu saya memahami dasar-dasar pemrograman dengan cara yang menyenangkan. Sekarang saya bisa membuat website sendiri!",
-                  avatar: "/placeholder.svg?height=100&width=100",
+                  avatar: "/images/testi/budi.jpg",
                 },
                 {
                   name: "Siti Rahma",
                   role: "Mahasiswa Teknik",
                   quote:
                     "Mentor-mentor di TeenCode sangat membantu dan selalu siap menjawab pertanyaan. Materi kursusnya juga up-to-date dengan teknologi terbaru.",
-                  avatar: "/placeholder.svg?height=100&width=100",
+                  avatar: "/images/testi/siti.jpg",
                 },
                 {
                   name: "Andi Wijaya",
                   role: "Fresh Graduate",
                   quote:
                     "Berkat sertifikat dari TeenCode, saya berhasil mendapatkan pekerjaan pertama saya sebagai web developer di startup teknologi.",
-                  avatar: "/placeholder.svg?height=100&width=100",
+                  avatar: "/images/testi/andi.jpg",
                 },
               ].map((testimonial, index) => (
                 <div key={index} className="bg-gray-50 p-8 rounded-2xl hover:shadow-lg transition-shadow">

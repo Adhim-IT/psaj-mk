@@ -1,9 +1,10 @@
 "use client"
 
-import React from "react"
-
+import type React from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 import {
   BookOpen,
   Calendar,
@@ -15,7 +16,6 @@ import {
   Home,
   Users,
 } from "lucide-react"
-import { useState } from "react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -36,18 +36,22 @@ interface NavItem {
   href: string
   icon: React.ElementType
   submenu?: { title: string; href: string }[]
+  roles?: string[] // Add roles property to control visibility
 }
 
+// Define navigation items with role-based access
 const navItems: NavItem[] = [
   {
     title: "Dashboard",
     href: "/admin/dashboard",
     icon: Home,
+    roles: ["Admin", "Mentor", "Writer"], // All roles can see dashboard
   },
   {
     title: "Manajemen Kelas",
     href: "/dashboard/kelas",
     icon: BookOpen,
+    roles: ["Admin", "Mentor"], // Only Admin and Mentor can see this
     submenu: [
       { title: "Tool", href: "/admin/dashboard/kelas/tool" },
       { title: "Kategori Kelas", href: "/admin/dashboard/kelas/kategori" },
@@ -61,6 +65,7 @@ const navItems: NavItem[] = [
     title: "Manajemen Event",
     href: "/dashboard/event",
     icon: Calendar,
+    roles: ["Admin", "Mentor"], // Only Admin and Mentor can see this
     submenu: [
       { title: "Event", href: "/admin/dashboard/event/list" },
       { title: "Review Event", href: "/admin/dashboard/event/review" },
@@ -70,6 +75,7 @@ const navItems: NavItem[] = [
     title: "Manajemen Transaksi",
     href: "/dashboard/transaksi",
     icon: DollarSign,
+    roles: ["Admin"], // Only Admin can see this
     submenu: [
       { title: "Kode Promo", href: "/admin/dashboard/transaksi/code" },
       { title: "Transaksi Kelas", href: "/admin/dashboard/transaksi/kelas" },
@@ -80,6 +86,7 @@ const navItems: NavItem[] = [
     title: "Manajemen Artikel",
     href: "/dashboard/artikel",
     icon: FileText,
+    roles: ["Admin", "Writer"], // Only Admin and Writer can see this
     submenu: [
       { title: "Tag", href: "/admin/dashboard/artikel/tag" },
       { title: "Kategori", href: "/admin/dashboard/artikel/kategori" },
@@ -91,6 +98,7 @@ const navItems: NavItem[] = [
     title: "Manajemen Akun",
     href: "/dashboard/akun",
     icon: Users,
+    roles: ["Admin"], // Only Admin can see this
     submenu: [
       { title: "Role", href: "/admin/dashboard/akun/role" },
       { title: "Mentor", href: "/admin/dashboard/akun/mentor" },
@@ -102,6 +110,7 @@ const navItems: NavItem[] = [
     title: "Manajemen FAQ",
     href: "/dashboard/faq",
     icon: CircleHelp,
+    roles: ["Admin"], // Only Admin can see this
     submenu: [
       { title: "Kategori", href: "/admin/dashboard/faq/kategori" },
       { title: "FAQ", href: "/admin/dashboard/faq/list" },
@@ -112,9 +121,18 @@ const navItems: NavItem[] = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
+  const { data: session } = useSession()
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  // Get user role from session
+  useEffect(() => {
+    if (session?.user?.role) {
+      setUserRole(session.user.role)
+    }
+  }, [session])
 
   // Auto-expand menus that contain the active page
-  React.useEffect(() => {
+  useEffect(() => {
     const newOpenMenus: Record<string, boolean> = {}
 
     navItems.forEach((item) => {
@@ -158,9 +176,18 @@ export function AdminSidebar() {
     return false
   }
 
+  // Filter navigation items based on user role
+  const filteredNavItems = navItems.filter((item) => {
+    // If no roles specified or user is admin, show the item
+    if (!item.roles || userRole === "Admin") return true
+
+    // Otherwise, check if the user's role is in the allowed roles
+    return userRole !== null && item.roles.includes(userRole)
+  })
+
   // Define common active styles for both menu and submenu items
-  const activeTextClass = "text-blue-600 dark:text-blue-400"
-  const activeIconClass = "text-blue-600 dark:text-blue-400"
+  const activeTextClass = "text-[#5596DF] dark:text-blue-400"
+  const activeIconClass = "text-[#5596DF] dark:text-blue-400"
   const activeBgClass = "bg-blue-50 dark:bg-blue-950/30"
   const hoverClass = "hover:bg-blue-50 dark:hover:bg-blue-950/30"
 
@@ -168,10 +195,10 @@ export function AdminSidebar() {
     <Sidebar className="border-r shadow-sm">
       <SidebarHeader className="border-b px-6 py-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-[#5596DF] to-[#5596DF] text-white shadow-md">
             <Cube className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+          <span className="text-xl font-bold bg-gradient-to-r from-[#5596DF] to-blue-400 bg-clip-text text-transparent">
             TC
           </span>
         </Link>
@@ -180,7 +207,7 @@ export function AdminSidebar() {
         <div className="px-4 py-3">
           <h2 className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">MAIN</h2>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 {item.submenu ? (
                   <>

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react"
 export function useUser() {
   const { data: session, status } = useSession()
   const [userData, setUserData] = useState({
+    
     name: "",
     email: "",
     image: "",

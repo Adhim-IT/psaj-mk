@@ -5,7 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/hooks/useUser"
-import { BookOpen, Calendar, CheckCircle, Clock, CreditCard, Loader2, Settings, User } from "lucide-react"
+import { BookOpen, Calendar, CheckCircle, Clock, CreditCard, Loader2, Settings } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useSession } from "next-auth/react"
 
 // Define types for our data
 type CourseTransaction = {
@@ -48,22 +50,61 @@ type EventRegistration = {
 }
 
 export default function DashboardPage() {
-    // Format currency to IDR
-    const formatCurrency: (amount: number) => string = (amount: number) => {
-        return new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR",
-          minimumFractionDigits: 0,
-        }).format(amount)
-      }
-  
+  // Format currency to IDR
+  const formatCurrency: (amount: number) => string = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
+
   const { user, status } = useUser()
+  const { data: session } = useSession()
   const router = useRouter()
 
   const [courses, setCourses] = useState<CourseTransaction[]>([])
   const [events, setEvents] = useState<EventRegistration[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
+  const [userImage, setUserImage] = useState("")
+  const [profileData, setProfileData] = useState<any>(null)
+
+  // Function to check if a URL is valid
+  const isValidImageUrl = (url: string | null | undefined): url is string => {
+    return !!url && typeof url === "string" && url.trim() !== ""
+  }
+
+  // Fetch profile data from API
+  const fetchProfileData = async () => {
+    if (session?.user?.id) {
+      try {
+        const response = await fetch("/api/dashboard/protfile/")
+        if (response.ok) {
+          const data = await response.json()
+          setProfileData(data)
+          console.log("Fetched profile data:", data)
+
+          // Try to get profile picture from different sources in order of priority
+          if (data.data?.student && isValidImageUrl(data.data.student.profile_picture)) {
+            console.log("Setting profile picture from student:", data.data.student.profile_picture)
+            setUserImage(data.data.student.profile_picture)
+          } else if (data.data?.mentor && isValidImageUrl(data.data.mentor.profile_picture)) {
+            console.log("Setting profile picture from mentor:", data.data.mentor.profile_picture)
+            setUserImage(data.data.mentor.profile_picture)
+          } else if (data.data?.writer && isValidImageUrl(data.data.writer.profile_picture)) {
+            console.log("Setting profile picture from writer:", data.data.writer.profile_picture)
+            setUserImage(data.data.writer.profile_picture)
+          } else if (isValidImageUrl(session.user.image)) {
+            console.log("Setting profile picture from session:", session.user.image)
+            setUserImage(session.user.image)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error)
+      }
+    }
+  }
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -73,6 +114,9 @@ export default function DashboardPage() {
     }
 
     if (status === "authenticated" && user) {
+      // Fetch profile data
+      fetchProfileData()
+
       // Fetch courses
       fetch("/api/dashboard/courses")
         .then((res) => {
@@ -106,7 +150,7 @@ export default function DashboardPage() {
         })
         .finally(() => setIsLoading(false))
     }
-  }, [user, status, router])
+  }, [user, status, router, session])
 
   const getUserInitials = () => {
     if (!user?.name) return "TC"
@@ -168,19 +212,17 @@ export default function DashboardPage() {
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="relative h-16 w-16 rounded-full overflow-hidden bg-gray-100">
-          {typeof user?.image === "string" && user.image.trim() ? (
-  <Image 
-    src={user.image} 
-    alt={user.name || "User"} 
-    fill 
-    className="object-cover" 
-  />
-) : (
-  <div className="flex items-center justify-center h-full w-full bg-blue-100 text-blue-500">
-    <User size={24} />
-  </div>
-)}
-
+            <Avatar className="h-full w-full">
+              <AvatarImage
+                src={userImage || ""}
+                alt={user?.name || "User"}
+                className="object-cover"
+                onError={() => {
+                  console.error("Failed to load dashboard avatar image:", userImage)
+                }}
+              />
+              <AvatarFallback className="bg-blue-100 text-blue-500">{getUserInitials()}</AvatarFallback>
+            </Avatar>
           </div>
           <div>
             <h1 className="text-2xl font-bold">Welcome back, {user?.name || "Student"}!</h1>

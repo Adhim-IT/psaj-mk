@@ -28,7 +28,7 @@ export default async function SettingsPage() {
                 </h1>
                 <p className="text-gray-500 text-sm mt-2">Manage your account preferences</p>
                 <div className="mt-6 space-y-1">
-                  <div className="text-sm font-medium text-gray-900 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg">
+                  <div className="text-sm font-medium  bg-blue-50 text-blue-600 px-4 py-2 rounded-lg">
                     User Settings
                   </div>
                 </div>

@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import NextImage from "next/image"
 import { useSession, signOut } from "next-auth/react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 // Define program items to ensure consistency between mobile and desktop
 const programItems = [
@@ -44,36 +45,33 @@ export default function Navbar() {
 
   // Add this function to check if a URL is valid before setting it
   const isValidImageUrl = (url: string | null | undefined): url is string => {
-    return typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://"))
+    return !!url && typeof url === "string" && url.trim() !== ""
   }
 
   // Update the fetchProfileData function to use this check
   const fetchProfileData = async () => {
     if (session?.user?.id) {
       try {
-        const response = await fetch("/api/dashboard/profile/")
+        // Fix: Use the correct API endpoint with "protfile" instead of "profile"
+        const response = await fetch("/api/dashboard/protfile/")
         if (response.ok) {
           const data = await response.json()
           setProfileData(data)
           console.log("Fetched profile data:", data)
 
-          // Check if student data exists and has profile_picture
-          if (data.students && isValidImageUrl(data.students.profile_picture)) {
-            console.log("Setting profile picture from students:", data.students.profile_picture)
-            setUserImage(data.students.profile_picture)
-            setImageError(false) // Reset error state when setting new image
-          } else if (data.mentor && isValidImageUrl(data.mentor.profile_picture)) {
-            console.log("Setting profile picture from mentor:", data.mentor.profile_picture)
-            setUserImage(data.mentor.profile_picture)
-            setImageError(false)
-          } else if (data.writer && isValidImageUrl(data.writer.profile_picture)) {
-            console.log("Setting profile picture from writer:", data.writer.profile_picture)
-            setUserImage(data.writer.profile_picture)
-            setImageError(false)
+          // Try to get profile picture from different sources in order of priority
+          if (data.data?.student && isValidImageUrl(data.data.student.profile_picture)) {
+            console.log("Setting profile picture from student:", data.data.student.profile_picture)
+            setUserImage(data.data.student.profile_picture)
+          } else if (data.data?.mentor && isValidImageUrl(data.data.mentor.profile_picture)) {
+            console.log("Setting profile picture from mentor:", data.data.mentor.profile_picture)
+            setUserImage(data.data.mentor.profile_picture)
+          } else if (data.data?.writer && isValidImageUrl(data.data.writer.profile_picture)) {
+            console.log("Setting profile picture from writer:", data.data.writer.profile_picture)
+            setUserImage(data.data.writer.profile_picture)
           } else if (isValidImageUrl(session.user.image)) {
             console.log("Setting profile picture from session:", session.user.image)
             setUserImage(session.user.image)
-            setImageError(false)
           }
         }
       } catch (error) {
@@ -199,23 +197,21 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-3 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="relative h-7 w-7 overflow-hidden rounded-full border border-[#5596DF]">
-                      {userImage && !imageError ? (
-                        <img
-                          src={userImage || "/placeholder.svg"}
-                          alt={userName || "User"}
-                          className="h-full w-full object-cover"
-                          onError={() => {
-                            console.error("Failed to load image in desktop menu:", userImage)
-                            setImageError(true)
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[#EBF3FC] text-[#5596DF] text-xs font-medium">
-                          {getUserInitials()}
-                        </div>
-                      )}
-                    </div>
+                    {/* Fixed aspect ratio for avatar */}
+                    <Avatar className="h-7 w-7 border border-[#5596DF] overflow-hidden">
+                      <AvatarImage
+                        src={userImage || ""}
+                        alt={userName || "User"}
+                        className="h-full w-full object-cover"
+                        onError={() => {
+                          console.error("Failed to load avatar image:", userImage)
+                          setImageError(true)
+                        }}
+                      />
+                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF] text-xs font-medium">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex flex-col items-start">
                       <span className="text-xs font-medium">{userName}</span>
                       <span className="text-xs text-gray-500">{userEmail}</span>
@@ -285,23 +281,21 @@ export default function Navbar() {
               {isAuthenticated && (
                 <div className="border-b p-4">
                   <div className="flex items-center gap-3">
-                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#5596DF]">
-                      {userImage && !imageError ? (
-                        <img
-                          src={userImage || "/placeholder.svg"}
-                          alt={userName || "User"}
-                          className="h-full w-full object-cover"
-                          onError={() => {
-                            console.error("Failed to load image in mobile menu:", userImage)
-                            setImageError(true)
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[#EBF3FC] text-[#5596DF] text-sm font-medium">
-                          {getUserInitials()}
-                        </div>
-                      )}
-                    </div>
+                    {/* Fixed aspect ratio for mobile avatar */}
+                    <Avatar className="h-10 w-10 border border-[#5596DF] overflow-hidden">
+                      <AvatarImage
+                        src={userImage || ""}
+                        alt={userName || "User"}
+                        className="h-full w-full object-cover"
+                        onError={() => {
+                          console.error("Failed to load mobile avatar image:", userImage)
+                          setImageError(true)
+                        }}
+                      />
+                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF] text-sm font-medium">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex flex-col">
                       <span className="font-medium">{userName}</span>
                       <span className="text-xs text-gray-500">{userEmail}</span>

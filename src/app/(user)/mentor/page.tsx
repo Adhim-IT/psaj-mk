@@ -1,4 +1,4 @@
-import { getAllMentors } from "@/lib/mentor"
+import { getAllMentors } from "@/lib/mentor-userpage"
 import ListMentor from "@/src/components/user/mentor/list-mentor"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"

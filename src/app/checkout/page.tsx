@@ -286,7 +286,7 @@ export default function CheckoutPage() {
         <Navbar />
         <div className="flex flex-col items-center justify-center min-h-[70vh]">
           <div className="bg-white p-8 rounded-xl shadow-md flex flex-col items-center max-w-md mx-auto">
-            <Loader2 className="h-16 w-16 animate-spin text-blue-600" />
+            <Loader2 className="h-16 w-16 animate-spin text-[#5596DF]" />
             <p className="mt-6 text-xl text-gray-700 font-medium">Memuat data checkout...</p>
             <p className="text-gray-500 mt-2">Mohon tunggu sebentar</p>
           </div>
@@ -309,7 +309,7 @@ export default function CheckoutPage() {
               Silakan kembali ke halaman kelas untuk memilih kelas lainnya
             </p>
             <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-[#5596DF] hover:bg-blue-700 text-white"
               size="lg"
               onClick={() => router.push("/kelas")}
             >
@@ -365,17 +365,17 @@ export default function CheckoutPage() {
         <div className="mb-10">
           <div className="flex justify-center items-center max-w-md mx-auto">
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white">
+              <div className="w-12 h-12 rounded-full bg-[#5596DF] flex items-center justify-center text-white">
                 <ShoppingCart className="h-5 w-5" />
               </div>
-              <span className="text-sm mt-2 font-medium text-blue-600">Keranjang</span>
+              <span className="text-sm mt-2 font-medium text-[#5596DF]">Keranjang</span>
             </div>
-            <div className="h-0.5 w-16 md:w-24 bg-blue-600"></div>
+            <div className="h-0.5 w-16 md:w-24 bg-[#5596DF]"></div>
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white">
+              <div className="w-12 h-12 rounded-full bg-[#5596DF] flex items-center justify-center text-white">
                 <CreditCard className="h-5 w-5" />
               </div>
-              <span className="text-sm mt-2 font-medium text-blue-600">Pembayaran</span>
+              <span className="text-sm mt-2 font-medium text-[#5596DF]">Pembayaran</span>
             </div>
             <div className="h-0.5 w-16 md:w-24 bg-gray-300"></div>
             <div className="flex flex-col items-center">
@@ -396,7 +396,7 @@ export default function CheckoutPage() {
                 Anda belum login. Silakan{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-blue-600 font-semibold"
+                  className="p-0 h-auto text-[#5596DF] font-semibold"
                   onClick={() => router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)}
                 >
                   login terlebih dahulu
@@ -411,7 +411,7 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div className="space-y-6">
             <Card className="overflow-hidden border-0 shadow-lg">
-              <CardHeader className="bg-blue-600 text-white">
+              <CardHeader className="bg-[#5596DF] text-white">
                 <CardTitle className="flex items-center">
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Ringkasan Pesanan
@@ -454,12 +454,12 @@ export default function CheckoutPage() {
                           <span className="text-gray-400 line-through text-sm mr-2">
                             Rp {courseType.normal_price.toLocaleString("id-ID")}
                           </span>
-                          <span className="text-lg font-bold text-blue-600">
+                          <span className="text-lg font-bold text-[#5596DF]">
                             Rp {(courseType.normal_price - discountAmount).toLocaleString("id-ID")}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-lg font-bold text-blue-600">
+                        <span className="text-lg font-bold text-[#5596DF]">
                           Rp {courseType.normal_price.toLocaleString("id-ID")}
                         </span>
                       )}
@@ -574,13 +574,13 @@ export default function CheckoutPage() {
 
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-blue-600">Rp {finalPrice.toLocaleString("id-ID")}</span>
+                    <span className="text-[#5596DF]">Rp {finalPrice.toLocaleString("id-ID")}</span>
                   </div>
                 </div>
 
                 <div className="mt-8">
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    className="w-full bg-[#5596DF] hover:bg-blue-700 text-white"
                     size="lg"
                     onClick={handleCheckout}
                     disabled={processingPayment || status === "unauthenticated" || !midtransLoaded}
@@ -622,11 +622,11 @@ export default function CheckoutPage() {
             <div className="mt-6 text-sm text-gray-600 bg-white p-4 rounded-lg shadow border-0">
               <p className="text-center">
                 Dengan melakukan pembayaran, Anda menyetujui{" "}
-                <a href="#" className="text-blue-600 hover:underline font-medium">
+                <a href="#" className="text-[#5596DF] hover:underline font-medium">
                   Syarat dan Ketentuan
                 </a>{" "}
                 serta{" "}
-                <a href="#" className="text-blue-600 hover:underline font-medium">
+                <a href="#" className="text-[#5596DF] hover:underline font-medium">
                   Kebijakan Privasi
                 </a>{" "}
                 kami.

@@ -1,7 +1,7 @@
 "use client"
 
 import type { Mentor } from "@/types"
-import type { Course, CourseStudentGroup, Event } from "@/lib/mentor"
+import type { Course, CourseStudentGroup, Event } from "@/lib/mentor-userpage"
 import Image from "next/image"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"

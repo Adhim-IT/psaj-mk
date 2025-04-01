@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getPopularMentors } from "@/lib/mentor"
+import { getPopularMentors } from "@/lib/mentor-userpage"
 import ListMentor from "./list-mentor"
 import type { Mentor } from "@/types"
 import Link from "next/link"

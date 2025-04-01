@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import DetailCourse from "@/components/user/kelas/detail-course";
 import { getListClasses, getListClassById } from "@/lib/list-kelas";
-import { getMentorById } from "@/lib/mentor";
+import { getMentorById } from "@/lib/mentor-userpage";
 import { getToolsById } from "@/lib/tools";
 import { getCourseTypesByCourseId } from "@/lib/course-types";
 import type { ListClass, Mentor, Tool } from "@/types";

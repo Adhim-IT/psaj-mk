@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcrypt-ts"
 
-export async function getMentors() {
+export async function getWriters() {
   try {
-    const mentors = await prisma.mentors.findMany({
+    const writers = await prisma.writers.findMany({
       where: {
         deleted_at: null,
       },
@@ -23,16 +23,16 @@ export async function getMentors() {
         name: "asc",
       },
     })
-    return mentors
+    return writers
   } catch (error) {
-    console.error("Error fetching mentors:", error)
-    throw new Error("Failed to fetch mentors")
+    console.error("Error fetching writers:", error)
+    throw new Error("Failed to fetch writers")
   }
 }
 
-export async function getMentorById(id: string) {
+export async function getWriterById(id: string) {
   try {
-    const mentor = await prisma.mentors.findUnique({
+    const writer = await prisma.writers.findUnique({
       where: {
         id,
         deleted_at: null,
@@ -47,26 +47,20 @@ export async function getMentorById(id: string) {
         },
       },
     })
-    return mentor
+    return writer
   } catch (error) {
-    console.error(`Error fetching mentor with ID ${id}:`, error)
-    throw new Error("Failed to fetch mentor")
+    console.error(`Error fetching writer with ID ${id}:`, error)
+    throw new Error("Failed to fetch writer")
   }
 }
 
-// Update the createMentorData function to handle profile_picture correctly
-export async function createMentorData(data: {
+export async function createWriterData(data: {
   name: string
   username: string
   email: string
   password: string
   role_id: string
-  gender: "male" | "female"
-  phone: string
-  city: string
-  specialization: string
-  bio: string
-  profile_picture?: string | null
+  profile_picture?: string
 }) {
   try {
     // Check if email already exists
@@ -81,7 +75,7 @@ export async function createMentorData(data: {
     }
 
     // Check if username already exists
-    const existingUsername = await prisma.mentors.findUnique({
+    const existingUsername = await prisma.writers.findUnique({
       where: {
         username: data.username,
       },
@@ -94,7 +88,7 @@ export async function createMentorData(data: {
     // Hash password
     const hashedPassword = await hash(data.password, 10)
 
-    // Create user and mentor in a transaction
+    // Create user and writer in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create user
       const user = await tx.user.create({
@@ -108,35 +102,29 @@ export async function createMentorData(data: {
         },
       })
 
-      // Create mentor
-      const mentor = await tx.mentors.create({
+      // Create writer
+      const writer = await tx.writers.create({
         data: {
           user_id: user.id,
           username: data.username,
           name: data.name,
-          gender: data.gender,
-          phone: data.phone,
-          city: data.city,
-          specialization: data.specialization,
-          bio: data.bio,
-          profile_picture: data.profile_picture || null,
+          profile_picture: data.profile_picture,
           created_at: new Date(),
           updated_at: new Date(),
         },
       })
 
-      return { user, mentor }
+      return { user, writer }
     })
 
-    return { success: true, data: result.mentor }
+    return { success: true, data: result.writer }
   } catch (error) {
-    console.error("Error creating mentor:", error)
-    return { success: false, error: "Failed to create mentor" }
+    console.error("Error creating writer:", error)
+    return { success: false, error: "Failed to create writer" }
   }
 }
 
-// Update the updateMentorData function to handle profile_picture correctly
-export async function updateMentorData(
+export async function updateWriterData(
   id: string,
   data: {
     name: string
@@ -144,27 +132,22 @@ export async function updateMentorData(
     email: string
     password?: string
     role_id: string
-    gender: "male" | "female"
-    phone: string
-    city: string
-    specialization: string
-    bio: string
-    profile_picture?: string | null
+    profile_picture?: string
   },
 ) {
   try {
-    const mentor = await prisma.mentors.findUnique({
+    const writer = await prisma.writers.findUnique({
       where: { id },
       include: { users: true },
     })
 
-    if (!mentor) {
-      return { success: false, error: "Mentor not found" }
+    if (!writer) {
+      return { success: false, error: "Writer not found" }
     }
 
-    // Check if username is taken by another mentor
-    if (data.username !== mentor.username) {
-      const existingUsername = await prisma.mentors.findUnique({
+    // Check if username is taken by another writer
+    if (data.username !== writer.username) {
+      const existingUsername = await prisma.writers.findUnique({
         where: {
           username: data.username,
           NOT: {
@@ -179,12 +162,12 @@ export async function updateMentorData(
     }
 
     // Check if email is taken by another user
-    if (data.email !== mentor.users.email) {
+    if (data.email !== writer.users.email) {
       const existingEmail = await prisma.user.findUnique({
         where: {
           email: data.email,
           NOT: {
-            id: mentor.user_id,
+            id: writer.user_id,
           },
         },
       })
@@ -194,7 +177,7 @@ export async function updateMentorData(
       }
     }
 
-    // Update user and mentor in a transaction
+    // Update user and writer in a transaction
     await prisma.$transaction(async (tx) => {
       // Update user
       const userData: any = {
@@ -210,22 +193,17 @@ export async function updateMentorData(
       }
 
       await tx.user.update({
-        where: { id: mentor.user_id },
+        where: { id: writer.user_id },
         data: userData,
       })
 
-      // Update mentor
-      await tx.mentors.update({
+      // Update writer
+      await tx.writers.update({
         where: { id },
         data: {
           username: data.username,
           name: data.name,
-          gender: data.gender,
-          phone: data.phone,
-          city: data.city,
-          specialization: data.specialization,
-          bio: data.bio,
-          profile_picture: data.profile_picture || null,
+          profile_picture: data.profile_picture,
           updated_at: new Date(),
         },
       })
@@ -233,25 +211,25 @@ export async function updateMentorData(
 
     return { success: true }
   } catch (error) {
-    console.error(`Error updating mentor with ID ${id}:`, error)
-    return { success: false, error: "Failed to update mentor" }
+    console.error(`Error updating writer with ID ${id}:`, error)
+    return { success: false, error: "Failed to update writer" }
   }
 }
 
-export async function deleteMentorData(id: string) {
+export async function deleteWriterData(id: string) {
   try {
-    const mentor = await prisma.mentors.findUnique({
+    const writer = await prisma.writers.findUnique({
       where: { id },
       select: { user_id: true },
     })
 
-    if (!mentor) {
-      return { success: false, error: "Mentor not found" }
+    if (!writer) {
+      return { success: false, error: "Writer not found" }
     }
 
-    // Soft delete mentor and user
+    // Soft delete writer and user
     await prisma.$transaction(async (tx) => {
-      await tx.mentors.update({
+      await tx.writers.update({
         where: { id },
         data: {
           deleted_at: new Date(),
@@ -259,7 +237,7 @@ export async function deleteMentorData(id: string) {
       })
 
       await tx.user.update({
-        where: { id: mentor.user_id },
+        where: { id: writer.user_id },
         data: {
           deleted_at: new Date(),
         },
@@ -268,8 +246,8 @@ export async function deleteMentorData(id: string) {
 
     return { success: true }
   } catch (error) {
-    console.error(`Error deleting mentor with ID ${id}:`, error)
-    return { success: false, error: "Failed to delete mentor" }
+    console.error(`Error deleting writer with ID ${id}:`, error)
+    return { success: false, error: "Failed to delete writer" }
   }
 }
 

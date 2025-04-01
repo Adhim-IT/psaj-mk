@@ -1,0 +1,29 @@
+import { getMentorById } from "@/lib/mentor"
+import { getRoles } from "@/lib/role"
+import { MentorForm } from "@/components/admin/akun/mentor/mentor-form"
+import { notFound } from "next/navigation"
+
+interface EditMentorPageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function EditMentorPage({ params }: EditMentorPageProps) {
+  const mentor = await getMentorById(params.id)
+  const roles = await getRoles()
+
+  if (!mentor) {
+    return notFound()
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Edit Mentor</h1>
+      </div>
+      <MentorForm mentor={mentor} roles={roles} />
+    </div>
+  )
+}
+

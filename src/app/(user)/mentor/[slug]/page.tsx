@@ -1,4 +1,4 @@
-import { getMentorByUsername } from "@/lib/mentor"
+import { getMentorByUsername } from "@/lib/mentor-userpage"
 import DetailMentor from "@/src/components/user/mentor/detail-mentor"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"

@@ -3,6 +3,7 @@ import Image from "next/image"
 import { useState, useRef } from "react"
 import { Star, Calendar, BookOpen, PlayCircle, Clock, BarChart3 } from "lucide-react"
 import type { ListClass, Mentor, CourseType } from "@/types"
+import { RichTextContent } from "@/components/rich-text-content"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,9 +11,21 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { CourseTypeSelection } from "./course-type-selection"
+import CourseReviews from "./course-reviews"
 
 interface DetailCourseProps {
-  course: ListClass
+  course: ListClass & {
+    course_reviews?: Array<{
+      id: string
+      rating: number
+      review: string
+      created_at?: string | Date
+      student?: {
+        name: string
+        profile_picture?: string
+      }
+    }>
+  }
   mentor?: Mentor
   courseTypes?: CourseType[]
 }
@@ -147,9 +160,13 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
                 <div>
                   <h2 className="text-xl font-semibold mb-4 text-[#5596DF]">Deskripsi Kelas</h2>
                   <div className="prose prose-gray max-w-none dark:prose-invert">
-                    <p className="leading-relaxed" style={{ whiteSpace: "pre-line" }}>
-                      {course.description}
-                    </p>
+                    {typeof course.description === "string" ? (
+                      <RichTextContent content={course.description} />
+                    ) : (
+                      <p className="leading-relaxed" style={{ whiteSpace: "pre-line" }}>
+                        {course.description}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -265,14 +282,7 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
               <TabsContent value="review" className="mt-6">
                 <div>
                   <h2 className="text-xl font-semibold mb-4 text-[#5596DF]">Review</h2>
-                  <Card className="border border-dashed rounded-xl overflow-hidden">
-                    <CardContent className="flex flex-col items-center justify-center py-16">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                        <Star className="w-8 h-8 text-muted-foreground/40" />
-                      </div>
-                      <p className="text-muted-foreground">Belum ada review untuk kelas ini</p>
-                    </CardContent>
-                  </Card>
+                  <CourseReviews courseId={course.id} courseName={course.title} />
                 </div>
               </TabsContent>
             </Tabs>

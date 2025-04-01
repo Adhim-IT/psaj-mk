@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Bell, ChevronDown, Search, User, LogOut } from "lucide-react"
+import { Bell, ChevronDown, Search, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -76,8 +76,7 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end" className="w-56 mt-1">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            
-            
+
             <DropdownMenuSeparator />
             {isAuthenticated ? (
               <DropdownMenuItem onClick={() => signOut()} className="text-red-600 cursor-pointer">
@@ -97,3 +96,4 @@ export function DashboardHeader() {
     </header>
   )
 }
+

@@ -192,7 +192,7 @@ export function AdminSidebar() {
   const hoverClass = "hover:bg-blue-50 dark:hover:bg-blue-950/30"
 
   return (
-    <Sidebar className="border-r shadow-sm">
+    <Sidebar className="border-r shadow-sm md:w-64 transition-transform duration-300 ease-in-out z-50">
       <SidebarHeader className="border-b px-6 py-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-[#5596DF] to-[#5596DF] text-white shadow-md">

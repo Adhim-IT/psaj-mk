@@ -21,6 +21,7 @@ const programItems = [
 export default function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
+  // Replace the useState for isProgramOpen with a proper initialization
   const [isProgramOpen, setIsProgramOpen] = useState(false)
   const { data: session, status } = useSession()
   const isAuthenticated = status === "authenticated"
@@ -31,80 +32,54 @@ export default function Navbar() {
   const [imageError, setImageError] = useState(false)
   const [profileData, setProfileData] = useState<any>(null)
 
-  // Add a debug function to test the image directly
+  // Fix the image error handling to be more robust
+  // Replace the testImageUrl function with this improved version:
   const testImageUrl = (url: string) => {
-    if (!url) return
+    if (typeof window === "undefined" || !url) return
 
-    console.log("Testing image URL:", url)
-    // Use the global Image constructor, not the Next.js Image component
     const img = new window.Image()
-    img.onload = () => console.log("Image loaded successfully:", url)
-    img.onerror = () => console.error("Image failed to load:", url)
+    img.onload = () => console.log("Image loaded successfully")
+    img.onerror = () => {
+      console.error("Image failed to load:", url)
+      setImageError(true)
+    }
     img.src = url
   }
 
-  // Add this function to check if a URL is valid before setting it
-  const isValidImageUrl = (url: string | null | undefined): url is string => {
-    return !!url && typeof url === "string" && url.trim() !== ""
-  }
-
-  // Update the fetchProfileData function to use this check
+  // Replace the fetchProfileData function with this improved version:
   const fetchProfileData = async () => {
-    if (session?.user?.id) {
-      try {
-        // Fix: Use the correct API endpoint with "protfile" instead of "profile"
-        const response = await fetch("/api/dashboard/protfile/")
-        if (response.ok) {
-          const data = await response.json()
-          setProfileData(data)
-          console.log("Fetched profile data:", data)
+    if (!session?.user?.id) return
 
-          // Try to get profile picture from different sources in order of priority
-          if (data.data?.student && isValidImageUrl(data.data.student.profile_picture)) {
-            console.log("Setting profile picture from student:", data.data.student.profile_picture)
-            setUserImage(data.data.student.profile_picture)
-          } else if (data.data?.mentor && isValidImageUrl(data.data.mentor.profile_picture)) {
-            console.log("Setting profile picture from mentor:", data.data.mentor.profile_picture)
-            setUserImage(data.data.mentor.profile_picture)
-          } else if (data.data?.writer && isValidImageUrl(data.data.writer.profile_picture)) {
-            console.log("Setting profile picture from writer:", data.data.writer.profile_picture)
-            setUserImage(data.data.writer.profile_picture)
-          } else if (isValidImageUrl(session.user.image)) {
-            console.log("Setting profile picture from session:", session.user.image)
-            setUserImage(session.user.image)
-          }
+    try {
+      const response = await fetch("/api/dashboard/protfile/")
+      if (response.ok) {
+        const data = await response.json()
+        setProfileData(data)
+
+        // Use a more reliable approach to set the image
+        if (data.data?.student?.profile_picture) {
+          setUserImage(data.data.student.profile_picture)
+        } else if (data.data?.mentor?.profile_picture) {
+          setUserImage(data.data.mentor.profile_picture)
+        } else if (data.data?.writer?.profile_picture) {
+          setUserImage(data.data.writer.profile_picture)
+        } else if (session.user.image) {
+          setUserImage(session.user.image)
         }
-      } catch (error) {
-        console.error("Error fetching profile data:", error)
       }
+    } catch (error) {
+      console.error("Error fetching profile data:", error)
     }
   }
 
-  // Fetch profile data when session changes
+  // Replace the useEffect for session with this improved version:
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && session?.user) {
+      setUserName(session.user.name || "")
+      setUserEmail(session.user.email || "")
       fetchProfileData()
     }
   }, [session, isAuthenticated])
-
-  useEffect(() => {
-    if (session?.user) {
-      setUserName(session.user.name || "")
-      setUserEmail(session.user.email || "")
-
-      // Only set from session if we don't have profile data yet
-      if (!userImage && isValidImageUrl(session.user.image)) {
-        setUserImage(session.user.image)
-        console.log("Setting user image from session:", session.user.image)
-      }
-    }
-  }, [session, userImage])
-
-  useEffect(() => {
-    if (userImage) {
-      testImageUrl(userImage)
-    }
-  }, [userImage])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -272,7 +247,9 @@ export default function Navbar() {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] p-0">
+          {/* Fix the mobile menu to ensure it's properly responsive */}
+          {/* Update the SheetContent component to have better responsive behavior: */}
+          <SheetContent side="right" className="w-[85vw] max-w-[300px] p-0 sm:max-w-sm">
             <SheetHeader className="border-b p-4">
               <SheetTitle className="text-left text-xl font-normal text-[#5596DF]">Menu</SheetTitle>
             </SheetHeader>

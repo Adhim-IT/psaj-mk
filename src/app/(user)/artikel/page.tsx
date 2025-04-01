@@ -59,12 +59,12 @@ export default function ArtikelPage() {
               tags,
               writer: article.writers
                 ? {
-                    id: article.writers.id,
-                    name: article.writers.name,
-                    email: article.writers.email,
-                    bio: article.writers.bio,
-                    avatar: article.writers.avatar,
-                  }
+                  id: article.writers.id,
+                  name: article.writers.name,
+                  email: article.writers.email,
+                  bio: article.writers.bio,
+                  avatar: article.writers.avatar,
+                }
                 : undefined,
             }
           })
@@ -85,12 +85,12 @@ export default function ArtikelPage() {
       {/* Animated background circles */}
       <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-white/10 rounded-full blur-xl animate-pulse"></div>
       <div className="absolute bottom-[-100px] left-[-20px] w-80 h-80 bg-white/5 rounded-full blur-xl animate-pulse delay-700"></div>
-  
+
       {/* Floating shapes */}
       <div className="absolute top-1/4 right-1/4 w-12 h-12 bg-white/20 rounded-lg rotate-12 animate-bounce delay-300"></div>
       <div className="absolute bottom-1/3 right-1/3 w-8 h-8 bg-white/15 rounded-full animate-ping opacity-70 delay-1000"></div>
       <div className="absolute top-1/3 left-1/4 w-6 h-6 bg-white/10 rotate-45 animate-bounce delay-700"></div>
-  
+
       <div className="container mx-auto max-w-7xl relative z-10">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 md:ml-5">
           {title}
@@ -108,12 +108,13 @@ export default function ArtikelPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-     <PageHeader title="Artikel" />
+      <PageHeader title="Artikel" />
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <ListArtikel articles={articles} isLoading={isLoading} />
       </div>
+
     </div>
   )
 }

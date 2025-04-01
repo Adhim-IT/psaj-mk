@@ -9,6 +9,7 @@ import { EventRegistrationModal } from "./event-registration-modal"
 import Swal from "sweetalert2"
 import { isAuthenticated, isStudent } from "@/lib/auth"
 import { useRouter } from "next/navigation"
+import EventReviews from "./event-reviews"
 
 interface Mentor {
   id: string
@@ -348,6 +349,15 @@ export default function EventDetail({ event }: { event: Event }) {
               </div>
             </div>
           )}
+
+          {/* Reviews Section */}
+          <div className="bg-gray-50 p-6 rounded-xl mb-8">
+            <h3 className="text-xl font-semibold mb-4">Reviews</h3>
+            <div className="space-y-4" id="event-reviews">
+              {/* Reviews will be loaded dynamically */}
+              <EventReviews eventId={event.id} />
+            </div>
+          </div>
 
           <Button onClick={handleShare} variant="outline" className="flex items-center gap-2">
             <Share2 className="w-4 h-4" />

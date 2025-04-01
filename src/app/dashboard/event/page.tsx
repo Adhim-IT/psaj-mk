@@ -3,236 +3,487 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Loader2, Calendar, Clock, AlertCircle } from "lucide-react"
-import { getCurrentUser } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { useUser } from "@/hooks/useUser"
+import { Calendar, Clock, Loader2, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { EventReviewModal } from "@/components/user/reviews/event-review-modal"
+import { canReviewEvent } from "@/lib/reviews"
+import Swal from "sweetalert2"
 
-interface EventRegistration {
+type EventRegistration = {
   id: string
-  event_id: string
-  student_id: string
-  status: "pending" | "paid" | "rejected"
+  status: string
   created_at: string
-  updated_at: string
   events: {
+    id: string
     title: string
+    slug: string
     thumbnail: string
     start_date: string
     end_date: string
+    price: number | null
     whatsapp_group_link: string
   }
 }
 
 export default function EventsPage() {
+  const { user, status } = useUser()
+  const router = useRouter()
+
   const [registrations, setRegistrations] = useState<EventRegistration[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  // Review modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<{
+    id: string
+    title: string
+    existingReview?: {
+      id: string
+      review: string
+    }
+  } | null>(null)
+
+  // Format currency to IDR
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Format date
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  }
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        // Get current user
-        const userData = await getCurrentUser()
-        setUser(userData)
-
-        if (!userData || !userData.studentId) {
-          setError("Anda harus login terlebih dahulu")
-          setLoading(false)
-          return
-        }
-
-        // Get event registrations for the current user
-        const response = await fetch(`/api/event-registrations?studentId=${userData.studentId}`)
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch event registrations")
-        }
-
-        const data = await response.json()
-        setRegistrations(data.registrations || [])
-      } catch (err) {
-        console.error("Error loading data:", err)
-        setError("Gagal memuat data event")
-      } finally {
-        setLoading(false)
-      }
+    // Redirect if not authenticated
+    if (status === "unauthenticated") {
+      router.push("/login")
+      return
     }
 
-    loadData()
-  }, [])
+    if (status === "authenticated" && user) {
+      // Fetch events
+      fetch("/api/dashboard/events")
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch events")
+          return res.json()
+        })
+        .then((data) => {
+          if (data.success) {
+            setRegistrations(data.data)
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching events:", err)
+          setError("Failed to load events. Please try again later.")
+        })
+        .finally(() => setIsLoading(false))
+    }
+  }, [user, status, router])
 
-  if (loading) {
+  const handleReviewClick = async (eventId: string, eventTitle: string) => {
+    try {
+      const result = await canReviewEvent(eventId)
+
+      if (!result.canReview) {
+        Swal.fire({
+          title: "Cannot Review",
+          text: "You can only review events you have registered for and attended",
+          icon: "info",
+          confirmButtonColor: "#5596DF",
+        })
+        return
+      }
+
+      setSelectedEvent({
+        id: eventId,
+        title: eventTitle,
+        existingReview: result.hasReviewed
+          ? {
+              id: result.reviewId!,
+              review: result.reviewData!.review,
+            }
+          : undefined,
+      })
+
+      setIsReviewModalOpen(true)
+    } catch (error) {
+      console.error("Error checking if user can review event:", error)
+      Swal.fire({
+        title: "Error",
+        text: "Failed to check review eligibility",
+        icon: "error",
+        confirmButtonColor: "#5596DF",
+      })
+    }
+  }
+
+  const handleJoinWhatsApp = (whatsappLink: string) => {
+    if (!whatsappLink) {
+      Swal.fire({
+        title: "WhatsApp Link Not Available",
+        text: "The WhatsApp group link is not available yet. Please check back later.",
+        icon: "info",
+        confirmButtonColor: "#5596DF",
+      })
+      return
+    }
+
+    window.open(whatsappLink, "_blank")
+  }
+
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-[#4A90E2]" />
-        <p className="mt-4 text-lg text-gray-600">Memuat data event...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#5596DF] mb-4" />
+        <p className="text-gray-500">Loading your events...</p>
       </div>
     )
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="mt-4 text-lg text-gray-800 font-medium">{error}</p>
-        <Button className="mt-6" asChild>
-          <Link href="/login">Login</Link>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 p-4 rounded-lg text-red-500 mb-4">
+          <p>{error}</p>
+        </div>
+        <Button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
+        >
+          Try Again
         </Button>
       </div>
     )
   }
 
-  const approvedRegistrations = registrations.filter((reg) => reg.status === "paid")
-  const pendingRegistrations = registrations.filter((reg) => reg.status === "pending")
-
-  return (
-    <div className="container max-w-6xl py-12 px-4 md:px-6 mt-16">
-      <h1 className="text-3xl font-bold mb-2">Event Saya</h1>
-      <p className="text-muted-foreground mb-8">Akses semua event yang telah Anda daftar</p>
-
-      <div className="space-y-10">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Event Aktif ({approvedRegistrations.length})</h2>
-          {approvedRegistrations.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-lg">
-              <Calendar className="h-12 w-12 mx-auto text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium">Belum ada event aktif</h3>
-              <p className="mt-2 text-muted-foreground">Anda belum memiliki event yang aktif</p>
-              <Button className="mt-6" asChild>
-                <Link href="/event">Jelajahi Event</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {approvedRegistrations.map((registration) => (
-                <Card key={registration.id} className="overflow-hidden transition-all duration-200 hover:shadow-md">
-                  <div className="relative h-48">
-                    <Image
-                      src={registration.events.thumbnail || "/placeholder.svg?height=200&width=400"}
-                      alt={registration.events.title}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-green-500 hover:bg-green-600">Terdaftar</Badge>
-                    </div>
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{registration.events.title}</CardTitle>
-                    <CardDescription>
-                      {new Date(registration.events.start_date).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                      {" - "}
-                      {new Date(registration.events.end_date).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        Terdaftar pada{" "}
-                        {new Date(registration.created_at).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]" asChild>
-                      <Link href={registration.events.whatsapp_group_link} target="_blank" rel="noopener noreferrer">
-                        Gabung Grup WhatsApp
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Menunggu Konfirmasi ({pendingRegistrations.length})</h2>
-          {pendingRegistrations.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-lg">
-              <Clock className="h-12 w-12 mx-auto text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium">Tidak ada pendaftaran tertunda</h3>
-              <p className="mt-2 text-muted-foreground">Anda tidak memiliki event yang menunggu konfirmasi</p>
-              <Button className="mt-6" asChild>
-                <Link href="/event">Jelajahi Event</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pendingRegistrations.map((registration) => (
-                <Card key={registration.id} className="overflow-hidden transition-all duration-200 hover:shadow-md">
-                  <div className="relative h-48">
-                    <Image
-                      src={registration.events.thumbnail || "/placeholder.svg?height=200&width=400"}
-                      alt={registration.events.title}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <Badge
-                        variant="outline"
-                        className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                      >
-                        Menunggu Konfirmasi
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{registration.events.title}</CardTitle>
-                    <CardDescription>
-                      {new Date(registration.events.start_date).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                      {" - "}
-                      {new Date(registration.events.end_date).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        Terdaftar pada{" "}
-                        {new Date(registration.created_at).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full" variant="outline" asChild>
-                      <Link href={`/event/${registration.event_id}`}>Lihat Detail Event</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
+  // Empty state
+  if (registrations.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8 mt-20">
+        <h1 className="text-2xl font-bold mb-6">My Events</h1>
+        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No events yet</h2>
+          <p className="text-gray-500 mb-6">You haven't registered for any events yet.</p>
+          <Link href="/event">
+            <Button className="bg-[#5596DF] hover:bg-blue-600">Browse Events</Button>
+          </Link>
         </div>
       </div>
+    )
+  }
+
+  // Group events by status
+  const upcomingEvents = registrations.filter(
+    (reg) => reg.status === "paid" && new Date(reg.events.start_date) > new Date(),
+  )
+  const pastEvents = registrations.filter(
+    (reg) => reg.status === "paid" && new Date(reg.events.start_date) <= new Date(),
+  )
+  const pendingEvents = registrations.filter((reg) => reg.status === "pending")
+  const rejectedEvents = registrations.filter((reg) => reg.status === "rejected")
+
+  return (
+    <div className="container mx-auto px-4 py-8 mt-20">
+      <h1 className="text-2xl font-bold mb-6">My Events</h1>
+
+      {/* Upcoming Events */}
+      {upcomingEvents.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {upcomingEvents.map((registration) => (
+              <Card
+                key={registration.id}
+                className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={registration.events.thumbnail || "/placeholder.svg?height=192&width=384"}
+                    alt={registration.events.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
+                  </div>
+                </div>
+
+                <CardContent className="p-5">
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">{registration.events.title}</h2>
+
+                  <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span>{formatDate(registration.events.start_date)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>
+                        {`${new Date(registration.events.start_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(registration.events.end_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} WIB`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">
+                      {registration.events.price ? formatCurrency(Number(registration.events.price)) : "Free"}
+                    </span>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-5 pt-0 flex justify-between gap-2">
+                  <Link href={`/event/${registration.events.slug}`} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      View Details
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={() => handleJoinWhatsApp(registration.events.whatsapp_group_link)}
+                    className="bg-[#5596DF] hover:bg-blue-600"
+                  >
+                    Join WhatsApp
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Past Events */}
+      {pastEvents.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">Past Events</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pastEvents.map((registration) => (
+              <Card
+                key={registration.id}
+                className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={registration.events.thumbnail || "/placeholder.svg?height=192&width=384"}
+                    alt={registration.events.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-gray-100 text-gray-800">Completed</Badge>
+                  </div>
+                </div>
+
+                <CardContent className="p-5">
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">{registration.events.title}</h2>
+
+                  <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span>{formatDate(registration.events.start_date)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>
+                        {`${new Date(registration.events.start_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(registration.events.end_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} WIB`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">
+                      {registration.events.price ? formatCurrency(Number(registration.events.price)) : "Free"}
+                    </span>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-5 pt-0 flex justify-between gap-2">
+                  <Link href={`/event/${registration.events.slug}`} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      View Details
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={() => handleReviewClick(registration.events.id, registration.events.title)}
+                    className="bg-[#5596DF] hover:bg-blue-600"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Review
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Events */}
+      {pendingEvents.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">Pending Registrations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingEvents.map((registration) => (
+              <Card
+                key={registration.id}
+                className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={registration.events.thumbnail || "/placeholder.svg?height=192&width=384"}
+                    alt={registration.events.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-amber-100 text-amber-800">Pending</Badge>
+                  </div>
+                </div>
+
+                <CardContent className="p-5">
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">{registration.events.title}</h2>
+
+                  <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span>{formatDate(registration.events.start_date)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>
+                        {`${new Date(registration.events.start_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(registration.events.end_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} WIB`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">
+                      {registration.events.price ? formatCurrency(Number(registration.events.price)) : "Free"}
+                    </span>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-5 pt-0">
+                  <Link href={`/event/${registration.events.slug}`} className="w-full">
+                    <Button variant="outline" className="w-full">
+                      View Details
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Events */}
+      {rejectedEvents.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Rejected Registrations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rejectedEvents.map((registration) => (
+              <Card
+                key={registration.id}
+                className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={registration.events.thumbnail || "/placeholder.svg?height=192&width=384"}
+                    alt={registration.events.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-red-100 text-red-800">Rejected</Badge>
+                  </div>
+                </div>
+
+                <CardContent className="p-5">
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">{registration.events.title}</h2>
+
+                  <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span>{formatDate(registration.events.start_date)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>
+                        {`${new Date(registration.events.start_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(registration.events.end_date).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} WIB`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">
+                      {registration.events.price ? formatCurrency(Number(registration.events.price)) : "Free"}
+                    </span>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-5 pt-0">
+                  <Link href={`/event/${registration.events.slug}`} className="w-full">
+                    <Button variant="outline" className="w-full">
+                      View Details
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {selectedEvent && (
+        <EventReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => {
+            setIsReviewModalOpen(false)
+            setSelectedEvent(null)
+          }}
+          eventId={selectedEvent.id}
+          eventName={selectedEvent.title}
+          existingReview={selectedEvent.existingReview}
+        />
+      )}
     </div>
   )
 }

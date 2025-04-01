@@ -1,6 +1,7 @@
+import type React from "react"
 
 import type { Metadata } from "next"
-import { Geist, Azeret_Mono as Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import NextAuthSessionProvider from "@/providers/session-provider"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
@@ -10,17 +11,20 @@ import { Poppins } from "next/font/google"
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap", // Add display swap for better font loading
 })
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap", // Add display swap for better font loading
 })
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "700"], // Pilih variasi berat font yang diinginkan
-  variable: "--font-poppins", // Nama CSS Variable
+  weight: ["400", "700"],
+  variable: "--font-poppins",
+  display: "swap", // Add display swap for better font loading
 })
 
 export const metadata: Metadata = {
@@ -48,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased min-h-screen`}>
         <NextAuthSessionProvider>
           {children}
           <Toaster />

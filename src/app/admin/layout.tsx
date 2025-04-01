@@ -28,15 +28,14 @@ export default function DashboardLayout({
     // If authenticated, check role
     if (status === "authenticated") {
       // Check if the user has the 'Admin' role
-      const allowedRoles = ["Admin", "Mentor", "Writer"];
-      const isAuthorized = allowedRoles.includes(session?.user?.role ?? "");
-      
-      setIsAuthorized(isAuthorized);
-      
+      const allowedRoles = ["Admin", "Mentor", "Writer"]
+      const isAuthorized = allowedRoles.includes(session?.user?.role ?? "")
+
+      setIsAuthorized(isAuthorized)
+
       if (!isAuthorized) {
-        router.push("/");
+        router.push("/")
       }
-      
     }
   }, [status, session, router])
 
@@ -53,11 +52,11 @@ export default function DashboardLayout({
   // Render admin layout for authorized users
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-white">
+      <div className="flex min-h-screen w-full bg-white flex-col md:flex-row">
         <AdminSidebar />
         <div className="flex flex-col flex-1">
           <DashboardHeader />
-          <main className="flex-1 p-4 md:p-6 animate-fadeIn">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-6 animate-fadeIn overflow-x-hidden">{children}</main>
         </div>
       </div>
     </SidebarProvider>

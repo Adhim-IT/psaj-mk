@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
+import { RichTextContent } from "@/components/rich-text-content"
 
 interface Mentor {
   id: string
@@ -106,7 +107,13 @@ export default function ListEventsPage({ events, maxEvents }: { events: Event[];
               <h3 className="font-bold text-xl mb-3 line-clamp-2 text-gray-800 group-hover:text-[#4A90E2] transition-colors">
                 {event.title}
               </h3>
-              <p className="text-gray-600 text-sm mb-5 line-clamp-2">{event.description}</p>
+              <div className="text-gray-600 text-sm mb-5 line-clamp-2">
+                {typeof event.description === "string" ? (
+                  <RichTextContent content={event.description} />
+                ) : (
+                  <p>{event.description}</p>
+                )}
+              </div>
 
               <div className="space-y-3 mb-5">
                 <div className="flex items-center text-sm text-gray-600">

@@ -3,231 +3,272 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Loader2, BookOpen, Clock, AlertCircle, BookText, Users } from "lucide-react"
-import { getTransactions } from "@/lib/transaction"
-import { getCurrentUser } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { useUser } from "@/hooks/useUser"
+import { BookOpen, Clock, Loader2, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { CourseReviewModal } from "@/components/user/reviews/course-review-modal"
+import { canReviewCourse } from "@/lib/reviews"
+import Swal from "sweetalert2"
+
+type CourseTransaction = {
+  id: string
+  code: string
+  status: string
+  final_price: number
+  created_at: string
+  courses: {
+    id: string
+    title: string
+    slug: string
+    thumbnail: string
+    level: string
+    meetings: number
+  }
+}
 
 export default function CoursesPage() {
-  const [transactions, setTransactions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const { user, status } = useUser()
+  const router = useRouter()
+
+  const [transactions, setTransactions] = useState<CourseTransaction[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  // Review modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<{
+    id: string
+    title: string
+    existingReview?: {
+      id: string
+      rating: number
+      review: string
+    }
+  } | null>(null)
+
+  // Format currency to IDR
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Format date
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  }
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        // Get current user
-        const userData = await getCurrentUser()
-        setUser(userData)
-
-        if (!userData || !userData.studentId) {
-          setError("Anda harus login terlebih dahulu")
-          setLoading(false)
-          return
-        }
-
-        // Get transactions for the current user
-        const { transactions: transactionsData, error: transactionsError } = await getTransactions(userData.studentId)
-
-        if (transactionsError) {
-          setError(transactionsError)
-          setLoading(false)
-          return
-        }
-
-        setTransactions(transactionsData || [])
-      } catch (err) {
-        console.error("Error loading data:", err)
-        setError("Gagal memuat data kelas")
-      } finally {
-        setLoading(false)
-      }
+    // Redirect if not authenticated
+    if (status === "unauthenticated") {
+      router.push("/login")
+      return
     }
 
-    loadData()
-  }, [])
+    if (status === "authenticated" && user) {
+      // Fetch courses
+      fetch("/api/dashboard/courses")
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch courses")
+          return res.json()
+        })
+        .then((data) => {
+          if (data.success) {
+            setTransactions(data.data)
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching courses:", err)
+          setError("Failed to load courses. Please try again later.")
+        })
+        .finally(() => setIsLoading(false))
+    }
+  }, [user, status, router])
 
-  if (loading) {
+  const handleReviewClick = async (courseId: string, courseTitle: string) => {
+    try {
+      const result = await canReviewCourse(courseId)
+
+      if (!result.canReview) {
+        Swal.fire({
+          title: "Cannot Review",
+          text: "You can only review courses you have purchased and completed",
+          icon: "info",
+          confirmButtonColor: "#5596DF",
+        })
+        return
+      }
+
+      setSelectedCourse({
+        id: courseId,
+        title: courseTitle,
+        existingReview: result.hasReviewed
+          ? {
+              id: result.reviewId!,
+              rating: result.reviewData!.rating,
+              review: result.reviewData!.review,
+            }
+          : undefined,
+      })
+
+      setIsReviewModalOpen(true)
+    } catch (error) {
+      console.error("Error checking if user can review course:", error)
+      Swal.fire({
+        title: "Error",
+        text: "Failed to check review eligibility",
+        icon: "error",
+        confirmButtonColor: "#5596DF",
+      })
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-[#4A90E2]" />
-        <p className="mt-4 text-lg text-gray-600">Memuat data kelas...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#5596DF] mb-4" />
+        <p className="text-gray-500">Loading your courses...</p>
       </div>
     )
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="mt-4 text-lg text-gray-800 font-medium">{error}</p>
-        <Button className="mt-6" asChild>
-          <Link href="/login">Login</Link>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 p-4 rounded-lg text-red-500 mb-4">
+          <p>{error}</p>
+        </div>
+        <Button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
+        >
+          Try Again
         </Button>
       </div>
     )
   }
 
-  const paidTransactions = transactions.filter((transaction) => transaction.status === "paid")
-  const pendingTransactions = transactions.filter((transaction) => transaction.status === "unpaid")
+  // Empty state
+  if (transactions.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8 mt-20">
+        <h1 className="text-2xl font-bold mb-6">My Courses</h1>
+        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+          <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No courses yet</h2>
+          <p className="text-gray-500 mb-6">You haven't purchased any courses yet.</p>
+          <Link href="/kelas">
+            <Button className="bg-[#5596DF] hover:bg-blue-600">Browse Courses</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="container max-w-6xl py-12 px-4 md:px-6 mt-16">
-      <h1 className="text-3xl font-bold mb-2">Kelas Saya</h1>
-      <p className="text-muted-foreground mb-8">Akses semua kelas yang telah Anda beli</p>
+    <div className="container mx-auto px-4 py-8 mt-20">
+      <h1 className="text-2xl font-bold mb-6">My Courses</h1>
 
-      <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="active">Kelas Aktif ({paidTransactions.length})</TabsTrigger>
-          <TabsTrigger value="pending">Menunggu Pembayaran ({pendingTransactions.length})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active">
-          {paidTransactions.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-lg">
-              <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium">Belum ada kelas aktif</h3>
-              <p className="mt-2 text-muted-foreground">Anda belum memiliki kelas yang aktif</p>
-              <Button className="mt-6" asChild>
-                <Link href="/kelas">Jelajahi Kelas</Link>
-              </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {transactions.map((transaction) => (
+          <Card
+            key={transaction.id}
+            className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
+          >
+            <div className="relative h-48 w-full">
+              <Image
+                src={transaction.courses.thumbnail || "/placeholder.svg?height=192&width=384"}
+                alt={transaction.courses.title}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute top-3 right-3">
+                <Badge
+                  className={`${
+                    transaction.status === "paid"
+                      ? "bg-green-100 text-green-800"
+                      : transaction.status === "unpaid"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {transaction.status === "paid" ? "Paid" : transaction.status === "unpaid" ? "Unpaid" : "Failed"}
+                </Badge>
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paidTransactions.map((transaction) => (
-                <Card key={transaction.id} className="overflow-hidden transition-all duration-200 hover:shadow-md">
-                  <div className="relative h-48">
-                    <Image
-                      src={transaction.courses.thumbnail || "/placeholder.svg?height=200&width=400"}
-                      alt={transaction.courses.title}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-green-500 hover:bg-green-600">Aktif</Badge>
-                    </div>
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{transaction.courses.title}</CardTitle>
-                    <CardDescription>
-                      {transaction.type === "batch" ? "Batch" : transaction.type === "private" ? "Private" : "Group"}
-                      {transaction.batch_number && ` (Batch ${transaction.batch_number})`}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <BookText className="h-4 w-4 text-blue-500" />
-                        <span>Level: {transaction.courses.level}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 text-blue-500" />
-                        <span>{transaction.courses.meetings} Pertemuan</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          Dibeli pada{" "}
-                          {new Date(transaction.created_at).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8]" asChild>
-                      <Link href="https://wa.me/6281234567890">Hubungi Admin</Link>
+
+            <CardContent className="p-5">
+              <h2 className="text-lg font-semibold mb-2 line-clamp-2">{transaction.courses.title}</h2>
+
+              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                <div className="flex items-center">
+                  <BookOpen className="w-4 h-4 mr-1" />
+                  <span>{transaction.courses.meetings} Meetings</span>
+                </div>
+                <div className="flex items-center">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span>{formatDate(transaction.created_at)}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="font-medium">{formatCurrency(Number(transaction.final_price))}</span>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  {transaction.courses.level}
+                </Badge>
+              </div>
+            </CardContent>
+
+            <CardFooter className="p-5 pt-0 flex justify-between gap-2">
+              {transaction.status === "paid" ? (
+                <>
+                  <Link href={`/kelas/${transaction.courses.slug}`} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      View Course
                     </Button>
-                  
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+                  </Link>
+                  <Button
+                    onClick={() => handleReviewClick(transaction.courses.id, transaction.courses.title)}
+                    className="bg-[#5596DF] hover:bg-blue-600"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Review
+                  </Button>
+                </>
+              ) : (
+                <Link href={`/checkout/payment?transaction=${transaction.id}`} className="w-full">
+                  <Button className="w-full bg-[#5596DF] hover:bg-blue-600">Complete Payment</Button>
+                </Link>
+              )}
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
 
-        <TabsContent value="pending">
-          {pendingTransactions.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-lg">
-              <Clock className="h-12 w-12 mx-auto text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium">Tidak ada pembayaran tertunda</h3>
-              <p className="mt-2 text-muted-foreground">Anda tidak memiliki kelas yang menunggu pembayaran</p>
-              <Button className="mt-6" asChild>
-                <Link href="/kelas">Jelajahi Kelas</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pendingTransactions.map((transaction) => (
-                <Card key={transaction.id} className="overflow-hidden transition-all duration-200 hover:shadow-md">
-                  <div className="relative h-48">
-                    <Image
-                      src={transaction.courses.thumbnail || "/placeholder.svg?height=200&width=400"}
-                      alt={transaction.courses.title}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <Badge
-                        variant="outline"
-                        className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                      >
-                        Menunggu Pembayaran
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{transaction.courses.title}</CardTitle>
-                    <CardDescription>
-                      {transaction.type === "batch" ? "Batch" : transaction.type === "private" ? "Private" : "Group"}
-                      {transaction.batch_number && ` (Batch ${transaction.batch_number})`}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <BookText className="h-4 w-4 text-blue-500" />
-                        <span>Level: {transaction.courses.level}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 text-blue-500" />
-                        <span>{transaction.courses.meetings} Pertemuan</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          Dibuat pada{" "}
-                          {new Date(transaction.created_at).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </span>
-                      </div>
-                      <div className="mt-2">
-                        <span className="font-medium">Total: </span>
-                        <span>Rp {Number(transaction.final_price).toLocaleString("id-ID")}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full" variant="outline" asChild>
-                      <Link href={`/checkout/payment?id=${transaction.id}`}>Lanjutkan Pembayaran</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Review Modal */}
+      {selectedCourse && (
+        <CourseReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => {
+            setIsReviewModalOpen(false)
+            setSelectedCourse(null)
+          }}
+          courseId={selectedCourse.id}
+          courseName={selectedCourse.title}
+          existingReview={selectedCourse.existingReview}
+        />
+      )}
     </div>
   )
 }

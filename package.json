@@ -44,6 +44,7 @@
     "framer-motion": "^12.4.9",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.476.0",
+    "marked": "^15.0.7",
     "midtrans-client": "^1.4.2",
     "mysql2": "^3.12.0",
     "next": "15.2.0",

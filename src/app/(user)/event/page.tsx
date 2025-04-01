@@ -40,9 +40,9 @@ const NoEventsMessage = () => (
       <div className="w-20 h-20 bg-[#EBF3FD] rounded-full flex items-center justify-center mx-auto mb-6">
         <Calendar className="h-10 w-10 text-[#5596DF]" />
       </div>
-      <h3 className="text-2xl font-bold text-gray-800 mb-3">No Upcoming Events</h3>
+      <h3 className="text-2xl font-bold text-gray-800 mb-3">Tidak Ada Acara Mendatang</h3>
       <p className="text-gray-600 mb-8 max-w-md mx-auto">
-        We don't have any events scheduled at the moment. Check back soon for new events and workshops!
+        Saat ini tidak ada acara yang dijadwalkan. Silakan periksa kembali nanti untuk acara dan workshop baru!
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
       </div>

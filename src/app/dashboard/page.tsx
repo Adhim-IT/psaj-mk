@@ -174,7 +174,7 @@ export default function DashboardPage() {
   if (status === "loading" || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#5596DF] mb-4" />
         <p className="text-gray-500">Loading your dashboard...</p>
       </div>
     )
@@ -189,7 +189,7 @@ export default function DashboardPage() {
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          className="px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
         >
           Try Again
         </button>
@@ -207,6 +207,7 @@ export default function DashboardPage() {
   )
 
   return (
+    
     <div className="container mx-auto px-4 py-8 mt-20">
       {/* Welcome Section */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
@@ -221,7 +222,7 @@ export default function DashboardPage() {
                   console.error("Failed to load dashboard avatar image:", userImage)
                 }}
               />
-              <AvatarFallback className="bg-blue-100 text-blue-500">{getUserInitials()}</AvatarFallback>
+              <AvatarFallback className="bg-blue-100 text-[#5596DF]">{getUserInitials()}</AvatarFallback>
             </Avatar>
           </div>
           <div>
@@ -236,7 +237,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-50 rounded-full">
-              <BookOpen className="h-6 w-6 text-blue-500" />
+              <BookOpen className="h-6 w-6 text-[#5596DF]" />
             </div>
             <div>
               <p className="text-gray-500 text-sm">Total Courses</p>
@@ -287,7 +288,7 @@ export default function DashboardPage() {
         <Link href="/dashboard/courses" className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-50 rounded-full">
-              <BookOpen className="h-6 w-6 text-blue-500" />
+              <BookOpen className="h-6 w-6 text-[#5596DF]" />
             </div>
             <div>
               <h3 className="font-semibold">My Courses</h3>
@@ -325,7 +326,7 @@ export default function DashboardPage() {
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Recent Courses</h2>
-          <Link href="/dashboard/courses" className="text-blue-500 hover:text-blue-700 text-sm">
+          <Link href="/dashboard/courses" className="text-[#5596DF] hover:text-blue-700 text-sm">
             View All
           </Link>
         </div>
@@ -336,7 +337,7 @@ export default function DashboardPage() {
             <p className="text-gray-500">You haven't purchased any courses yet.</p>
             <Link
               href="/kelas"
-              className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="mt-4 inline-block px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
             >
               Browse Courses
             </Link>
@@ -387,7 +388,7 @@ export default function DashboardPage() {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Recent Events</h2>
-          <Link href="/dashboard/event" className="text-blue-500 hover:text-blue-700 text-sm">
+          <Link href="/dashboard/event" className="text-[#5596DF] hover:text-blue-700 text-sm">
             View All
           </Link>
         </div>
@@ -398,7 +399,7 @@ export default function DashboardPage() {
             <p className="text-gray-500">You haven't registered for any events yet.</p>
             <Link
               href="/event"
-              className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="mt-4 inline-block px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
             >
               Browse Events
             </Link>

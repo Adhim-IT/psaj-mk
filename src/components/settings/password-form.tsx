@@ -8,22 +8,27 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
+import Swal from "sweetalert2"
 
 const passwordFormSchema = z
   .object({
     currentPassword: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
+      message: "Password harus minimal 8 karakter.",
     }),
     newPassword: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
+      message: "Password harus minimal 8 karakter.",
     }),
     confirmPassword: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
+      message: "Password harus minimal 8 karakter.",
     }),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Password tidak cocok",
     path: ["confirmPassword"],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: "Password baru tidak boleh sama dengan password lama",
+    path: ["newPassword"],
   })
 
 type PasswordFormValues = z.infer<typeof passwordFormSchema>
@@ -47,30 +52,97 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
     },
   })
 
+  const showFormError = (message: string) => {
+    Swal.fire({
+      icon: "error",
+      title: "Validasi Gagal",
+      text: message,
+      confirmButtonColor: "#5596DF",
+    })
+  }
+
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+
+  const handleSubmit = async (values: PasswordFormValues) => {
+    // Reset any previous errors
+    setPasswordError(null)
+
+    // Check if passwords match before submitting
+    if (values.newPassword !== values.confirmPassword) {
+      showFormError("Password tidak sesuai. Silakan periksa kembali.")
+      return
+    }
+
+    try {
+      await onSubmit(values)
+      // Reset form after successful submission
+      form.reset({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      })
+    } catch (error) {
+      console.error(error)
+
+      // If there's a specific error about incorrect password
+      if (error instanceof Error && error.message.includes("Current password is incorrect")) {
+        // Set the error state for the current password field
+        setPasswordError("Password saat ini tidak sesuai")
+        // Also focus the field
+        document.getElementById("current-password")?.focus()
+        // Show the alert for better visibility
+        showFormError("Password saat ini tidak sesuai. Silakan periksa kembali.")
+
+        // Prevent the error from bubbling up further
+        return
+      }
+
+      // Handle other errors
+      showFormError("Terjadi kesalahan saat memperbarui password. Silakan coba lagi.")
+    }
+  }
+
   return (
     <div>
-      <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-        Password
-      </h2>
+      <h2 className="text-xl font-bold text-[#5596DF]">Password</h2>
       <p className="text-gray-500 mt-2 mb-8">
-        Update your password. We recommend using a strong password that you don't use elsewhere.
+        Perbarui password Anda. Kami menyarankan menggunakan password yang kuat dan tidak digunakan di tempat lain.
       </p>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-xl">
+        <form
+          onSubmit={form.handleSubmit((values) => {
+            // Check if passwords match
+            if (values.newPassword !== values.confirmPassword) {
+              showFormError("Password tidak sesuai. Silakan periksa kembali.")
+              return
+            }
+            // Additional client-side validation if needed
+            handleSubmit(values)
+          })}
+          className="space-y-6 max-w-xl"
+        >
           <FormField
             control={form.control}
             name="currentPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-700">Current Password</FormLabel>
+                <FormLabel className="text-gray-700">Password Saat Ini</FormLabel>
                 <div className="relative">
                   <FormControl>
                     <Input
-                      placeholder="Enter your current password"
+                      id="current-password"
+                      placeholder="Masukkan password saat ini"
                       type={showCurrentPassword ? "text" : "password"}
-                      className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all pr-10"
+                      className={`bg-gray-50/50 border-gray-200 focus:border-[#5596DF] focus:ring-2 focus:ring-[#5596DF]/20 transition-all pr-10 ${
+                        passwordError ? "border-red-500 ring-1 ring-red-500" : ""
+                      }`}
                       {...field}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        // Clear error when user starts typing again
+                        if (passwordError) setPasswordError(null)
+                      }}
                     />
                   </FormControl>
                   <Button
@@ -83,7 +155,11 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
                     {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                <FormMessage className="text-red-500" />
+                {passwordError ? (
+                  <p className="text-sm font-medium text-red-500 mt-1">{passwordError}</p>
+                ) : (
+                  <FormMessage className="text-red-500" />
+                )}
               </FormItem>
             )}
           />
@@ -93,13 +169,13 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
             name="newPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-700">New Password</FormLabel>
+                <FormLabel className="text-gray-700">Password Baru</FormLabel>
                 <div className="relative">
                   <FormControl>
                     <Input
-                      placeholder="Enter new password"
+                      placeholder="Masukkan password baru"
                       type={showNewPassword ? "text" : "password"}
-                      className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all pr-10"
+                      className="bg-gray-50/50 border-gray-200 focus:border-[#5596DF] focus:ring-2 focus:ring-[#5596DF]/20 transition-all pr-10"
                       {...field}
                     />
                   </FormControl>
@@ -113,9 +189,7 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                <FormDescription className="text-xs text-gray-500">
-                  Password must be at least 8 characters long.
-                </FormDescription>
+                <FormDescription className="text-xs text-gray-500">Password harus minimal 8 karakter.</FormDescription>
                 <FormMessage className="text-red-500" />
               </FormItem>
             )}
@@ -126,13 +200,13 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-700">Confirm Password</FormLabel>
+                <FormLabel className="text-gray-700">Konfirmasi Password</FormLabel>
                 <div className="relative">
                   <FormControl>
                     <Input
-                      placeholder="Confirm new password"
+                      placeholder="Konfirmasi password baru"
                       type={showConfirmPassword ? "text" : "password"}
-                      className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all pr-10"
+                      className="bg-gray-50/50 border-gray-200 focus:border-[#5596DF] focus:ring-2 focus:ring-[#5596DF]/20 transition-all pr-10"
                       {...field}
                     />
                   </FormControl>
@@ -155,15 +229,15 @@ export function PasswordForm({ onSubmit, isLoading }: PasswordFormProps) {
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
+              className="bg-[#5596DF] text-white hover:bg-[#4785cc] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
+                  Memperbarui...
                 </>
               ) : (
-                "Update password"
+                "Perbarui password"
               )}
             </Button>
           </div>

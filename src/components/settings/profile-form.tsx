@@ -14,10 +14,10 @@ import { Loader2, Camera } from "lucide-react"
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+    message: "Nama harus minimal 2 karakter.",
   }),
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: "Masukkan alamat email yang valid.",
   }),
   image: z.any().optional(),
 })
@@ -79,10 +79,8 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-        Profile
-      </h2>
-      <p className="text-gray-500 mt-2 mb-8">Update your profile information and email address.</p>
+      <h2 className="text-xl font-bold text-[#5596DF]">Profil</h2>
+      <p className="text-gray-500 mt-2 mb-8">Perbarui informasi profil dan alamat email Anda.</p>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-xl">
@@ -92,7 +90,7 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                 onClick={handleImageClick}
                 className="relative cursor-pointer rounded-full overflow-hidden transition-transform duration-200 transform group-hover:scale-105"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-[#5596DF]/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Avatar className="h-24 w-24 ring-2 ring-white shadow-lg">
                   {previewImage ? (
                     <AvatarImage
@@ -105,16 +103,14 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                       }}
                     />
                   ) : null}
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                    {getUserInitials()}
-                  </AvatarFallback>
+                  <AvatarFallback className="bg-[#5596DF] text-white">{getUserInitials()}</AvatarFallback>
                 </Avatar>
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera className="h-6 w-6 text-white" />
                 </div>
               </div>
               <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-              <p className="text-sm text-gray-500 mt-2 text-center">Click to upload</p>
+              <p className="text-sm text-gray-500 mt-2 text-center">Klik untuk upload</p>
             </div>
 
             <div className="flex-1 space-y-6 w-full">
@@ -123,16 +119,16 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700">Name</FormLabel>
+                    <FormLabel className="text-gray-700">Nama</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Your name"
+                        placeholder="Nama Anda"
                         {...field}
-                        className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="bg-gray-50/50 border-gray-200 focus:border-[#5596DF] focus:ring-2 focus:ring-[#5596DF]/20 transition-all"
                       />
                     </FormControl>
                     <FormDescription className="text-xs text-gray-500">
-                      This is your public display name.
+                      Ini adalah nama tampilan publik Anda.
                     </FormDescription>
                     <FormMessage className="text-red-500" />
                   </FormItem>
@@ -147,13 +143,13 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
                     <FormLabel className="text-gray-700">Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Your email address"
+                        placeholder="Alamat email Anda"
                         {...field}
-                        className="bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="bg-gray-50/50 border-gray-200 focus:border-[#5596DF] focus:ring-2 focus:ring-[#5596DF]/20 transition-all"
                       />
                     </FormControl>
                     <FormDescription className="text-xs text-gray-500">
-                      We'll use this email to contact you.
+                      Kami akan menggunakan email ini untuk menghubungi Anda.
                     </FormDescription>
                     <FormMessage className="text-red-500" />
                   </FormItem>
@@ -166,15 +162,15 @@ export function ProfileForm({ user, onSubmit, isLoading }: ProfileFormProps) {
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
+              className="bg-[#5596DF] text-white hover:bg-[#4785cc] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
+                  Memperbarui...
                 </>
               ) : (
-                "Update profile"
+                "Perbarui profil"
               )}
             </Button>
           </div>

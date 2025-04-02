@@ -5,7 +5,7 @@ import { ProfileForm } from "./profile-form"
 import { PasswordForm } from "./password-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { updateProfile, updatePassword } from "@/lib/settings"
-import { toast } from "sonner"
+import Swal from "sweetalert2"
 import type { User } from "next-auth"
 
 interface SettingsFormProps {
@@ -29,12 +29,28 @@ export default function SettingsForm({ user }: SettingsFormProps) {
     try {
       const result = await updateProfile(values)
       if (result.success) {
-        toast.success("Profile updated successfully")
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: "Profil berhasil diperbarui",
+          confirmButtonColor: "#5596DF",
+          timer: 3000,
+        })
       } else {
-        toast.error(result.error || "Failed to update profile")
+        Swal.fire({
+          icon: "error",
+          title: "Gagal!",
+          text: result.error || "Gagal memperbarui profil",
+          confirmButtonColor: "#5596DF",
+        })
       }
     } catch (error) {
-      toast.error("An error occurred while updating your profile")
+      Swal.fire({
+        icon: "error",
+        title: "Terjadi Kesalahan",
+        text: "Terjadi kesalahan saat memperbarui profil Anda",
+        confirmButtonColor: "#5596DF",
+      })
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -50,12 +66,45 @@ export default function SettingsForm({ user }: SettingsFormProps) {
     try {
       const result = await updatePassword(values)
       if (result.success) {
-        toast.success("Password updated successfully")
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: "Password berhasil diperbarui",
+          confirmButtonColor: "#5596DF",
+          timer: 3000,
+        })
       } else {
-        toast.error(result.error || "Failed to update password")
+        // Check for specific error messages
+        if (result.error && result.error.includes("Current password is incorrect")) {
+          // Show SweetAlert instead of throwing an error
+          Swal.fire({
+            icon: "error",
+            title: "Validasi Gagal",
+            text: "Password saat ini tidak sesuai. Silakan periksa kembali.",
+            confirmButtonColor: "#5596DF",
+          })
+
+          // Focus the current password field if possible
+          setTimeout(() => {
+            document.getElementById("current-password")?.focus()
+          }, 500)
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Gagal!",
+            text: result.error || "Gagal memperbarui password",
+            confirmButtonColor: "#5596DF",
+          })
+        }
       }
     } catch (error) {
-      toast.error("An error occurred while updating your password")
+      const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan saat memperbarui password Anda"
+      Swal.fire({
+        icon: "error",
+        title: "Terjadi Kesalahan",
+        text: errorMessage,
+        confirmButtonColor: "#5596DF",
+      })
       console.error(error)
     } finally {
       setIsLoading(false)

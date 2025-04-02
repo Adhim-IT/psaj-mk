@@ -1,0 +1,31 @@
+name: psaj-mk
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        cpu_shares: 90
+        command: []
+        container_name: psaj-mk
+        deploy:
+            resources:
+                limits:
+                    memory: "8186232832"
+        hostname: psaj-mk
+        image: registry.muhammadluthfi.id/psaj-mk:latest
+        network_mode: host
+        restart: unless-stopped
+networks:
+    default:
+        name: psaj-mk_default
+x-casaos:
+    author: self
+    category: self
+    hostname: ""
+    icon: ""
+    index: /
+    is_uncontrolled: false
+    port_map: "3337"
+    scheme: http
+    title:
+        custom: PSAJ-MK

@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/hooks/useUser"
-import { BookOpen, Calendar, CheckCircle, Clock, CreditCard, Loader2, Settings } from "lucide-react"
+import { BookOpen, Calendar, CheckCircle, Clock, CreditCard, Loader2, MessageSquare } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSession } from "next-auth/react"
 
@@ -207,8 +207,7 @@ export default function DashboardPage() {
   )
 
   return (
-    
-    <div className="container mx-auto px-4 py-8 mt-20">
+    <div className="container mx-auto px-4 py-8 mt-4">
       {/* Welcome Section */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -226,8 +225,8 @@ export default function DashboardPage() {
             </Avatar>
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {user?.name || "Student"}!</h1>
-            <p className="text-gray-500">Here's an overview of your learning journey</p>
+            <h1 className="text-2xl font-bold">Selamat datang kembali, {user?.name || "Siswa"}!</h1>
+            <p className="text-gray-500">Berikut adalah ringkasan perjalanan belajar Anda</p>
           </div>
         </div>
       </div>
@@ -240,7 +239,7 @@ export default function DashboardPage() {
               <BookOpen className="h-6 w-6 text-[#5596DF]" />
             </div>
             <div>
-              <p className="text-gray-500 text-sm">Total Courses</p>
+              <p className="text-gray-500 text-sm">Total Kursus</p>
               <h3 className="text-2xl font-bold">{totalCourses}</h3>
             </div>
           </div>
@@ -252,7 +251,7 @@ export default function DashboardPage() {
               <CheckCircle className="h-6 w-6 text-green-500" />
             </div>
             <div>
-              <p className="text-gray-500 text-sm">Completed</p>
+              <p className="text-gray-500 text-sm">Selesai</p>
               <h3 className="text-2xl font-bold">{completedCourses}</h3>
             </div>
           </div>
@@ -264,7 +263,7 @@ export default function DashboardPage() {
               <Calendar className="h-6 w-6 text-purple-500" />
             </div>
             <div>
-              <p className="text-gray-500 text-sm">Upcoming Events</p>
+              <p className="text-gray-500 text-sm">Event Mendatang</p>
               <h3 className="text-2xl font-bold">{upcomingEvents}</h3>
             </div>
           </div>
@@ -276,7 +275,7 @@ export default function DashboardPage() {
               <CreditCard className="h-6 w-6 text-amber-500" />
             </div>
             <div>
-              <p className="text-gray-500 text-sm">Total Investment</p>
+              <p className="text-gray-500 text-sm">Total Investasi</p>
               <h3 className="text-2xl font-bold">{formatCurrency(totalSpent)}</h3>
             </div>
           </div>
@@ -291,8 +290,8 @@ export default function DashboardPage() {
               <BookOpen className="h-6 w-6 text-[#5596DF]" />
             </div>
             <div>
-              <h3 className="font-semibold">My Courses</h3>
-              <p className="text-gray-500 text-sm">Access your purchased courses</p>
+              <h3 className="font-semibold">Kursus Saya</h3>
+              <p className="text-gray-500 text-sm">Akses kursus yang telah Anda beli</p>
             </div>
           </div>
         </Link>
@@ -303,20 +302,20 @@ export default function DashboardPage() {
               <Calendar className="h-6 w-6 text-purple-500" />
             </div>
             <div>
-              <h3 className="font-semibold">My Events</h3>
-              <p className="text-gray-500 text-sm">View your registered events</p>
+              <h3 className="font-semibold">Event Saya</h3>
+              <p className="text-gray-500 text-sm">Lihat event yang telah Anda daftar</p>
             </div>
           </div>
         </Link>
 
-        <Link href="/settings" className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+        <Link href="/dashboard/reviews" className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gray-50 rounded-full">
-              <Settings className="h-6 w-6 text-gray-500" />
+              <MessageSquare className="h-6 w-6 text-gray-500" />
             </div>
             <div>
-              <h3 className="font-semibold">Account Settings</h3>
-              <p className="text-gray-500 text-sm">Update your profile and password</p>
+              <h3 className="font-semibold">Ulasan Saya</h3>
+              <p className="text-gray-500 text-sm">Kelola ulasan kursus dan event Anda</p>
             </div>
           </div>
         </Link>
@@ -325,21 +324,21 @@ export default function DashboardPage() {
       {/* Recent Courses */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Recent Courses</h2>
+          <h2 className="text-xl font-bold">Kursus Terbaru</h2>
           <Link href="/dashboard/courses" className="text-[#5596DF] hover:text-blue-700 text-sm">
-            View All
+            Lihat Semua
           </Link>
         </div>
 
         {courses.length === 0 ? (
           <div className="text-center py-8">
             <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">You haven't purchased any courses yet.</p>
+            <p className="text-gray-500">Anda belum membeli kursus apapun.</p>
             <Link
               href="/kelas"
               className="mt-4 inline-block px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
             >
-              Browse Courses
+              Jelajahi Kursus
             </Link>
           </div>
         ) : (
@@ -387,21 +386,21 @@ export default function DashboardPage() {
       {/* Recent Events */}
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Recent Events</h2>
+          <h2 className="text-xl font-bold">Event Terbaru</h2>
           <Link href="/dashboard/event" className="text-[#5596DF] hover:text-blue-700 text-sm">
-            View All
+            Lihat Semua
           </Link>
         </div>
 
         {events.length === 0 ? (
           <div className="text-center py-8">
             <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">You haven't registered for any events yet.</p>
+            <p className="text-gray-500">Anda belum mendaftar ke event apapun.</p>
             <Link
               href="/event"
               className="mt-4 inline-block px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
             >
-              Browse Events
+              Jelajahi Event
             </Link>
           </div>
         ) : (

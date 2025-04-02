@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { CourseReviewModal } from "@/components/user/reviews/course-review-modal"
 import { canReviewCourse } from "@/lib/reviews"
 import Swal from "sweetalert2"
+import PageHeader from "@/src/components/dashboard/page-header"
 
 type CourseTransaction = {
   id: string
@@ -135,141 +136,154 @@ export default function CoursesPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#5596DF] mb-4" />
-        <p className="text-gray-500">Loading your courses...</p>
-      </div>
+      <>
+        <PageHeader title="Kursus Saya" description="Akses dan kelola kursus yang telah Anda beli" />
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-[#5596DF] mb-4" />
+            <p className="text-gray-500">Loading your courses...</p>
+          </div>
+        </div>
+      </>
     )
   }
 
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="bg-red-50 p-4 rounded-lg text-red-500 mb-4">
-          <p>{error}</p>
+      <>
+        <PageHeader title="Kursus Saya" description="Akses dan kelola kursus yang telah Anda beli" />
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="bg-red-50 p-4 rounded-lg text-red-500 mb-4">
+              <p>{error}</p>
+            </div>
+            <Button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
+            >
+              Try Again
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-[#5596DF] text-white rounded-md hover:bg-blue-600"
-        >
-          Try Again
-        </Button>
-      </div>
+      </>
     )
   }
 
   // Empty state
   if (transactions.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 mt-20">
-        <h1 className="text-2xl font-bold mb-6">My Courses</h1>
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-          <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No courses yet</h2>
-          <p className="text-gray-500 mb-6">You haven't purchased any courses yet.</p>
-          <Link href="/kelas">
-            <Button className="bg-[#5596DF] hover:bg-blue-600">Browse Courses</Button>
-          </Link>
+      <>
+        <PageHeader title="Kursus Saya" description="Akses dan kelola kursus yang telah Anda beli" />
+        <div className="container mx-auto px-4">
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+            <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Belum ada kursus</h2>
+            <p className="text-gray-500 mb-6">Anda belum membeli kursus apapun.</p>
+            <Link href="/kelas">
+              <Button className="bg-[#5596DF] hover:bg-blue-600">Jelajahi Kursus</Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 mt-20">
-      <h1 className="text-2xl font-bold mb-6">My Courses</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {transactions.map((transaction) => (
-          <Card
-            key={transaction.id}
-            className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
-          >
-            <div className="relative h-48 w-full">
-              <Image
-                src={transaction.courses.thumbnail || "/placeholder.svg?height=192&width=384"}
-                alt={transaction.courses.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute top-3 right-3">
-                <Badge
-                  className={`${
-                    transaction.status === "paid"
-                      ? "bg-green-100 text-green-800"
-                      : transaction.status === "unpaid"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {transaction.status === "paid" ? "Paid" : transaction.status === "unpaid" ? "Unpaid" : "Failed"}
-                </Badge>
-              </div>
-            </div>
-
-            <CardContent className="p-5">
-              <h2 className="text-lg font-semibold mb-2 line-clamp-2">{transaction.courses.title}</h2>
-
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                <div className="flex items-center">
-                  <BookOpen className="w-4 h-4 mr-1" />
-                  <span>{transaction.courses.meetings} Meetings</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <span>{formatDate(transaction.created_at)}</span>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="font-medium">{formatCurrency(Number(transaction.final_price))}</span>
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  {transaction.courses.level}
-                </Badge>
-              </div>
-            </CardContent>
-
-            <CardFooter className="p-5 pt-0 flex justify-between gap-2">
-              {transaction.status === "paid" ? (
-                <>
-                  <Link href={`/kelas/${transaction.courses.slug}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
-                      View Course
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={() => handleReviewClick(transaction.courses.id, transaction.courses.title)}
-                    className="bg-[#5596DF] hover:bg-blue-600"
+    <>
+      <PageHeader title="Kursus Saya" description="Akses dan kelola kursus yang telah Anda beli" />
+      <div className="container mx-auto px-4 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {transactions.map((transaction) => (
+            <Card
+              key={transaction.id}
+              className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow"
+            >
+              <div className="relative h-48 w-full">
+                <Image
+                  src={transaction.courses.thumbnail || "/placeholder.svg?height=192&width=384"}
+                  alt={transaction.courses.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-3 right-3">
+                  <Badge
+                    className={`${
+                      transaction.status === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : transaction.status === "unpaid"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-red-100 text-red-800"
+                    }`}
                   >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Review
-                  </Button>
-                </>
-              ) : (
-                <Link href={`/checkout/payment?transaction=${transaction.id}`} className="w-full">
-                  <Button className="w-full bg-[#5596DF] hover:bg-blue-600">Complete Payment</Button>
-                </Link>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+                    {transaction.status === "paid" ? "Paid" : transaction.status === "unpaid" ? "Unpaid" : "Failed"}
+                  </Badge>
+                </div>
+              </div>
 
-      {/* Review Modal */}
-      {selectedCourse && (
-        <CourseReviewModal
-          isOpen={isReviewModalOpen}
-          onClose={() => {
-            setIsReviewModalOpen(false)
-            setSelectedCourse(null)
-          }}
-          courseId={selectedCourse.id}
-          courseName={selectedCourse.title}
-          existingReview={selectedCourse.existingReview}
-        />
-      )}
-    </div>
+              <CardContent className="p-5">
+                <h2 className="text-lg font-semibold mb-2 line-clamp-2">{transaction.courses.title}</h2>
+
+                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                  <div className="flex items-center">
+                    <BookOpen className="w-4 h-4 mr-1" />
+                    <span>{transaction.courses.meetings} Meetings</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>{formatDate(transaction.created_at)}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{formatCurrency(Number(transaction.final_price))}</span>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {transaction.courses.level}
+                  </Badge>
+                </div>
+              </CardContent>
+
+              <CardFooter className="p-5 pt-0 flex justify-between gap-2">
+                {transaction.status === "paid" ? (
+                  <>
+                    <Link href={`/kelas/${transaction.courses.slug}`} className="flex-1">
+                      <Button variant="outline" className="w-full">
+                        View Course
+                      </Button>
+                    </Link>
+                    <Button
+                      onClick={() => handleReviewClick(transaction.courses.id, transaction.courses.title)}
+                      className="bg-[#5596DF] hover:bg-blue-600"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Review
+                    </Button>
+                  </>
+                ) : (
+                  <Link href={`/checkout/payment?transaction=${transaction.id}`} className="w-full">
+                    <Button className="w-full bg-[#5596DF] hover:bg-blue-600">Complete Payment</Button>
+                  </Link>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+
+        {/* Review Modal */}
+        {selectedCourse && (
+          <CourseReviewModal
+            isOpen={isReviewModalOpen}
+            onClose={() => {
+              setIsReviewModalOpen(false)
+              setSelectedCourse(null)
+            }}
+            courseId={selectedCourse.id}
+            courseName={selectedCourse.title}
+            existingReview={selectedCourse.existingReview}
+          />
+        )}
+      </div>
+    </>
   )
 }
 

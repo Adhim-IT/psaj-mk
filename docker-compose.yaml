@@ -25,7 +25,7 @@ x-casaos:
     icon: ""
     index: /
     is_uncontrolled: false
-    port_map: "3337"
+    port_map: "3010"
     scheme: http
     title:
         custom: PSAJ-MK

@@ -1,27 +1,25 @@
-import { notFound } from "next/navigation"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { HomeIcon } from "lucide-react"
-import TagForm from "@/components/admin/artikel/tag/TagClass-form"
-import { getTagById } from "@/lib/tag"
+import { notFound } from 'next/navigation';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { HomeIcon } from 'lucide-react';
+import TagForm from '@/components/admin/artikel/tag/TagClass-form';
+import { getTagById } from '@/lib/tag';
 
+// Perbarui interface untuk Next.js 15
 interface EditTagPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function EditTagPage({ params }: EditTagPageProps) {
-  const { id } = params
-  const { tag, error } = await getTagById(id)
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  const { tag, error } = await getTagById(id);
 
   if (error || !tag) {
-    notFound()
+    return notFound();
   }
 
   return (
@@ -56,6 +54,5 @@ export default async function EditTagPage({ params }: EditTagPageProps) {
 
       <TagForm tag={tag} isEditing={true} />
     </div>
-  )
+  );
 }
-

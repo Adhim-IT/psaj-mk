@@ -65,7 +65,7 @@ export async function getCourseTransactions(filters: Filters) {
     })
 
     // Convert Decimal objects to numbers
-    const serializedTransactions = transactions.map((transaction) => ({
+    const serializedTransactions = transactions.map((transaction: any) => ({
       ...transaction,
       original_price: Number(transaction.original_price),
       discount: Number(transaction.discount),
@@ -101,6 +101,7 @@ export async function getCourseTransactionById(id: string) {
         students: {
           select: {
             name: true,
+            
           },
         },
       },

@@ -1,203 +1,199 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
-import { Loader2, CheckCircle, AlertCircle, CreditCard, Tag, ShoppingCart } from "lucide-react"
-import Swal from "sweetalert2"
-import { initiateCheckout } from "@/lib/checkout"
-import { getCourseTypeBySlug } from "@/lib/course-types"
-import { validatePromoCode } from "@/lib/promo-code"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import type { CourseTypeTransaction } from "@/types"
-import { useSession } from "next-auth/react"
-import Script from "next/script"
-import Navbar from "@/components/user/Navbar"
-import Footer from "@/components/user/Footer"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/components/ui/use-toast"
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { Loader2, CheckCircle, AlertCircle, CreditCard, Tag, ShoppingCart } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { initiateCheckout } from '@/lib/checkout';
+import { getCourseTypeBySlug } from '@/lib/course-types';
+import { validatePromoCode } from '@/lib/promo-code';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { useSession } from 'next-auth/react';
+import Script from 'next/script';
+import Navbar from '@/components/user/Navbar';
+import Footer from '@/components/user/Footer';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 // Deklarasi tipe untuk Midtrans Snap
 declare global {
   interface Window {
     snap?: {
-      pay: (token: string, options: any) => void
-    }
+      pay: (token: string, options: any) => void;
+    };
   }
 }
 
 export default function CheckoutPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const courseTypeSlug = searchParams.get("course")
-  const { data: session, status } = useSession()
-  const { toast } = useToast()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const courseTypeSlug = searchParams.get('course');
+  const { data: session, status } = useSession();
+  const { toast } = useToast();
 
-  const [courseType, setCourseType] = useState<CourseTypeTransaction | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [promoCode, setPromoCode] = useState("")
-  const [promoApplied, setPromoApplied] = useState(false)
-  const [promoDiscount, setPromoDiscount] = useState(0)
-  const [promoDiscountType, setPromoDiscountType] = useState<"percentage" | "fixed" | null>(null)
-  const [validatingPromo, setValidatingPromo] = useState(false)
-  const [processingPayment, setProcessingPayment] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [authChecked, setAuthChecked] = useState(false)
-  const [midtransLoaded, setMidtransLoaded] = useState(false)
+  const [courseType, setCourseType] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDiscountType, setPromoDiscountType] = useState<'percentage' | 'fixed' | null>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [midtransLoaded, setMidtransLoaded] = useState(false);
 
   // Cek session dari client-side
   useEffect(() => {
-    if (status === "loading") return
+    if (status === 'loading') return;
 
-    setAuthChecked(true)
+    setAuthChecked(true);
 
-    if (status === "unauthenticated") {
-      console.log("User is not authenticated")
-    } else if (status === "authenticated" && session) {
-      console.log("User is authenticated:", session.user)
+    if (status === 'unauthenticated') {
+      console.log('User is not authenticated');
+    } else if (status === 'authenticated' && session) {
+      console.log('User is authenticated:', session.user);
     }
-  }, [session, status])
+  }, [session, status]);
 
   useEffect(() => {
     async function loadCourseType() {
       if (!courseTypeSlug) {
-        setError("Kelas tidak ditemukan")
-        setLoading(false)
-        return
+        setError('Kelas tidak ditemukan');
+        setLoading(false);
+        return;
       }
 
       try {
-        const courseTypeData = await getCourseTypeBySlug(courseTypeSlug)
+        const courseTypeData = await getCourseTypeBySlug(courseTypeSlug);
         if (!courseTypeData) {
-          setError("Kelas tidak ditemukan")
-          setLoading(false)
-          return
+          setError('Kelas tidak ditemukan');
+          setLoading(false);
+          return;
         }
 
-        setCourseType(courseTypeData)
+        setCourseType(courseTypeData);
       } catch (err) {
-        console.error("Error loading course type:", err)
-        setError("Gagal memuat data kelas")
+        console.error('Error loading course type:', err);
+        setError('Gagal memuat data kelas');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadCourseType()
-  }, [courseTypeSlug])
+    loadCourseType();
+  }, [courseTypeSlug]);
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) {
       Swal.fire({
-        title: "Kode promo kosong",
-        text: "Silakan masukkan kode promo",
-        icon: "error",
-        confirmButtonColor: "#4A90E2",
-      })
-      return
+        title: 'Kode promo kosong',
+        text: 'Silakan masukkan kode promo',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
+      return;
     }
 
-    setValidatingPromo(true)
+    setValidatingPromo(true);
 
     try {
       // Validate promo code from database
-      const result = await validatePromoCode(promoCode.trim())
+      const result = await validatePromoCode(promoCode.trim());
 
       if (!result.success || !result.data) {
         Swal.fire({
-          title: "Kode promo tidak valid",
-          text: result.error || "Kode promo tidak ditemukan atau sudah tidak berlaku",
-          icon: "error",
-          confirmButtonColor: "#4A90E2",
-        })
-        return
+          title: 'Kode promo tidak valid',
+          text: result.error || 'Kode promo tidak ditemukan atau sudah tidak berlaku',
+          icon: 'error',
+          confirmButtonColor: '#4A90E2',
+        });
+        return;
       }
 
       // Set promo details from database
-      const promoData = result.data
-      setPromoDiscountType(promoData.discount_type)
-      setPromoDiscount(promoData.discount)
-      setPromoApplied(true)
+      const promoData = result.data;
+      setPromoDiscountType(promoData.discount_type as 'percentage' | 'fixed');
+      setPromoDiscount(promoData.discount);
+      setPromoApplied(true);
 
       // Show success message
-      const discountText =
-        promoData.discount_type === "percentage"
-          ? `${promoData.discount}%`
-          : `Rp ${promoData.discount.toLocaleString("id-ID")}`
+      const discountText = promoData.discount_type === 'percentage' ? `${promoData.discount}%` : `Rp ${promoData.discount.toLocaleString('id-ID')}`;
 
       Swal.fire({
-        title: "Kode promo berhasil diterapkan",
+        title: 'Kode promo berhasil diterapkan',
         text: `Diskon ${discountText} telah ditambahkan`,
-        icon: "success",
-        confirmButtonColor: "#4A90E2",
-      })
+        icon: 'success',
+        confirmButtonColor: '#4A90E2',
+      });
     } catch (err) {
-      console.error("Error validating promo code:", err)
+      console.error('Error validating promo code:', err);
       Swal.fire({
-        title: "Gagal memvalidasi kode promo",
-        text: "Terjadi kesalahan saat memvalidasi kode promo",
-        icon: "error",
-        confirmButtonColor: "#4A90E2",
-      })
+        title: 'Gagal memvalidasi kode promo',
+        text: 'Terjadi kesalahan saat memvalidasi kode promo',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
     } finally {
-      setValidatingPromo(false)
+      setValidatingPromo(false);
     }
-  }
+  };
 
   const handleCheckout = async () => {
-    if (!courseType) return
+    if (!courseType) return;
 
-    if (status === "unauthenticated") {
+    if (status === 'unauthenticated') {
       Swal.fire({
-        title: "Checkout gagal",
-        text: "Anda harus login terlebih dahulu",
-        icon: "error",
-        confirmButtonColor: "#4A90E2",
-      })
-      router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)
-      return
+        title: 'Checkout gagal',
+        text: 'Anda harus login terlebih dahulu',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
+      router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`);
+      return;
     }
 
     if (!window.snap) {
       Swal.fire({
-        title: "Checkout gagal",
-        text: "Sistem pembayaran belum siap. Silakan coba lagi.",
-        icon: "error",
-        confirmButtonColor: "#4A90E2",
-      })
-      return
+        title: 'Checkout gagal',
+        text: 'Sistem pembayaran belum siap. Silakan coba lagi.',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
+      return;
     }
 
-    setProcessingPayment(true)
-    setError(null)
+    setProcessingPayment(true);
+    setError(null);
 
     try {
       // STEP 1: Minta token Midtrans dari server
-      const response = await fetch("/api/midtrans/create-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/midtrans/create-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseType,
           promoCode: promoApplied ? promoCode : undefined,
           promoDiscountType,
           promoDiscount,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok || data.error) {
-        throw new Error(data.error || "Gagal mendapatkan token pembayaran")
+        throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
       }
 
       // STEP 2: Tampilkan Midtrans Snap
-      window.snap.pay(data.token, {
+      window.snap?.pay(data.token, {
         onSuccess: async (result: any) => {
-          console.log("✅ Payment success:", result)
+          console.log('✅ Payment success:', result);
 
           // STEP 3: Simpan transaksi ke database setelah sukses
           const saveResponse = await initiateCheckout({
@@ -205,80 +201,74 @@ export default function CheckoutPage() {
             promoCode: promoApplied ? promoCode : undefined,
             promoDiscountType,
             promoDiscount,
-          })
+          });
 
-          // Replace this code:
-          // if (saveResponse.error) {
-          //   throw new Error(saveResponse.error);
-          // }
-
-          // With this improved error handling:
           if (saveResponse.error) {
             // Check if the error is about already purchasing the class
-            if (saveResponse.error.includes("sudah membeli kelas ini")) {
+            if (saveResponse.error.includes('sudah membeli kelas ini')) {
               Swal.fire({
-                title: "Informasi",
-                text: "Anda sudah membeli kelas ini. Anda akan dialihkan ke dashboard.",
-                icon: "info",
-                confirmButtonColor: "#4A90E2",
-                confirmButtonText: "Lihat Dashboard",
+                title: 'Informasi',
+                text: 'Anda sudah membeli kelas ini. Anda akan dialihkan ke dashboard.',
+                icon: 'info',
+                confirmButtonColor: '#4A90E2',
+                confirmButtonText: 'Lihat Dashboard',
               }).then(() => {
-                router.push("/dashboard")
-              })
-              return
+                router.push('/dashboard');
+              });
+              return;
             } else {
               // Handle other errors
               Swal.fire({
-                title: "Error",
+                title: 'Error',
                 text: saveResponse.error,
-                icon: "error",
-                confirmButtonColor: "#4A90E2",
-              })
-              setProcessingPayment(false)
-              return
+                icon: 'error',
+                confirmButtonColor: '#4A90E2',
+              });
+              setProcessingPayment(false);
+              return;
             }
           }
 
           // Redirect ke halaman sukses
-          router.push(`/checkout/success?id=${saveResponse.transactionId}`)
+          router.push(`/checkout/success?id=${saveResponse.transactionId}`);
         },
         onPending: (result: any) => {
-          console.log("⏳ Payment pending:", result)
-          router.push(`/checkout/payment?id=${result.order_id}`)
+          console.log('⏳ Payment pending:', result);
+          router.push(`/checkout/payment?id=${result.order_id}`);
         },
         onError: (result: any) => {
-          console.error("❌ Payment error:", result)
+          console.error('❌ Payment error:', result);
           Swal.fire({
-            title: "Pembayaran gagal",
-            text: "Terjadi kesalahan saat memproses pembayaran",
-            icon: "error",
-            confirmButtonColor: "#4A90E2",
-          })
+            title: 'Pembayaran gagal',
+            text: 'Terjadi kesalahan saat memproses pembayaran',
+            icon: 'error',
+            confirmButtonColor: '#4A90E2',
+          });
         },
         onClose: () => {
-          console.log("⚠️ Customer closed the popup")
+          console.log('⚠️ Customer closed the popup');
           Swal.fire({
-            title: "Pembayaran dibatalkan",
-            text: "Anda menutup halaman pembayaran sebelum menyelesaikan transaksi",
-            icon: "warning",
-            confirmButtonColor: "#4A90E2",
-          })
+            title: 'Pembayaran dibatalkan',
+            text: 'Anda menutup halaman pembayaran sebelum menyelesaikan transaksi',
+            icon: 'warning',
+            confirmButtonColor: '#4A90E2',
+          });
         },
-      })
+      });
     } catch (err) {
-      console.error("Checkout error:", err)
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan saat memproses pembayaran"
-      setError(errorMessage)
+      console.error('Checkout error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan saat memproses pembayaran';
+      setError(errorMessage);
       Swal.fire({
-        title: "Checkout gagal",
+        title: 'Checkout gagal',
         text: errorMessage,
-        icon: "error",
-        confirmButtonColor: "#4A90E2",
-      })
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
     } finally {
-      setProcessingPayment(false)
+      setProcessingPayment(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -292,7 +282,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !courseType) {
@@ -304,54 +294,44 @@ export default function CheckoutPage() {
             <div className="bg-red-100 p-3 rounded-full">
               <AlertCircle className="h-12 w-12 text-red-500" />
             </div>
-            <p className="mt-6 text-xl text-gray-800 font-semibold text-center">{error || "Kelas tidak ditemukan"}</p>
-            <p className="text-gray-500 mt-2 text-center mb-6">
-              Silakan kembali ke halaman kelas untuk memilih kelas lainnya
-            </p>
-            <Button
-              className="w-full bg-[#5596DF] hover:bg-blue-700 text-white"
-              size="lg"
-              onClick={() => router.push("/kelas")}
-            >
+            <p className="mt-6 text-xl text-gray-800 font-semibold text-center">{error || 'Kelas tidak ditemukan'}</p>
+            <p className="text-gray-500 mt-2 text-center mb-6">Silakan kembali ke halaman kelas untuk memilih kelas lainnya</p>
+            <Button className="w-full bg-[#5596DF] hover:bg-blue-700 text-white" size="lg" onClick={() => router.push('/kelas')}>
               Kembali ke Daftar Kelas
             </Button>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Calculate discount amount if applicable
-  let discountAmount = 0
+  let discountAmount = 0;
   if (courseType.is_discount && courseType.discount && courseType.discount_type) {
-    if (courseType.discount_type === "percentage") {
-      discountAmount = (courseType.normal_price * courseType.discount) / 100
+    if (courseType.discount_type === 'percentage') {
+      discountAmount = (courseType.normal_price * courseType.discount) / 100;
     } else {
-      discountAmount = courseType.discount
+      discountAmount = courseType.discount;
     }
   }
 
   // Calculate promo discount amount
-  let promoDiscountAmount = 0
+  let promoDiscountAmount = 0;
   if (promoApplied && promoDiscount) {
-    if (promoDiscountType === "percentage") {
-      promoDiscountAmount = (courseType.normal_price * promoDiscount) / 100
+    if (promoDiscountType === 'percentage') {
+      promoDiscountAmount = (courseType.normal_price * promoDiscount) / 100;
     } else {
-      promoDiscountAmount = promoDiscount
+      promoDiscountAmount = promoDiscount;
     }
   }
 
   // Calculate final price
-  const finalPrice = Math.max(courseType.normal_price - discountAmount - promoDiscountAmount, 0)
+  const finalPrice = Math.max(courseType.normal_price - discountAmount - promoDiscountAmount, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Load Midtrans Snap JavaScript */}
-      <Script
-        src="https://app.sandbox.midtrans.com/snap/snap.js"
-        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-        onLoad={() => setMidtransLoaded(true)}
-      />
+      <Script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY} onLoad={() => setMidtransLoaded(true)} />
 
       <Navbar />
 
@@ -388,19 +368,15 @@ export default function CheckoutPage() {
         </div>
 
         {/* Tampilkan peringatan jika tidak ada session */}
-        {status === "unauthenticated" && authChecked && (
+        {status === 'unauthenticated' && authChecked && (
           <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg shadow-sm">
             <p className="text-amber-700 flex items-center text-sm md:text-base">
               <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
               <span>
-                Anda belum login. Silakan{" "}
-                <Button
-                  variant="link"
-                  className="p-0 h-auto text-[#5596DF] font-semibold"
-                  onClick={() => router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)}
-                >
+                Anda belum login. Silakan{' '}
+                <Button variant="link" className="p-0 h-auto text-[#5596DF] font-semibold" onClick={() => router.push(`/login?redirect=/checkout?course=${courseTypeSlug}`)}>
                   login terlebih dahulu
-                </Button>{" "}
+                </Button>{' '}
                 untuk melanjutkan checkout.
               </span>
             </p>
@@ -421,16 +397,9 @@ export default function CheckoutPage() {
               <CardContent className="p-6">
                 <div className="flex flex-col gap-6">
                   <div className="relative w-full h-48 rounded-lg overflow-hidden shadow-md">
-                    <Image
-                      src={courseType.course_thumbnail || "/placeholder.svg?height=200&width=400"}
-                      alt={courseType.course_title || "Course"}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={courseType.course_thumbnail || '/placeholder.svg?height=200&width=400'} alt={courseType.course_title || 'Course'} fill className="object-cover" />
                     {courseType.is_discount && courseType.discount && (
-                      <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs font-bold">
-                        {courseType.discount_type === "percentage" ? `${courseType.discount}% OFF` : "DISKON"}
-                      </div>
+                      <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs font-bold">{courseType.discount_type === 'percentage' ? `${courseType.discount}% OFF` : 'DISKON'}</div>
                     )}
                   </div>
                   <div>
@@ -438,7 +407,7 @@ export default function CheckoutPage() {
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                        {courseType.type === "batch" ? "Batch" : courseType.type === "private" ? "Private" : "Group"}
+                        {courseType.type === 'batch' ? 'Batch' : courseType.type === 'private' ? 'Private' : 'Group'}
                       </Badge>
                       {courseType.batch_number && (
                         <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200">
@@ -451,17 +420,11 @@ export default function CheckoutPage() {
                       <span className="text-gray-500 text-sm mr-2">Harga:</span>
                       {courseType.is_discount && courseType.discount ? (
                         <div className="flex items-center">
-                          <span className="text-gray-400 line-through text-sm mr-2">
-                            Rp {courseType.normal_price.toLocaleString("id-ID")}
-                          </span>
-                          <span className="text-lg font-bold text-[#5596DF]">
-                            Rp {(courseType.normal_price - discountAmount).toLocaleString("id-ID")}
-                          </span>
+                          <span className="text-gray-400 line-through text-sm mr-2">Rp {courseType.normal_price.toLocaleString('id-ID')}</span>
+                          <span className="text-lg font-bold text-[#5596DF]">Rp {(courseType.normal_price - discountAmount).toLocaleString('id-ID')}</span>
                         </div>
                       ) : (
-                        <span className="text-lg font-bold text-[#5596DF]">
-                          Rp {courseType.normal_price.toLocaleString("id-ID")}
-                        </span>
+                        <span className="text-lg font-bold text-[#5596DF]">Rp {courseType.normal_price.toLocaleString('id-ID')}</span>
                       )}
                     </div>
                   </div>
@@ -477,9 +440,7 @@ export default function CheckoutPage() {
                     <Tag className="mr-2 h-5 w-5" />
                     Kode Promo
                   </CardTitle>
-                  <CardDescription className="text-purple-100">
-                    Masukkan kode promo jika Anda memilikinya
-                  </CardDescription>
+                  <CardDescription className="text-purple-100">Masukkan kode promo jika Anda memilikinya</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="flex gap-4">
@@ -489,19 +450,14 @@ export default function CheckoutPage() {
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
                         disabled={promoApplied || validatingPromo}
-                        className={cn(
-                          "border-2 focus-visible:ring-blue-500",
-                          promoApplied ? "border-green-500 bg-green-50" : "border-gray-200",
-                        )}
+                        className={cn('border-2 focus-visible:ring-blue-500', promoApplied ? 'border-green-500 bg-green-50' : 'border-gray-200')}
                       />
                     </div>
                     <Button
-                      variant={promoApplied ? "outline" : "default"}
+                      variant={promoApplied ? 'outline' : 'default'}
                       onClick={handleApplyPromo}
                       disabled={promoApplied || validatingPromo || !promoCode.trim()}
-                      className={
-                        promoApplied ? "border-2 border-green-500 text-green-600" : "bg-purple-600 hover:bg-purple-700"
-                      }
+                      className={promoApplied ? 'border-2 border-green-500 text-green-600' : 'bg-purple-600 hover:bg-purple-700'}
                     >
                       {validatingPromo ? (
                         <>
@@ -512,7 +468,7 @@ export default function CheckoutPage() {
                           <CheckCircle className="mr-2 h-4 w-4" /> Diterapkan
                         </>
                       ) : (
-                        "Terapkan"
+                        'Terapkan'
                       )}
                     </Button>
                   </div>
@@ -521,12 +477,7 @@ export default function CheckoutPage() {
                       <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium">Kode promo berhasil diterapkan!</p>
-                        <p className="mt-1">
-                          Anda mendapatkan diskon{" "}
-                          {promoDiscountType === "percentage"
-                            ? `${promoDiscount}%`
-                            : `Rp ${promoDiscount.toLocaleString("id-ID")}`}
-                        </p>
+                        <p className="mt-1">Anda mendapatkan diskon {promoDiscountType === 'percentage' ? `${promoDiscount}%` : `Rp ${promoDiscount.toLocaleString('id-ID')}`}</p>
                       </div>
                     </div>
                   )}
@@ -548,7 +499,7 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Harga Kelas</span>
-                    <span className="font-medium">Rp {courseType.normal_price.toLocaleString("id-ID")}</span>
+                    <span className="font-medium">Rp {courseType.normal_price.toLocaleString('id-ID')}</span>
                   </div>
 
                   {discountAmount > 0 && (
@@ -556,17 +507,16 @@ export default function CheckoutPage() {
                       <span className="flex items-center">
                         <Tag className="h-4 w-4 mr-1" /> Diskon Kelas
                       </span>
-                      <span className="font-medium">- Rp {discountAmount.toLocaleString("id-ID")}</span>
+                      <span className="font-medium">- Rp {discountAmount.toLocaleString('id-ID')}</span>
                     </div>
                   )}
 
                   {promoApplied && promoDiscountAmount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span className="flex items-center">
-                        <Tag className="h-4 w-4 mr-1" /> Diskon Promo{" "}
-                        {promoDiscountType === "percentage" ? `(${promoDiscount}%)` : ""}
+                        <Tag className="h-4 w-4 mr-1" /> Diskon Promo {promoDiscountType === 'percentage' ? `(${promoDiscount}%)` : ''}
                       </span>
-                      <span className="font-medium">- Rp {promoDiscountAmount.toLocaleString("id-ID")}</span>
+                      <span className="font-medium">- Rp {promoDiscountAmount.toLocaleString('id-ID')}</span>
                     </div>
                   )}
 
@@ -574,17 +524,12 @@ export default function CheckoutPage() {
 
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-[#5596DF]">Rp {finalPrice.toLocaleString("id-ID")}</span>
+                    <span className="text-[#5596DF]">Rp {finalPrice.toLocaleString('id-ID')}</span>
                   </div>
                 </div>
 
                 <div className="mt-8">
-                  <Button
-                    className="w-full bg-[#5596DF] hover:bg-blue-700 text-white"
-                    size="lg"
-                    onClick={handleCheckout}
-                    disabled={processingPayment || status === "unauthenticated" || !midtransLoaded}
-                  >
+                  <Button className="w-full bg-[#5596DF] hover:bg-blue-700 text-white" size="lg" onClick={handleCheckout} disabled={processingPayment || status === 'unauthenticated' || !midtransLoaded}>
                     {processingPayment ? (
                       <>
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memproses
@@ -596,13 +541,9 @@ export default function CheckoutPage() {
                     )}
                   </Button>
 
-                  {status === "unauthenticated" && (
-                    <p className="text-amber-600 text-sm mt-2 text-center">Anda perlu login terlebih dahulu</p>
-                  )}
+                  {status === 'unauthenticated' && <p className="text-amber-600 text-sm mt-2 text-center">Anda perlu login terlebih dahulu</p>}
 
-                  {!midtransLoaded && (
-                    <p className="text-amber-600 text-sm mt-2 text-center">Memuat sistem pembayaran...</p>
-                  )}
+                  {!midtransLoaded && <p className="text-amber-600 text-sm mt-2 text-center">Memuat sistem pembayaran...</p>}
                 </div>
               </CardContent>
               <CardFooter className="bg-gray-50 px-6 py-4">
@@ -621,14 +562,14 @@ export default function CheckoutPage() {
 
             <div className="mt-6 text-sm text-gray-600 bg-white p-4 rounded-lg shadow border-0">
               <p className="text-center">
-                Dengan melakukan pembayaran, Anda menyetujui{" "}
+                Dengan melakukan pembayaran, Anda menyetujui{' '}
                 <a href="#" className="text-[#5596DF] hover:underline font-medium">
                   Syarat dan Ketentuan
-                </a>{" "}
-                serta{" "}
+                </a>{' '}
+                serta{' '}
                 <a href="#" className="text-[#5596DF] hover:underline font-medium">
                   Kebijakan Privasi
-                </a>{" "}
+                </a>{' '}
                 kami.
               </p>
             </div>
@@ -638,6 +579,5 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
-  )
+  );
 }
-

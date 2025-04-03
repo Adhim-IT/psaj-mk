@@ -17,7 +17,7 @@ export default async function ArticleDetailClient({ params }: { params: { slug: 
   }
 
   // Get related articles based on categories
-  const categoryIds = listArticle.categories.map((cat) => cat.id)
+  const categoryIds = listArticle.categories.map((cat: any) => cat.id)
   const { relatedArticles } = await getRelatedArticles(listArticle.id, categoryIds, 3)
 
   const readingTime = calculateReadingTime(listArticle.content)
@@ -60,7 +60,7 @@ export default async function ArticleDetailClient({ params }: { params: { slug: 
               <div className="p-6 md:p-8">
                 {/* Categories */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {listArticle.categories.map((category) => (
+                  {listArticle.categories.map((category: any) => (
                     <Link
                       key={category.id}
                       href={`/artikel?category=${category.slug || category.id}`}
@@ -111,7 +111,7 @@ export default async function ArticleDetailClient({ params }: { params: { slug: 
                   <div className="mt-8 pt-6 border-t">
                     <h3 className="text-lg font-semibold mb-3">Tags</h3>
                     <div className="flex flex-wrap gap-2">
-                      {listArticle.tag.map((tag) => (
+                      {listArticle.tag.map((tag: any) => (
                         <span key={tag.id} className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">
                           {tag.name}
                         </span>
@@ -157,7 +157,7 @@ export default async function ArticleDetailClient({ params }: { params: { slug: 
 
               {relatedArticles && relatedArticles.length > 0 ? (
                 <div className="space-y-6">
-                  {relatedArticles.map((article) => (
+                  {relatedArticles.map((article: any) => (
                     <div key={article.id} className="group">
                       <Link href={`/artikel/${article.slug}`} className="block">
                         <div className="relative h-40 mb-3 rounded-lg overflow-hidden">

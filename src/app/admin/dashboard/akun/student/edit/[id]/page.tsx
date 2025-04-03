@@ -1,28 +1,27 @@
-import { getStudentById } from "@/lib/student"
-import { getRoles } from "@/lib/role"
-import { StudentForm } from "@/components/admin/akun/student/student-form"
-import { notFound } from "next/navigation"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Home } from "lucide-react"
+import { getStudentById } from '@/lib/student';
+import { getRoles } from '@/lib/role';
+import { StudentForm } from '@/components/admin/akun/student/student-form';
+import { notFound } from 'next/navigation';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Home } from 'lucide-react';
 
+// Perbarui interface untuk Next.js 15
 interface EditStudentPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function EditStudentPage({ params }: EditStudentPageProps) {
-  const student = await getStudentById(params.id)
-  const roles = await getRoles()
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  const student = await getStudentById(id);
+  const roles = await getRoles();
 
   if (!student) {
-    return notFound()
+    return notFound();
   }
 
   return (
@@ -55,6 +54,5 @@ export default async function EditStudentPage({ params }: EditStudentPageProps) 
       </div>
       <StudentForm student={student} roles={roles} />
     </div>
-  )
+  );
 }
-

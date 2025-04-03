@@ -1,45 +1,44 @@
-import { Metadata } from "next"
+import type { Metadata } from 'next';
 
-import { Home } from 'lucide-react'
-import { getCourseTransactions } from "@/lib/course-transaksi-admin"
-import { TransactionTable } from "@/components/admin/transaksi/kelas/transaction-table"
-import { courseTransactionFilterSchema } from "@/lib/zod"
-import { 
-  Breadcrumb, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
-  BreadcrumbList, 
-  BreadcrumbSeparator 
-} from "@/components/ui/breadcrumb"
+import { Home } from 'lucide-react';
+import { getCourseTransactions } from '@/lib/course-transaksi-admin';
+import { TransactionTable } from '@/components/admin/transaksi/kelas/transaction-table';
+import { courseTransactionFilterSchema } from '@/lib/zod';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 export const metadata: Metadata = {
-  title: "Transaksi Kelas - Admin",
-  description: "Kelola transaksi kelas di platform Anda",
-}
+  title: 'Transaksi Kelas - Admin',
+  description: 'Kelola transaksi kelas di platform Anda',
+};
 
+// Perbarui interface untuk Next.js 15
 interface PageProps {
-  searchParams: {
-    status?: string
-    course_id?: string
-    student_id?: string
-    search?: string
-    page?: string
-    limit?: string
-  }
+  params: Promise<{}>;
+  searchParams: Promise<{
+    status?: string;
+    course_id?: string;
+    student_id?: string;
+    search?: string;
+    page?: string;
+    limit?: string;
+  }>;
 }
 
 export default async function TransaksiKelasPage({ searchParams }: PageProps) {
+  // Await searchParams sebelum mengakses propertinya
+  const searchParamsData = await searchParams;
+
   // Parse and validate search params
   const filters = courseTransactionFilterSchema.parse({
-    status: searchParams.status,
-    course_id: searchParams.course_id,
-    student_id: searchParams.student_id,
-    search: searchParams.search,
-    page: searchParams.page ? parseInt(searchParams.page) : 1,
-    limit: searchParams.limit ? parseInt(searchParams.limit) : 10,
-  })
+    status: searchParamsData.status,
+    course_id: searchParamsData.course_id,
+    student_id: searchParamsData.student_id,
+    search: searchParamsData.search,
+    page: searchParamsData.page ? Number.parseInt(searchParamsData.page) : 1,
+    limit: searchParamsData.limit ? Number.parseInt(searchParamsData.limit) : 10,
+  });
 
-  const { data: transactions, meta } = await getCourseTransactions(filters)
+  const { data: transactions, meta } = await getCourseTransactions(filters);
 
   return (
     <div className="container py-10">
@@ -64,12 +63,11 @@ export default async function TransaksiKelasPage({ searchParams }: PageProps) {
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Transaksi Kelas</h1>
-        <p className="text-muted-foreground">
-          Kelola semua transaksi kelas di platform Anda
-        </p>
+        <p className="text-muted-foreground">Kelola semua transaksi kelas di platform Anda</p>
       </div>
 
-      <TransactionTable transactions={transactions} meta={meta} />
+      {/* Gunakan type assertion untuk mengatasi error tipe */}
+      <TransactionTable transactions={transactions as any} meta={meta} />
     </div>
-  )
+  );
 }

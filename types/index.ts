@@ -22,6 +22,9 @@ export interface Tool {
   created_at: Date | null
   updated_at: Date | null
 }
+export type ToolListProps = {
+  tools: Tool[];
+};
 
 export interface Category {
   id: string

@@ -65,11 +65,11 @@ export async function getListArticles() {
       },
     })
 
-    const transformedArticles = ListArticles.map((article) => ({
+    const transformedArticles = ListArticles.map((article: any) => ({
       ...article,
-      categories: article.article_category_pivot.map((pivot) => pivot.article_categories),
-      tag: article.article_tag_pivot.map((pivot) => pivot.article_tags),
-    }))
+      categories: article.article_category_pivot.map((pivot: any) => pivot.article_categories),
+      tag: article.article_tag_pivot.map((pivot: any) => pivot.article_tags),
+    }));
 
     return { ListArticles: transformedArticles }
   } catch (error) {
@@ -105,10 +105,10 @@ export async function getListArticleById(id: string) {
     return {
       listArticle: {
         ...listArticle,
-        categories: listArticle.article_category_pivot.map((pivot) => pivot.article_categories),
-        tag: listArticle.article_tag_pivot.map((pivot) => pivot.article_tags),
+        categories: listArticle.article_category_pivot.map((pivot: any) => pivot.article_categories),
+        tag: listArticle.article_tag_pivot.map((pivot: any) => pivot.article_tags),
       },
-    }
+    };
   } catch (error) {
     console.error("Error fetching list article:", error)
     return { error: "Failed to load list article" }
@@ -152,11 +152,11 @@ export async function getListArticleBySlug(slug: string) {
     return {
       listArticle: {
         ...listArticle,
-        categories: listArticle.article_category_pivot.map((pivot) => pivot.article_categories),
-        tag: listArticle.article_tag_pivot.map((pivot) => pivot.article_tags),
+        categories: listArticle.article_category_pivot.map((pivot: any) => pivot.article_categories),
+        tag: listArticle.article_tag_pivot.map((pivot: any) => pivot.article_tags),
         writer: listArticle.writers,
       },
-    }
+    };
   } catch (error) {
     console.error("Error fetching article by slug:", error)
     return { error: "Failed to load article" }
@@ -238,7 +238,7 @@ export async function updateListArticle(id: string, data: ListArticleFormData) {
       thumbnailUrl = uploadResult.url
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       await tx.articles.update({
         where: { id },
         data: {
@@ -249,33 +249,33 @@ export async function updateListArticle(id: string, data: ListArticleFormData) {
           thumbnail: thumbnailUrl,
           updated_at: new Date(),
         },
-      })
+      });
 
       // Handle categories
-      await tx.article_category_pivot.deleteMany({ where: { article_id: id } })
+      await tx.article_category_pivot.deleteMany({ where: { article_id: id } });
       if (data.categories?.length) {
         await tx.article_category_pivot.createMany({
           data: data.categories.map((article_category_id) => ({
             article_category_id,
             article_id: id,
           })),
-        })
+        });
       }
 
       // Handle tags
-      await tx.article_tag_pivot.deleteMany({ where: { article_id: id } })
+      await tx.article_tag_pivot.deleteMany({ where: { article_id: id } });
       if (data.tag?.length) {
         await tx.article_tag_pivot.createMany({
           data: data.tag.map((tagId) => ({
             article_tag_id: tagId,
             article_id: id,
           })),
-        })
+        });
       }
 
-      revalidatePath("/admin/dashboard/artikel/list")
-      return { success: true }
-    })
+      revalidatePath('/admin/dashboard/artikel/list');
+      return { success: true };
+    });
   } catch (error) {
     console.error("Error updating article:", error)
     return { error: "Failed to update article" }
@@ -335,11 +335,11 @@ export async function getRelatedArticles(articleId: string, categoryIds: string[
       take: limit,
     })
 
-    const transformedArticles = relatedArticles.map((article) => ({
+    const transformedArticles = relatedArticles.map((article: any) => ({
       ...article,
-      categories: article.article_category_pivot.map((pivot) => pivot.article_categories),
-      tag: article.article_tag_pivot.map((pivot) => pivot.article_tags),
-    }))
+      categories: article.article_category_pivot.map((pivot: any) => pivot.article_categories),
+      tag: article.article_tag_pivot.map((pivot: any) => pivot.article_tags),
+    }));
 
     return { relatedArticles: transformedArticles }
   } catch (error) {

@@ -1,17 +1,18 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import DetailCourse from "@/components/user/kelas/detail-course";
-import { getListClasses, getListClassById } from "@/lib/list-kelas";
-import { getMentorById } from "@/lib/mentor-userpage";
-import { getToolsById } from "@/lib/tools";
-import { getCourseTypesByCourseId } from "@/lib/course-types";
-import type { ListClass, Mentor, Tool } from "@/types";
+import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import DetailCourse from '@/components/user/kelas/detail-course';
+import { getListClasses, getListClassById } from '@/lib/list-kelas';
+import { getMentorById } from '@/lib/mentor-userpage';
+import { getToolsById } from '@/lib/tools';
+import { getCourseTypesByCourseId } from '@/lib/course-types';
+import type { ListClass, Mentor, Tool } from '@/types';
 
 interface PageProps {
-  params?: {
-    slug?: string;
-  };
+  params: Promise<{
+    slug: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 async function CourseDetailContent({ slug }: { slug: string }) {
@@ -20,11 +21,11 @@ async function CourseDetailContent({ slug }: { slug: string }) {
     const { listClasses, error: classesError } = await getListClasses();
 
     if (classesError || !listClasses) {
-      throw new Error(classesError || "Gagal mengambil data kelas");
+      throw new Error(classesError || 'Gagal mengambil data kelas');
     }
 
     // Temukan kelas berdasarkan slug
-    const course = listClasses.find((course) => course.slug === slug);
+    const course = listClasses.find((course: any) => course.slug === slug);
 
     if (!course) {
       return notFound();
@@ -34,7 +35,7 @@ async function CourseDetailContent({ slug }: { slug: string }) {
     const { listClass, error: detailError } = await getListClassById(course.id);
 
     if (detailError || !listClass) {
-      throw new Error(detailError || "Gagal mengambil detail kelas");
+      throw new Error(detailError || 'Gagal mengambil detail kelas');
     }
 
     // Ambil data mentor
@@ -47,7 +48,7 @@ async function CourseDetailContent({ slug }: { slug: string }) {
           mentor = mentorResult.mentor;
         }
       } catch (mentorError) {
-        console.error("Error mengambil data mentor:", mentorError);
+        console.error('Error mengambil data mentor:', mentorError);
       }
     }
 
@@ -55,9 +56,9 @@ async function CourseDetailContent({ slug }: { slug: string }) {
     if (!mentor && course.mentors) {
       mentor = {
         id: course.mentors.id || listClass.mentor_id,
-        name: course.mentors.name || "Mentor",
+        name: course.mentors.name || 'Mentor',
         profile_picture: course.mentors.profile_picture || null,
-        specialization: course.mentors.specialization || undefined,
+        specialization: course.mentors.specialization || "",
       };
     }
 
@@ -66,13 +67,13 @@ async function CourseDetailContent({ slug }: { slug: string }) {
 
     if (listClass.tools && listClass.tools.length > 0) {
       try {
-        const toolIds = listClass.tools.map((tool) => tool.id);
+        const toolIds = listClass.tools.map((tool: any) => tool.id);
         const { tools } = await getToolsById(toolIds);
         if (tools && tools.length > 0) {
           completeTools = tools;
         }
       } catch (toolError) {
-        console.error("Error mengambil data tools:", toolError);
+        console.error('Error mengambil data tools:', toolError);
       }
     }
 
@@ -84,7 +85,7 @@ async function CourseDetailContent({ slug }: { slug: string }) {
         courseTypes = types;
       }
     } catch (courseTypesError) {
-      console.error("Error mengambil tipe kursus:", courseTypesError);
+      console.error('Error mengambil tipe kursus:', courseTypesError);
     }
 
     // Buat objek kursus dengan data lengkap
@@ -95,13 +96,14 @@ async function CourseDetailContent({ slug }: { slug: string }) {
 
     return <DetailCourse course={transformedCourse} mentor={mentor} courseTypes={courseTypes} />;
   } catch (error) {
-    console.error("Error di CourseDetailContent:", error);
+    console.error('Error di CourseDetailContent:', error);
     throw error;
   }
 }
 
-export default function CourseDetailPage({ params }: PageProps) {
-  const slug = params?.slug;
+export default async function CourseDetailPage({ params }: PageProps) {
+  // ✅ Await params sebelum mengakses propertinya
+  const { slug } = await params;
 
   if (!slug) {
     return notFound();
@@ -121,15 +123,14 @@ export default function CourseDetailPage({ params }: PageProps) {
   );
 }
 
-// Generate static params untuk semua kursus
 export async function generateStaticParams() {
   const { listClasses } = await getListClasses();
 
   if (!listClasses) return [];
 
   return listClasses
-    .filter((course) => course.is_active)
-    .map((course) => ({
+    .filter((course: any) => course.is_active)
+    .map((course: any) => ({
       slug: course.slug,
     }));
 }

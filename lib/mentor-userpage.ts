@@ -210,13 +210,19 @@ export async function getPopularMentors(limit = 4): Promise<{ mentors: Mentor[] 
       },
     },
     select: {
-      id: true,
-      name: true,
-      specialization: true,
-      profile_picture: true,
-      bio: true,
-      city: true,
-      username: true,
+      id: true, // ID mentor
+      user_id: true, // user_id
+      username: true, // Username mentor
+      name: true, // Nama mentor
+      profile_picture: true, // Foto profil
+      gender: true, // Gender mentor
+      phone: true, // Nomor telepon
+      city: true, // Kota
+      specialization: true, // Spesialisasi
+      bio: true, // Bio
+      created_at: true, // Tanggal dibuat
+      updated_at: true, // Tanggal diperbarui
+      deleted_at: true, // Tanggal dihapus (jika ada)
       _count: {
         select: {
           courses: {
@@ -231,20 +237,21 @@ export async function getPopularMentors(limit = 4): Promise<{ mentors: Mentor[] 
     orderBy: [
       {
         courses: {
-          _count: "desc",
+          _count: 'desc',
         },
       },
       {
-        name: "asc",
+        name: 'asc',
       },
     ],
     take: limit,
-  })
+  });
 
-  // Transform the result to match the Mentor type
-  const mentors = mentorsWithCourseCount.map(({ _count, ...mentor }) => mentor)
+  // Menghapus _count karena itu bukan bagian dari Mentor
+  const mentors = mentorsWithCourseCount.map(({ _count, ...mentor }) => mentor);
 
-  return { mentors }
+  return { mentors };
+
 }
 
 // Get mentors by specialization
@@ -287,9 +294,9 @@ export async function getAllSpecializations(): Promise<{ specializations: string
   })
 
   const specializations = result
-    .map((item) => item.specialization)
+    .map((item: any) => item.specialization)
     .filter(Boolean)
-    .sort()
+    .sort();
 
   return { specializations }
 }

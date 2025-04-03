@@ -1,56 +1,57 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { getListClasses } from "@/lib/list-kelas"
-import { Clock, BookOpen, ChevronRight } from "lucide-react"
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { getListClasses } from '@/lib/list-kelas';
+import { Clock, BookOpen, ChevronRight } from 'lucide-react';
 
 // Types
 type MentorData = {
-  id: string
-  name: string
-  profile_picture?: string
-  specialization?: string
-}
+  id: string;
+  name: string;
+  profile_picture?: string;
+  specialization?: string;
+};
 
 type CourseData = {
-  id: string
-  title: string
-  description: string
-  thumbnail: string
-  level: string
-  meetings: number
-  slug: string
-  is_popular: boolean
-  mentor: MentorData
-}
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  level: string;
+  meetings: number;
+  slug: string;
+  is_popular: boolean;
+  mentor: MentorData;
+};
 
 // Helper functions
 const truncateText = (text: string, limit: number) => {
-  return text.split(" ").length > limit ? text.split(" ").slice(0, limit).join(" ") + "..." : text
-}
+  return text.split(' ').length > limit ? text.split(' ').slice(0, limit).join(' ') + '...' : text;
+};
 
 const getDefaultMentorImage = (profilePicture?: string) => {
-  if (!profilePicture) return "/images/mentor.png"
-  return profilePicture.startsWith("http") ? "/images/mentor.png" : profilePicture
-}
+  if (!profilePicture || typeof profilePicture !== 'string') return '/images/mentor.png';
+  return profilePicture.startsWith('http') ? profilePicture : '/images/mentor.png';
+};
 
 // Components
 const CourseCard = ({ course }: { course: CourseData }) => (
   <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 group h-full flex flex-col">
     <div className="relative h-52 overflow-hidden">
-      {course.is_popular && (
-        <div className="absolute top-3 left-0 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold px-4 py-1 rounded-r-full z-10">
-          POPULER
-        </div>
-      )}
+      {course.is_popular && <div className="absolute top-3 left-0 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold px-4 py-1 rounded-r-full z-10">POPULER</div>}
       <Image
-        src={course.thumbnail || "/placeholder.svg?height=200&width=400"}
+        src={typeof course.thumbnail === 'string' && course.thumbnail ? course.thumbnail : '/placeholder.svg?height=200&width=400'}
         alt={`Gambar kursus ${course.title}`}
         width={400}
         height={200}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        onError={(e) => {
+          console.error('Error loading course thumbnail:', course.thumbnail);
+          (e.target as HTMLImageElement).src = '/placeholder.svg?height=200&width=400';
+        }}
+        unoptimized={true}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4">
         <span className="text-white font-medium">Lihat Detail</span>
@@ -60,15 +61,7 @@ const CourseCard = ({ course }: { course: CourseData }) => (
 
     <div className="p-5 flex flex-col flex-grow">
       <div className="flex items-center gap-2 mb-3">
-        <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-            course.level === "Beginner"
-              ? "bg-green-100 text-green-700"
-              : course.level === "Intermediate"
-                ? "bg-[#e6f0fc] text-[#5596DF]"
-                : "bg-purple-100 text-purple-700"
-          }`}
-        >
+        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${course.level === 'Beginner' ? 'bg-green-100 text-green-700' : course.level === 'Intermediate' ? 'bg-[#e6f0fc] text-[#5596DF]' : 'bg-purple-100 text-purple-700'}`}>
           {course.level}
         </span>
       </div>
@@ -80,18 +73,21 @@ const CourseCard = ({ course }: { course: CourseData }) => (
         <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
             <Image
-              src={getDefaultMentorImage(course.mentor.profile_picture) || "/images/mentor.png"}
+              src={typeof course.mentor.profile_picture === 'string' && course.mentor.profile_picture ? course.mentor.profile_picture : '/images/mentor.png'}
               alt={`Mentor ${course.mentor.name}`}
               width={40}
               height={40}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Error loading mentor image:', course.mentor.profile_picture);
+                (e.target as HTMLImageElement).src = '/images/mentor.png';
+              }}
+              unoptimized={true}
             />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-medium text-gray-800">{course.mentor.name}</span>
-            {course.mentor.specialization && (
-              <span className="text-xs text-gray-500">{course.mentor.specialization}</span>
-            )}
+            {course.mentor.specialization && <span className="text-xs text-gray-500">{course.mentor.specialization}</span>}
           </div>
         </div>
 
@@ -106,45 +102,34 @@ const CourseCard = ({ course }: { course: CourseData }) => (
           </div>
         </div>
 
-        <Link
-          href={`/kelas/${course.slug}`}
-          className="mt-2 inline-flex w-full items-center justify-center bg-[#5596DF] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[#4785cc] transition-colors"
-        >
+        <Link href={`/kelas/${course.slug}`} className="mt-2 inline-flex w-full items-center justify-center bg-[#5596DF] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[#4785cc] transition-colors">
           Daftar Sekarang
         </Link>
       </div>
     </div>
   </div>
-)
+);
 
 // Main component - Removed PageHeader and display count div
-export default function CourseList({
-  maxCourses,
-  courses: initialCourses,
-  title,
-}: {
-  maxCourses?: number
-  courses?: CourseData[]
-  title?: string
-}) {
-  const [courses, setCourses] = useState<CourseData[]>(initialCourses || [])
-  const [loading, setLoading] = useState(!initialCourses)
-  const [error, setError] = useState<string | null>(null)
+export default function CourseList({ maxCourses, courses: initialCourses, title }: { maxCourses?: number; courses?: CourseData[]; title?: string }) {
+  const [courses, setCourses] = useState<CourseData[]>(initialCourses || []);
+  const [loading, setLoading] = useState(!initialCourses);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialCourses) {
-      setCourses(initialCourses)
-      setLoading(false)
-      return
+      setCourses(initialCourses);
+      setLoading(false);
+      return;
     }
     const fetchCourses = async () => {
       try {
-        setLoading(true)
-        const { listClasses, error } = await getListClasses()
+        setLoading(true);
+        const { listClasses, error } = await getListClasses();
 
         if (error) {
-          setError(error)
-          return
+          setError(error);
+          return;
         }
 
         const coursesData = (listClasses || [])
@@ -159,27 +144,27 @@ export default function CourseList({
             slug: course.slug,
             is_popular: course.is_popular,
             mentor: {
-              id: course.mentors?.id || "",
-              name: course.mentors?.name || "Mentor",
-              profile_picture: course.mentors?.profile_picture ?? "/images/mentor.png",
+              id: course.mentors?.id || '',
+              name: course.mentors?.name || 'Mentor',
+              profile_picture: course.mentors?.profile_picture ?? '/images/mentor.png',
               specialization: course.mentors?.specialization,
             },
-          }))
+          }));
 
-        setCourses(coursesData)
+        setCourses(coursesData);
       } catch (err) {
-        setError("Failed to fetch courses")
-        console.error(err)
+        setError('Failed to fetch courses');
+        console.error(err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchCourses()
-  }, [initialCourses])
+    fetchCourses();
+  }, [initialCourses]);
 
   // Apply maxCourses limit if provided
-  const displayedCourses = maxCourses ? courses.slice(0, maxCourses) : courses
+  const displayedCourses = maxCourses ? courses.slice(0, maxCourses) : courses;
 
   // Loading state
   if (loading) {
@@ -188,7 +173,7 @@ export default function CourseList({
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#5596DF] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
         <p className="mt-4 text-gray-600">Memuat kelas...</p>
       </div>
-    )
+    );
   }
 
   // Error state
@@ -197,7 +182,7 @@ export default function CourseList({
       <div className="py-24 text-center">
         <p className="text-red-500">Error: {error}</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -215,6 +200,5 @@ export default function CourseList({
         </div>
       )}
     </>
-  )
+  );
 }
-

@@ -89,7 +89,7 @@ export async function createWriterData(data: {
     const hashedPassword = await hash(data.password, 10)
 
     // Create user and writer in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx:any) => {
       // Create user
       const user = await tx.user.create({
         data: {
@@ -178,7 +178,7 @@ export async function updateWriterData(
     }
 
     // Update user and writer in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Update user
       const userData: any = {
         name: data.name,
@@ -228,7 +228,7 @@ export async function deleteWriterData(id: string) {
     }
 
     // Soft delete writer and user
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.writers.update({
         where: { id },
         data: {

@@ -119,11 +119,11 @@ export async function getListClassById(id: string) {
     return {
       listClass: {
         ...listClass,
-        categories: listClass.course_category_pivot.map((pivot) => pivot.course_categories),
-        tools: listClass.course_tool_pivot.map((pivot) => pivot.tools),
+        categories: listClass.course_category_pivot.map((pivot: any) => pivot.course_categories),
+        tools: listClass.course_tool_pivot.map((pivot: any) => pivot.tools),
         syllabus: listClass.course_syllabus,
       },
-    }
+    };
   } catch (error) {
     console.error("Error fetching list class:", error)
     return { error: "Failed to load list class" }
@@ -230,7 +230,7 @@ export async function updateListClass(id: string, data: ListClassFormData) {
       thumbnailUrl = uploadResult.url
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       await tx.courses.update({
         where: { id },
         data: {
@@ -247,16 +247,16 @@ export async function updateListClass(id: string, data: ListClassFormData) {
           is_active: data.is_active,
           updated_at: new Date(),
         },
-      })
+      });
 
-      await tx.course_category_pivot.deleteMany({ where: { course_id: id } })
+      await tx.course_category_pivot.deleteMany({ where: { course_id: id } });
       if (data.categories?.length) {
         await tx.course_category_pivot.createMany({
           data: data.categories.map((course_category_id) => ({
             course_category_id,
             course_id: id,
           })),
-        })
+        });
       }
 
       await tx.course_tool_pivot.deleteMany({ where: { course_id: id } });
@@ -270,8 +270,7 @@ export async function updateListClass(id: string, data: ListClassFormData) {
         });
       }
 
-
-      await tx.course_syllabus.deleteMany({ where: { course_id: id } })
+      await tx.course_syllabus.deleteMany({ where: { course_id: id } });
       if (data.syllabus?.length) {
         await tx.course_syllabus.createMany({
           data: data.syllabus.map((item) => ({
@@ -282,12 +281,12 @@ export async function updateListClass(id: string, data: ListClassFormData) {
             created_at: new Date(),
             updated_at: new Date(),
           })),
-        })
+        });
       }
 
-      revalidatePath("/admin/dashboard/kelas/list")
-      return { success: true }
-    })
+      revalidatePath('/admin/dashboard/kelas/list');
+      return { success: true };
+    });
   } catch (error) {
     console.error("Error updating list class:", error)
     return { error: "Failed to update list class" }

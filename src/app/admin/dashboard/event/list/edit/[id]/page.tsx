@@ -1,25 +1,23 @@
-import { Suspense } from "react"
-import { notFound } from "next/navigation"
-import { getEventById, getMentorsForDropdown } from "@/lib/list-event"
-import { EventForm } from "@/components/admin/event/list-event/event-form"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { HomeIcon } from "lucide-react"
-import type { EventFormData } from "@/types"
+import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
+import { getEventById, getMentorsForDropdown } from '@/lib/list-event';
+import { EventForm } from '@/components/admin/event/list-event/event-form';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { HomeIcon } from 'lucide-react';
+import type { EventFormData } from '@/types';
 
+// Perbarui interface untuk Next.js 15
 interface EditEventPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default function EditEventPage({ params }: EditEventPageProps) {
-  const { id } = params
+// Ubah menjadi async function untuk bisa menggunakan await params
+export default async function EditEventPage({ params }: EditEventPageProps) {
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
 
   return (
     <div className="space-y-6">
@@ -55,18 +53,18 @@ export default function EditEventPage({ params }: EditEventPageProps) {
         <EditEventForm id={id} />
       </Suspense>
     </div>
-  )
+  );
 }
 
 async function EditEventForm({ id }: { id: string }) {
-  const [eventResult, mentorsResult] = await Promise.all([getEventById(id), getMentorsForDropdown()])
+  const [eventResult, mentorsResult] = await Promise.all([getEventById(id), getMentorsForDropdown()]);
 
   if (!eventResult.success || !mentorsResult.success) {
-    return <div className="text-red-500">Error loading data</div>
+    return <div className="text-red-500">Error loading data</div>;
   }
 
   if (!eventResult.data) {
-    notFound()
+    return notFound();
   }
 
   const initialData: EventFormData = {
@@ -78,11 +76,10 @@ async function EditEventForm({ id }: { id: string }) {
     description: eventResult.data.description,
     start_date: eventResult.data.start_date,
     end_date: eventResult.data.end_date,
-    price: eventResult.data.price ? eventResult.data.price.toString() : "",
+    price: eventResult.data.price ? eventResult.data.price.toString() : '',
     whatsapp_group_link: eventResult.data.whatsapp_group_link,
     is_active: eventResult.data.is_active,
-  }
+  };
 
-  return <EventForm initialData={initialData} mentors={mentorsResult.data || []} isEditing={true} />
+  return <EventForm initialData={initialData} mentors={mentorsResult.data || []} isEditing={true} />;
 }
-

@@ -1,44 +1,43 @@
-import type { Metadata } from "next"
-import { Home } from "lucide-react"
-import { getEventRegistrants } from "@/lib/event-register-admin"
-import { EventRegistrantTable } from "@/components/admin/transaksi/event/page"
-import { eventRegistrantFilterSchema } from "@/lib/zod"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import type { Metadata } from 'next';
+import { Home } from 'lucide-react';
+import { getEventRegistrants } from '@/lib/event-register-admin';
+import { EventRegistrantTable } from '@/components/admin/transaksi/event/page';
+import { eventRegistrantFilterSchema } from '@/lib/zod';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 export const metadata: Metadata = {
-  title: "Transaksi Event - Admin",
-  description: "Kelola transaksi event di platform Anda",
-}
+  title: 'Transaksi Event - Admin',
+  description: 'Kelola transaksi event di platform Anda',
+};
 
+// Perbarui interface untuk Next.js 15
 interface PageProps {
-  searchParams: {
-    status?: string
-    event_id?: string
-    student_id?: string
-    search?: string
-    page?: string
-    limit?: string
-  }
+  params: Promise<{}>;
+  searchParams: Promise<{
+    status?: string;
+    event_id?: string;
+    student_id?: string;
+    search?: string;
+    page?: string;
+    limit?: string;
+  }>;
 }
 
 export default async function TransaksiEventPage({ searchParams }: PageProps) {
+  // Await searchParams sebelum mengakses propertinya
+  const searchParamsData = await searchParams;
+
   // Parse and validate search params
   const filters = eventRegistrantFilterSchema.parse({
-    status: searchParams.status,
-    event_id: searchParams.event_id,
-    student_id: searchParams.student_id,
-    search: searchParams.search,
-    page: searchParams.page ? Number.parseInt(searchParams.page) : 1,
-    limit: searchParams.limit ? Number.parseInt(searchParams.limit) : 10,
-  })
+    status: searchParamsData.status,
+    event_id: searchParamsData.event_id,
+    student_id: searchParamsData.student_id,
+    search: searchParamsData.search,
+    page: searchParamsData.page ? Number.parseInt(searchParamsData.page) : 1,
+    limit: searchParamsData.limit ? Number.parseInt(searchParamsData.limit) : 10,
+  });
 
-  const { data: registrants, meta } = await getEventRegistrants(filters)
+  const { data: registrants, meta } = await getEventRegistrants(filters);
 
   return (
     <div className="container py-10">
@@ -68,6 +67,5 @@ export default async function TransaksiEventPage({ searchParams }: PageProps) {
 
       <EventRegistrantTable registrants={registrants} meta={meta} />
     </div>
-  )
+  );
 }
-

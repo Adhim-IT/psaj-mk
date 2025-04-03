@@ -1,17 +1,21 @@
-import { notFound } from "next/navigation"
-import { PromoCodeForm } from "@/components/admin/transaksi/code-promo/promo-code-form"
-import { getPromoCodeById } from "@/lib/promo-code"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@/components/ui/breadcrumb"
-import { HomeIcon } from "lucide-react"
+import { notFound } from 'next/navigation';
+import { PromoCodeForm } from '@/components/admin/transaksi/code-promo/promo-code-form';
+import { getPromoCodeById } from '@/lib/promo-code';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@/components/ui/breadcrumb';
+import { HomeIcon } from 'lucide-react';
 
-export default async function EditPromoCodePage({ params }: { params: { id: string } }) {
-  const result = await getPromoCodeById(Number(params.id))
+// Perbarui tipe parameter untuk Next.js 15
+export default async function EditPromoCodePage({ params }: { params: Promise<{ id: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  const result = await getPromoCodeById(Number(id));
 
   if (!result.success || !result.data) {
-    notFound()
+    return notFound();
   }
 
-  const { id, code, discount_type, discount, valid_until, is_used } = result.data
+  const { id: promoId, code, discount_type, discount, valid_until, is_used } = result.data;
 
   return (
     <div className="space-y-6">
@@ -36,7 +40,7 @@ export default async function EditPromoCodePage({ params }: { params: { id: stri
       <PromoCodeForm
         isEditing={true}
         initialData={{
-          id: Number(id),
+          id: Number(promoId),
           code,
           discount_type,
           discount,
@@ -45,6 +49,5 @@ export default async function EditPromoCodePage({ params }: { params: { id: stri
         }}
       />
     </div>
-  )
+  );
 }
-

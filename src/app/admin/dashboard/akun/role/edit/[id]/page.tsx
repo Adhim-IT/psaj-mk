@@ -1,26 +1,25 @@
-import { getRoleById } from "@/lib/role"
-import { RoleForm } from "@/components/admin/akun/role/role-form"
-import { notFound } from "next/navigation"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Home } from "lucide-react"
+import { getRoleById } from '@/lib/role';
+import { RoleForm } from '@/components/admin/akun/role/role-form';
+import { notFound } from 'next/navigation';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Home } from 'lucide-react';
 
+// Perbarui interface untuk Next.js 15
 interface EditRolePageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function EditRolePage({ params }: EditRolePageProps) {
-  const role = await getRoleById(params.id)
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  const role = await getRoleById(id);
 
   if (!role) {
-    return notFound()
+    return notFound();
   }
 
   return (
@@ -53,6 +52,5 @@ export default async function EditRolePage({ params }: EditRolePageProps) {
       </div>
       <RoleForm role={role} />
     </div>
-  )
+  );
 }
-

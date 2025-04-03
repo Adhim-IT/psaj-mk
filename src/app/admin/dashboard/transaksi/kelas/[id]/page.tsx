@@ -1,86 +1,85 @@
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Home } from "lucide-react"
-import type { Decimal } from "@prisma/client/runtime/library"
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, Home } from 'lucide-react';
+import type { Decimal } from '@prisma/client/runtime/library';
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { getCourseTransactionById } from "@/lib/course-transaksi-admin"
-import { CourseTransactionStatus, CourseTransactionType } from "@/types"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { getCourseTransactionById } from '@/lib/course-transaksi-admin';
+import { CourseTransactionStatus, CourseTransactionType } from '@/types';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 export const metadata: Metadata = {
-  title: "Detail Transaksi - Admin",
-  description: "Lihat detail transaksi kelas",
-}
+  title: 'Detail Transaksi - Admin',
+  description: 'Lihat detail transaksi kelas',
+};
 
+// Perbarui interface untuk Next.js 15
 interface PageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function TransaksiDetailPage({ params }: PageProps) {
-  let transaction
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  let transaction;
 
   try {
-    transaction = await getCourseTransactionById(params.id)
+    transaction = await getCourseTransactionById(id);
   } catch (error) {
-    notFound()
+    return notFound();
   }
 
-  const getStatusBadge = (status: CourseTransactionStatus) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case CourseTransactionStatus.PAID:
-        return <Badge className="bg-green-500">Dibayar</Badge>
+        return <Badge className="bg-green-500">Dibayar</Badge>;
       case CourseTransactionStatus.UNPAID:
-        return <Badge className="bg-red-500">Belum Dibayar</Badge>
+        return <Badge className="bg-red-500">Belum Dibayar</Badge>;
       case CourseTransactionStatus.FAILED:
-        return <Badge className="bg-red-700">Gagal</Badge>
+        return <Badge className="bg-red-700">Gagal</Badge>;
       default:
-        return <Badge>{status}</Badge>
+        return <Badge>{status}</Badge>;
     }
-  }
+  };
 
-  const getTypeName = (type: CourseTransactionType) => {
+  const getTypeName = (type: string) => {
     switch (type) {
       case CourseTransactionType.GROUP:
-        return "Grup"
+        return 'Grup';
       case CourseTransactionType.PRIVATE:
-        return "Private"
+        return 'Private';
       case CourseTransactionType.BATCH:
-        return "Batch"
+        return 'Batch';
       default:
-        return type
+        return type;
     }
-  }
+  };
 
-  const formatPrice = (price: Decimal) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-    }).format(Number(price))
-  }
+  const formatPrice = (price: Decimal | number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    }).format(Number(price));
+  };
 
   const formatDate = (date: Date | null) => {
-    if (!date) return "-"
-    return new Intl.DateTimeFormat("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(date))
-  }
+    if (!date) return '-';
+    return new Intl.DateTimeFormat('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date));
+  };
 
   return (
     <div className="container py-10">
@@ -132,15 +131,15 @@ export default async function TransaksiDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Status</dt>
-                <dd>{getStatusBadge(transaction.status)}</dd>
+                <dd>{getStatusBadge(transaction.status as string)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Tipe Transaksi</dt>
-                <dd className="capitalize">{getTypeName(transaction.type)}</dd>
+                <dd className="capitalize">{getTypeName(transaction.type as string)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Batch</dt>
-                <dd>{transaction.batch_number || "-"}</dd>
+                <dd>{transaction.batch_number || '-'}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Tanggal Dibuat</dt>
@@ -167,7 +166,7 @@ export default async function TransaksiDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Diskon</dt>
-                <dd>{transaction.discount ? formatPrice(transaction.discount) : "-"}</dd>
+                <dd>{transaction.discount ? formatPrice(transaction.discount) : '-'}</dd>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between text-lg font-bold">
@@ -212,15 +211,11 @@ export default async function TransaksiDetailPage({ params }: PageProps) {
                 <dt className="font-medium">Nama</dt>
                 <dd>{transaction.students.name}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="font-medium">Email</dt>
-                <dd>{transaction.students.email}</dd>
-              </div>
+              
             </dl>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
-

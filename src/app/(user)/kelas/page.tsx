@@ -68,8 +68,8 @@ export default function Kelas() {
         }
 
         const coursesData = (listClasses || [])
-          .filter((course) => course.is_active)
-          .map((course) => ({
+          .filter((course: any) => course.is_active)
+          .map((course: any) => ({
             id: course.id,
             title: course.title,
             description: course.description,

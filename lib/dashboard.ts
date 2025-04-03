@@ -55,7 +55,7 @@ export async function getRecentActivity(limit = 5) {
     })
 
     // Transform to activity format
-    return recentUsers.map((user) => ({
+    return recentUsers.map((user: any) => ({
       userName: user.name || "Unknown User",
       userAvatar: user.image || "/placeholder.svg",
       action: `Joined as ${user.role?.name || "User"}`,
@@ -101,7 +101,7 @@ export async function getRegistrationData() {
     // Group by month
     const monthlyData = Array(12).fill(0)
 
-    users.forEach((user) => {
+    users.forEach((user: any) => {
       if (user.created_at) {
         const month = new Date(user.created_at).getMonth()
         monthlyData[month]++
@@ -147,7 +147,7 @@ export async function getRegistrationDataByYear(year: number) {
     const monthCounts = Array(12).fill(0)
 
     // Count registrations for each month
-    users.forEach((user) => {
+    users.forEach((user: any) => {
       const month = user.created_at?.getMonth() ?? 0 // 0-11
       monthCounts[month]++
     })
@@ -242,25 +242,16 @@ export async function getRevenueStats() {
 
     // Calculate total revenue for current month
     const courseRevenueMonth = courseTransactionsMonth.reduce(
-      (total, transaction) => total + Number(transaction.final_price),
+      (total : any, transaction : any) => total + Number(transaction.final_price),
       0,
     )
 
-    const eventRevenueMonth = eventRegistrationsMonth.reduce(
-      (total, registration) => total + Number(registration.events.price || 0),
-      0,
-    )
+    const eventRevenueMonth = eventRegistrationsMonth.reduce((total: any, registration: any) => total + Number(registration.events.price || 0), 0);
 
     // Calculate total revenue for current year
-    const courseRevenueYear = courseTransactionsYear.reduce(
-      (total, transaction) => total + Number(transaction.final_price),
-      0,
-    )
+    const courseRevenueYear = courseTransactionsYear.reduce((total: any, transaction: any) => total + Number(transaction.final_price), 0);
 
-    const eventRevenueYear = eventRegistrationsYear.reduce(
-      (total, registration) => total + Number(registration.events.price || 0),
-      0,
-    )
+    const eventRevenueYear = eventRegistrationsYear.reduce((total: any, registration: any) => total + Number(registration.events.price || 0), 0);
 
     // Get counts
     const paidCourseCount = await prisma.course_transactions.count({
@@ -352,20 +343,20 @@ export async function getMonthlyRevenueData(year: number) {
     })
 
     // Aggregate course revenue by month
-    courseTransactions.forEach((transaction) => {
+    courseTransactions.forEach((transaction: any) => {
       if (transaction.created_at) {
-        const month = new Date(transaction.created_at).getMonth()
-        monthlyData[month].courseRevenue += Number(transaction.final_price)
+        const month = new Date(transaction.created_at).getMonth();
+        monthlyData[month].courseRevenue += Number(transaction.final_price);
       }
-    })
+    });
 
     // Aggregate event revenue by month
-    eventRegistrations.forEach((registration) => {
+    eventRegistrations.forEach((registration: any) => {
       if (registration.created_at) {
-        const month = new Date(registration.created_at).getMonth()
-        monthlyData[month].eventRevenue += Number(registration.events.price || 0)
+        const month = new Date(registration.created_at).getMonth();
+        monthlyData[month].eventRevenue += Number(registration.events.price || 0);
       }
-    })
+    });
 
     // Format for chart
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

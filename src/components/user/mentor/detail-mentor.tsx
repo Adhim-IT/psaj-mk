@@ -1,33 +1,33 @@
-"use client"
+'use client';
 
-import type { Mentor } from "@/types"
-import type { Course, CourseStudentGroup, Event } from "@/lib/mentor-userpage"
-import Image from "next/image"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Phone, Award, Calendar, Clock, Users, BookOpen, Tag } from "lucide-react"
-import Link from "next/link"
+import type { Mentor } from '@/types';
+import type { Course, CourseStudentGroup, Event } from '@/lib/mentor-userpage';
+import Image from 'next/image';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { MapPin, Phone, Award, Calendar, Clock, Users, BookOpen, Tag } from 'lucide-react';
+import Link from 'next/link';
 
 interface DetailMentorProps {
-  mentor: Mentor
-  courses?: Course[]
-  courseGroups?: CourseStudentGroup[]
-  events?: Event[]
+  mentor: Mentor;
+  courses?: Course[];
+  courseGroups?: CourseStudentGroup[];
+  events?: Event[];
 }
 
 export default function DetailMentor({ mentor, courses = [], courseGroups = [], events = [] }: DetailMentorProps) {
   if (!mentor) {
-    return <div>Mentor not found</div>
+    return <div>Mentor not found</div>;
   }
 
   // Format date function
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    })
-  }
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -36,18 +36,23 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
         <div className="space-y-6">
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl shadow-lg">
             <Image
-              src={mentor.profile_picture || "/placeholder.svg?height=400&width=300"}
+              src={typeof mentor.profile_picture === 'string' && mentor.profile_picture ? mentor.profile_picture : '/placeholder.svg?height=400&width=300'}
               alt={mentor.name}
               fill
               className="object-cover"
               priority
+              onError={(e) => {
+                console.error('Error loading mentor profile picture:', mentor.profile_picture);
+                (e.target as HTMLImageElement).src = '/placeholder.svg?height=400&width=300';
+              }}
+              unoptimized={true}
             />
           </div>
 
           <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-[#4A90E2]" />
-              <span>{mentor.city || "Location not specified"}</span>
+              <span>{mentor.city || 'Location not specified'}</span>
             </div>
             {mentor.phone && (
               <div className="flex items-center gap-2">
@@ -61,7 +66,7 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-[#4A90E2]" />
-              <span>{mentor.gender === "male" ? "Laki-laki" : "Perempuan"}</span>
+              <span>{mentor.gender === 'male' ? 'Laki-laki' : 'Perempuan'}</span>
             </div>
           </div>
         </div>
@@ -86,9 +91,7 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
                 <CardContent className="pt-6">
                   <div className="prose max-w-none">
                     <h3 className="text-xl font-semibold mb-4">Biografi</h3>
-                    <div className="whitespace-pre-wrap text-gray-700">
-                      {mentor.bio || "Tidak ada biografi tersedia."}
-                    </div>
+                    <div className="whitespace-pre-wrap text-gray-700">{mentor.bio || 'Tidak ada biografi tersedia.'}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -107,16 +110,19 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
                             <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                               <div className="relative h-40">
                                 <Image
-                                  src={course.thumbnail || "/placeholder.svg?height=160&width=320"}
+                                  src={typeof course.thumbnail === 'string' && course.thumbnail ? course.thumbnail : '/placeholder.svg?height=160&width=320'}
                                   alt={course.title}
                                   fill
                                   className="object-cover"
+                                  onError={(e) => {
+                                    console.error('Error loading course thumbnail:', course.thumbnail);
+                                    (e.target as HTMLImageElement).src = '/placeholder.svg?height=160&width=320';
+                                  }}
+                                  unoptimized={true}
                                 />
                               </div>
                               <div className="p-4">
-                                <h4 className="font-semibold group-hover:text-[#4A90E2] transition-colors">
-                                  {course.title}
-                                </h4>
+                                <h4 className="font-semibold group-hover:text-[#4A90E2] transition-colors">{course.title}</h4>
                                 <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
                                   <Tag className="h-4 w-4" />
                                   <span>{course.level}</span>
@@ -152,13 +158,7 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
                                   </div>
                                   <div className="flex items-center gap-1 text-sm text-gray-600">
                                     <Tag className="h-4 w-4 text-[#4A90E2]" />
-                                    <span>
-                                      {group.course_types.type === "group"
-                                        ? "Grup"
-                                        : group.course_types.type === "private"
-                                          ? "Private"
-                                          : "Batch"}
-                                    </span>
+                                    <span>{group.course_types.type === 'group' ? 'Grup' : group.course_types.type === 'private' ? 'Private' : 'Batch'}</span>
                                   </div>
                                 </div>
                                 {group.remarks && <p className="text-sm text-gray-600 mt-2 italic">{group.remarks}</p>}
@@ -193,29 +193,31 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
                             <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                               <div className="relative h-40">
                                 <Image
-                                  src={event.thumbnail || "/placeholder.svg?height=160&width=320"}
+                                  src={typeof event.thumbnail === 'string' && event.thumbnail ? event.thumbnail : '/placeholder.svg?height=160&width=320'}
                                   alt={event.title}
                                   fill
                                   className="object-cover"
+                                  onError={(e) => {
+                                    console.error('Error loading event thumbnail:', event.thumbnail);
+                                    (e.target as HTMLImageElement).src = '/placeholder.svg?height=160&width=320';
+                                  }}
+                                  unoptimized={true}
                                 />
                               </div>
                               <div className="p-4">
-                                <h4 className="font-semibold group-hover:text-[#4A90E2] transition-colors">
-                                  {event.title}
-                                </h4>
+                                <h4 className="font-semibold group-hover:text-[#4A90E2] transition-colors">{event.title}</h4>
                                 <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
                                   <Calendar className="h-4 w-4" />
                                   <span>
                                     {formatDate(event.start_date)}
-                                    {new Date(event.start_date).toDateString() !==
-                                      new Date(event.end_date).toDateString() && ` - ${formatDate(event.end_date)}`}
+                                    {new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString() && ` - ${formatDate(event.end_date)}`}
                                   </span>
                                 </div>
                                 {event.price && (
                                   <div className="mt-2 font-medium text-[#4A90E2]">
-                                    {new Intl.NumberFormat("id-ID", {
-                                      style: "currency",
-                                      currency: "IDR",
+                                    {new Intl.NumberFormat('id-ID', {
+                                      style: 'currency',
+                                      currency: 'IDR',
                                       minimumFractionDigits: 0,
                                     }).format(Number(event.price))}
                                   </div>
@@ -241,6 +243,5 @@ export default function DetailMentor({ mentor, courses = [], courseGroups = [], 
         </div>
       </div>
     </div>
-  )
+  );
 }
-

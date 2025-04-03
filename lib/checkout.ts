@@ -1,51 +1,51 @@
-"use server"
-import { v4 as uuidv4 } from "uuid"
-import { prisma } from "@/lib/prisma"
-import { getCurrentUser } from "@/lib/auth"
-import { createMidtransTransaction } from "@/lib/midtrans"
-import type { CourseTypeTransaction } from "@/types"
-import type { course_transactions_type } from "@prisma/client"
+'use server';
+import { v4 as uuidv4 } from 'uuid';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
+import { createMidtransTransaction } from '@/lib/midtrans';
+import type { CourseTypeTransaction } from '@/types';
+import type { course_transactions_type } from '@prisma/client';
 
 interface CheckoutData {
-  courseType: CourseTypeTransaction
-  promoCode?: string
-  promoDiscountType?: "percentage" | "fixed" | null
-  promoDiscount?: number
+  courseType: CourseTypeTransaction;
+  promoCode?: string;
+  promoDiscountType?: 'percentage' | 'fixed' | null;
+  promoDiscount?: number;
 }
 
 export async function initiateCheckout(data: CheckoutData) {
-  console.log("Input Checkout Data:", data)
-  const user = await getCurrentUser()
+  console.log('Input Checkout Data:', data);
+  const user = await getCurrentUser();
 
   if (!user || !user.studentId) {
-    return { error: "Anda harus login terlebih dahulu", redirectUrl: "/login?redirect=/checkout" }
+    return { error: 'Anda harus login terlebih dahulu', redirectUrl: '/login?redirect=/checkout' };
   }
 
   const existingTransaction = await prisma.course_transactions.findFirst({
     where: {
       student_id: user.studentId,
       course_id: data.courseType.course_id,
-      status: { not: "failed" },
+      status: { not: 'failed' },
     },
-  })
+  });
 
   if (existingTransaction) {
-    return { error: "Anda sudah membeli kelas ini." }
+    return { error: 'Anda sudah membeli kelas ini.' };
   }
 
   try {
-    const { courseType, promoCode } = data
+    const { courseType, promoCode } = data;
 
     // Calculate prices
-    let discount = 0
-    let voucherDiscount = 0
+    let discount = 0;
+    let voucherDiscount = 0;
 
     // Apply course discount if available
     if (courseType.is_discount && courseType.discount && courseType.discount_type) {
-      if (courseType.discount_type === "percentage") {
-        discount = (courseType.normal_price * courseType.discount) / 100
+      if (courseType.discount_type === 'percentage') {
+        discount = (courseType.normal_price * courseType.discount) / 100;
       } else {
-        discount = courseType.discount
+        discount = courseType.discount;
       }
     }
 
@@ -60,22 +60,22 @@ export async function initiateCheckout(data: CheckoutData) {
           },
           deleted_at: null,
         },
-      })
+      });
 
       if (promoCodeData) {
-        if (promoCodeData.discount_type === "percentage") {
-          voucherDiscount = (courseType.normal_price * promoCodeData.discount) / 100
+        if (promoCodeData.discount_type === 'percentage') {
+          voucherDiscount = (courseType.normal_price * promoCodeData.discount) / 100;
         } else {
-          voucherDiscount = promoCodeData.discount
+          voucherDiscount = promoCodeData.discount;
         }
       }
     }
 
     // Calculate final price
-    const finalPrice = Math.max(courseType.normal_price - discount - voucherDiscount, 0)
+    const finalPrice = Math.max(courseType.normal_price - discount - voucherDiscount, 0);
 
     // Create transaction code
-    const transactionCode = `TRX-${Date.now()}`
+    const transactionCode = `TRX-${Date.now()}`;
 
     // Create transaction in database
     const transaction = await prisma.course_transactions.create({
@@ -86,30 +86,30 @@ export async function initiateCheckout(data: CheckoutData) {
         student_id: user.studentId,
         type: courseType.type as course_transactions_type,
         batch_number: courseType.batch_number || null,
-        status: "unpaid",
+        status: 'unpaid',
         original_price: courseType.normal_price,
         discount: discount + voucherDiscount,
         final_price: finalPrice,
         created_at: new Date(),
         updated_at: new Date(),
       },
-    })
+    });
 
     // Create Midtrans transaction
     const midtransResponse = await createMidtransTransaction({
       orderId: transaction.code,
       amount: Number(finalPrice),
-      customerName: user.name || "Student",
+      customerName: user.name || 'Student',
       customerEmail: user.email,
-      description: `Pembayaran kelas ${courseType.course_title || "Course"}`,
-    })
+      description: `Pembayaran kelas ${courseType.course_title || 'Course'}`,
+    });
 
     // Mark promo code as used if applicable
     if (promoCode && voucherDiscount > 0) {
       await prisma.promo_codes.updateMany({
         where: { code: promoCode },
         data: { is_used: true, updated_at: new Date() },
-      })
+      });
     }
 
     return {
@@ -122,17 +122,17 @@ export async function initiateCheckout(data: CheckoutData) {
             vaNumber: midtransResponse.va_numbers[0].va_number,
           }
         : null,
-    }
+    };
   } catch (error) {
-    console.error("Checkout error:", error)
-    return { error: "Gagal memproses pembayaran" }
+    console.error('Checkout error:', error);
+    return { error: 'Gagal memproses pembayaran' };
   }
 }
 
 export async function getTransactionById(transactionId: string) {
   try {
     if (!transactionId) {
-      return { error: "Transaksi ID diperlukan" }
+      return { error: 'Transaksi ID diperlukan' };
     }
 
     const transaction = await prisma.course_transactions.findUnique({
@@ -154,10 +154,10 @@ export async function getTransactionById(transactionId: string) {
           },
         },
       },
-    })
+    });
 
     if (!transaction) {
-      return { error: "Transaksi tidak ditemukan" }
+      return { error: 'Transaksi tidak ditemukan' };
     }
 
     return {
@@ -167,10 +167,9 @@ export async function getTransactionById(transactionId: string) {
         discount: Number(transaction.discount),
         final_price: Number(transaction.final_price),
       },
-    }
+    };
   } catch (error) {
-    console.error("Error fetching transaction:", error)
-    return { error: "Gagal memuat data transaksi" }
+    console.error('Error fetching transaction:', error);
+    return { error: 'Gagal memuat data transaksi' };
   }
 }
-

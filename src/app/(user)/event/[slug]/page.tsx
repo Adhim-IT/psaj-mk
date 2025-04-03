@@ -1,51 +1,54 @@
-import { getEventBySlug } from "@/lib/list-event"
-import EventDetail from "@/components/user/event/detail-event"
-import { notFound } from "next/navigation"
+import { getEventBySlug } from '@/lib/list-event';
+import EventDetail from '@/components/user/event/detail-event';
+import { notFound } from 'next/navigation';
 
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: {
-    slug: string
-  }
+  params: Promise<{
+    slug: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function EventDetailPage({ params }: PageProps) {
-  const { slug } = params
+  // ✅ Await params sebelum mengakses propertinya
+  const { slug } = await params;
 
   try {
-    const response = await getEventBySlug(slug)
+    const response = await getEventBySlug(slug);
 
     if (!response.success || !response.data) {
-      notFound()
+      notFound();
     }
 
     return (
       <main className="py-8">
         <EventDetail event={response.data} />
       </main>
-    )
+    );
   } catch (error) {
-    console.error("Error fetching event:", error)
-    notFound()
+    console.error('Error fetching event:', error);
+    notFound();
   }
 }
 
 // Generate metadata for the page
 export async function generateMetadata({ params }: PageProps) {
-  const { slug } = params
+  // ✅ Await params sebelum mengakses propertinya
+  const { slug } = await params;
 
   try {
-    const response = await getEventBySlug(slug)
+    const response = await getEventBySlug(slug);
 
     if (!response.success || !response.data) {
       return {
-        title: "Event Not Found",
-        description: "The requested event could not be found.",
-      }
+        title: 'Event Not Found',
+        description: 'The requested event could not be found.',
+      };
     }
 
-    const event = response.data
+    const event = response.data;
 
     return {
       title: `${event.title} | Your Platform Name`,
@@ -62,12 +65,11 @@ export async function generateMetadata({ params }: PageProps) {
           },
         ],
       },
-    }
+    };
   } catch (error) {
     return {
-      title: "Event | Your Platform Name",
-      description: "View our upcoming events.",
-    }
+      title: 'Event | Your Platform Name',
+      description: 'View our upcoming events.',
+    };
   }
 }
-

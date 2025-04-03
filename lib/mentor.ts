@@ -95,7 +95,7 @@ export async function createMentorData(data: {
     const hashedPassword = await hash(data.password, 10)
 
     // Create user and mentor in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx : any) => {
       // Create user
       const user = await tx.user.create({
         data: {
@@ -195,24 +195,24 @@ export async function updateMentorData(
     }
 
     // Update user and mentor in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Update user
       const userData: any = {
         name: data.name,
         email: data.email,
         role_id: data.role_id,
         updated_at: new Date(),
-      }
+      };
 
       // Only update password if provided
       if (data.password) {
-        userData.password = await hash(data.password, 10)
+        userData.password = await hash(data.password, 10);
       }
 
       await tx.user.update({
         where: { id: mentor.user_id },
         data: userData,
-      })
+      });
 
       // Update mentor
       await tx.mentors.update({
@@ -228,8 +228,8 @@ export async function updateMentorData(
           profile_picture: data.profile_picture || null,
           updated_at: new Date(),
         },
-      })
-    })
+      });
+    });
 
     return { success: true }
   } catch (error) {
@@ -250,21 +250,21 @@ export async function deleteMentorData(id: string) {
     }
 
     // Soft delete mentor and user
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.mentors.update({
         where: { id },
         data: {
           deleted_at: new Date(),
         },
-      })
+      });
 
       await tx.user.update({
         where: { id: mentor.user_id },
         data: {
           deleted_at: new Date(),
         },
-      })
-    })
+      });
+    });
 
     return { success: true }
   } catch (error) {

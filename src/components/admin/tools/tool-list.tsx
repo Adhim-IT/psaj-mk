@@ -91,7 +91,7 @@ export function ToolList({ tools }: ToolListProps) {
 
   // Filter tools based on search query
   const filteredTools = tools.filter(
-    (tool) =>
+    (tool : any) =>
       tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tool.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (tool.description && tool.description.toLowerCase().includes(searchQuery.toLowerCase())),
@@ -137,7 +137,7 @@ export function ToolList({ tools }: ToolListProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTools.map((tool) => (
+              filteredTools.map((tool : any) => (
                 <TableRow key={tool.id}>
                   <TableCell>
                     <div className="relative h-10 w-10 overflow-hidden rounded-md">

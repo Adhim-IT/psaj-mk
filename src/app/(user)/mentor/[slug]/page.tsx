@@ -1,34 +1,38 @@
-import { getMentorByUsername } from "@/lib/mentor-userpage"
-import DetailMentor from "@/src/components/user/mentor/detail-mentor"
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import { ChevronRight } from "lucide-react"
+import { getMentorByUsername } from '@/lib/mentor-userpage';
+import DetailMentor from '@/src/components/user/mentor/detail-mentor';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 
 interface MentorDetailPageProps {
-  params: {
-    slug: string
-  }
+  params: Promise<{
+    slug: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: MentorDetailPageProps): Promise<Metadata> {
-  const { mentor } = await getMentorByUsername(params.slug)
+  // ✅ Await params sebelum mengakses propertinya
+  const { slug } = await params;
+
+  const { mentor } = await getMentorByUsername(slug);
 
   if (!mentor) {
     return {
-      title: "Mentor Not Found | PSAJMK",
-      description: "The mentor you are looking for could not be found.",
-    }
+      title: 'Mentor Not Found | PSAJMK',
+      description: 'The mentor you are looking for could not be found.',
+    };
   }
 
   return {
     title: `${mentor.name} - ${mentor.specialization} | PSAJMK`,
     description: mentor.bio?.substring(0, 160) || `Learn from ${mentor.name}, an expert in ${mentor.specialization}`,
-  }
+  };
 }
 
 const PageHeader = ({ title, mentorName }: { title: string; mentorName: string }) => (
-  <div className="bg-gradient-to-r from-[#5596DF] to-[#6ba5e7] text-white py-20 px-6 mt-10 min-h-[200px] flex items-center relative overflow-hidden">
+  <div className="bg-gradient-to-r from-[#5596DF] to-[#6ba5e7] text-white py-32 px-6 mt-10 min-h-[200px] flex items-center relative overflow-hidden">
     {/* Animated background circles */}
     <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-white/10 rounded-full blur-xl animate-pulse"></div>
     <div className="absolute bottom-[-100px] left-[-20px] w-80 h-80 bg-white/5 rounded-full blur-xl animate-pulse delay-700"></div>
@@ -48,13 +52,16 @@ const PageHeader = ({ title, mentorName }: { title: string; mentorName: string }
       </div>
     </div>
   </div>
-)
+);
 
 export default async function MentorDetailPage({ params }: MentorDetailPageProps) {
-  const { mentor, courses, courseGroups, events } = await getMentorByUsername(params.slug)
+  // ✅ Await params sebelum mengakses propertinya
+  const { slug } = await params;
+
+  const { mentor, courses, courseGroups, events } = await getMentorByUsername(slug);
 
   if (!mentor) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -64,6 +71,5 @@ export default async function MentorDetailPage({ params }: MentorDetailPageProps
         <DetailMentor mentor={mentor} courses={courses} courseGroups={courseGroups} events={events} />
       </div>
     </main>
-  )
+  );
 }
-

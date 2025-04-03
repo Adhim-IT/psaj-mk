@@ -1,28 +1,27 @@
-import { getMentorById } from "@/lib/mentor"
-import { getRoles } from "@/lib/role"
-import { MentorForm } from "@/components/admin/akun/mentor/mentor-form"
-import { notFound } from "next/navigation"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Home } from "lucide-react"
+import { getMentorById } from '@/lib/mentor';
+import { getRoles } from '@/lib/role';
+import { MentorForm } from '@/components/admin/akun/mentor/mentor-form';
+import { notFound } from 'next/navigation';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Home } from 'lucide-react';
 
+// Perbarui interface untuk Next.js 15
 interface EditMentorPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function EditMentorPage({ params }: EditMentorPageProps) {
-  const mentor = await getMentorById(params.id)
-  const roles = await getRoles()
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  const mentor = await getMentorById(id);
+  const roles = await getRoles();
 
   if (!mentor) {
-    return notFound()
+    return notFound();
   }
 
   return (
@@ -55,6 +54,5 @@ export default async function EditMentorPage({ params }: EditMentorPageProps) {
       </div>
       <MentorForm mentor={mentor} roles={roles} />
     </div>
-  )
+  );
 }
-

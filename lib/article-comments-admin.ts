@@ -20,7 +20,7 @@ export async function getComments() {
         created_at: "desc",
       },
     })
-    const formattedComments = comments.map((comment) => ({
+    const formattedComments = comments.map((comment: any) => ({
       ...comment,
       created_at: comment.created_at ? comment.created_at.toISOString() : null,
       updated_at: comment.updated_at ? comment.updated_at.toISOString() : null,
@@ -98,11 +98,11 @@ export async function getCommentsByArticleId(articleId: string) {
     })
 
     // Format dates for parent comments and their replies
-    const formattedComments = parentComments.map((comment) => ({
+    const formattedComments = parentComments.map((comment: any) => ({
       ...comment,
       created_at: comment.created_at ? comment.created_at.toISOString() : null,
       updated_at: comment.updated_at ? comment.updated_at.toISOString() : null,
-      other_article_comments: comment.other_article_comments.map((reply) => ({
+      other_article_comments: comment.other_article_comments.map((reply: any) => ({
         ...reply,
         created_at: reply.created_at ? reply.created_at.toISOString() : null,
         updated_at: reply.updated_at ? reply.updated_at.toISOString() : null,
@@ -152,11 +152,11 @@ export async function getApprovedCommentsByArticleId(articleId: string) {
     })
 
     // Format dates for parent comments and their replies
-    const formattedComments = parentComments.map((comment) => ({
+    const formattedComments = parentComments.map((comment: any) => ({
       ...comment,
       created_at: comment.created_at ? comment.created_at.toISOString() : null,
       updated_at: comment.updated_at ? comment.updated_at.toISOString() : null,
-      other_article_comments: comment.other_article_comments.map((reply) => ({
+      other_article_comments: comment.other_article_comments.map((reply: any) => ({
         ...reply,
         created_at: reply.created_at ? reply.created_at.toISOString() : null,
         updated_at: reply.updated_at ? reply.updated_at.toISOString() : null,

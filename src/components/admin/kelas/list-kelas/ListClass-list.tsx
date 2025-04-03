@@ -1,132 +1,114 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import Swal from "sweetalert2"
-import { deleteListClass } from "@/lib/list-kelas"
-import { Edit, MoreHorizontal, Plus, Search, Trash2, Youtube } from "lucide-react"
-import Image from "next/image"
-import { extractYouTubeId } from "@/lib/youtube"
-import type { ListClass } from "@/types"
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import Swal from 'sweetalert2';
+import { deleteListClass } from '@/lib/list-kelas';
+import { Edit, MoreHorizontal, Plus, Search, Trash2, Youtube } from 'lucide-react';
+import Image from 'next/image';
+import { extractYouTubeId } from '@/lib/youtube';
+import type { ListClass } from '@/types';
 
 interface ListClassListProps {
-  listClasses: ListClass[]
+  listClasses: ListClass[];
 }
 
 // Helper function to validate image URL
 const getValidImageUrl = (imageUrl: string): string => {
   // Check if it's a valid URL
   try {
-    new URL(imageUrl)
-    return imageUrl
+    new URL(imageUrl);
+    return imageUrl;
   } catch (e) {
     // Not a valid URL
   }
 
   // Check if it's a valid path
-  if (imageUrl.startsWith("/")) {
-    return imageUrl
+  if (imageUrl?.startsWith('/')) {
+    return imageUrl;
   }
 
   // Return placeholder if none of the above
-  return "/placeholder.svg?height=40&width=40"
-}
+  return '/placeholder.svg?height=40&width=40';
+};
 
 // Helper function to get level badge color
 const getLevelBadgeColor = (level: string) => {
   switch (level) {
-    case "Beginner":
-      return "bg-green-100 text-green-800 hover:bg-green-100"
-    case "Intermediate":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-100"
-    case "Advanced":
-      return "bg-purple-100 text-purple-800 hover:bg-purple-100"
+    case 'Beginner':
+      return 'bg-green-100 text-green-800 hover:bg-green-100';
+    case 'Intermediate':
+      return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
+    case 'Advanced':
+      return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
     default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+      return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
   }
-}
+};
 
 export function ListClassList({ listClasses }: ListClassListProps) {
-  const router = useRouter()
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [listClassToDelete, setListClassToDelete] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [listClassToDelete, setListClassToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleDelete = async () => {
-    if (!listClassToDelete) return
+    if (!listClassToDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      const result = await deleteListClass(listClassToDelete)
+      const result = await deleteListClass(listClassToDelete);
 
       if (result.success) {
         Swal.fire({
-          icon: "success",
-          title: "List class deleted",
-          text: "List class has been deleted successfully.",
-        })
+          icon: 'success',
+          title: 'List class deleted',
+          text: 'List class has been deleted successfully.',
+        });
       } else {
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: typeof result.error === "string" ? result.error : "Failed to delete list class.",
-        })
+          icon: 'error',
+          title: 'Error',
+          text: typeof result.error === 'string' ? result.error : 'Failed to delete list class.',
+        });
       }
     } catch (error) {
       Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An unexpected error occurred. Please try again.",
-      })
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred. Please try again.',
+      });
     } finally {
-      setIsDeleting(false)
-      setIsDeleteDialogOpen(false)
-      setListClassToDelete(null)
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setListClassToDelete(null);
     }
-  }
+  };
 
   const confirmDelete = (id: string) => {
-    setListClassToDelete(id)
-    setIsDeleteDialogOpen(true)
-  }
+    setListClassToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
 
   // Filter listClasses based on search query
   const filteredListClasses = listClasses.filter(
-    (listClass) =>
-      listClass.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listClass.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listClass.level.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+    (listClass) => listClass.title.toLowerCase().includes(searchQuery.toLowerCase()) || listClass.description.toLowerCase().includes(searchQuery.toLowerCase()) || listClass.level.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search list classes..."
-            className="pl-8 w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <Input type="search" placeholder="Search list classes..." className="pl-8 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
         <Button asChild>
           <Link href="/admin/dashboard/kelas/list/create" className="flex items-center gap-2">
@@ -153,9 +135,7 @@ export function ListClassList({ listClasses }: ListClassListProps) {
             {filteredListClasses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  {searchQuery
-                    ? "No list classes found matching your search."
-                    : "No list classes found. Create your first list class."}
+                  {searchQuery ? 'No list classes found matching your search.' : 'No list classes found. Create your first list class.'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -164,15 +144,17 @@ export function ListClassList({ listClasses }: ListClassListProps) {
                   <TableCell>
                     <div className="relative h-12 w-20 overflow-hidden rounded-md">
                       <Image
-                        src={getValidImageUrl(listClass.thumbnail) || "/placeholder.svg"}
+                        src={getValidImageUrl(listClass.thumbnail) || '/placeholder.svg'}
                         alt={listClass.title}
                         fill
                         className="object-cover"
+                        unoptimized={true}
                         onError={(e) => {
+                          console.error('Error loading thumbnail:', listClass.thumbnail);
                           // If image fails to load, replace with placeholder
-                          const target = e.target as HTMLImageElement
-                          target.onerror = null // Prevent infinite loop
-                          target.src = "/placeholder.svg?height=48&width=80"
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null; // Prevent infinite loop
+                          target.src = '/placeholder.svg?height=48&width=80';
                         }}
                       />
                     </div>
@@ -186,11 +168,7 @@ export function ListClassList({ listClasses }: ListClassListProps) {
                         </Badge>
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1 hidden md:block">
-                      {listClass.description.length > 60
-                        ? `${listClass.description.substring(0, 60)}...`
-                        : listClass.description}
-                    </div>
+                    <div className="text-sm text-muted-foreground mt-1 hidden md:block">{listClass.description.length > 60 ? `${listClass.description.substring(0, 60)}...` : listClass.description}</div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant="outline" className={getLevelBadgeColor(listClass.level)}>
@@ -198,12 +176,9 @@ export function ListClassList({ listClasses }: ListClassListProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {listClass.meetings} {listClass.meetings === 1 ? "meeting" : "meetings"}
+                    {listClass.meetings} {listClass.meetings === 1 ? 'meeting' : 'meetings'}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    
-                    {listClass.transactions?.length ?? 0}
-                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{listClass.transactions?.length ?? 0}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {listClass.is_active ? (
                       <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
@@ -224,27 +199,22 @@ export function ListClassList({ listClasses }: ListClassListProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/admin/dashboard/kelas/list/edit/${listClass.id}`)}
-                        >
+                        <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/kelas/list/edit/${listClass.id}`)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            const videoId = extractYouTubeId(listClass.trailer)
+                            const videoId = extractYouTubeId(listClass.trailer);
                             if (videoId) {
-                              window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank")
+                              window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
                             }
                           }}
                         >
                           <Youtube className="mr-2 h-4 w-4" />
                           Watch Trailer
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => confirmDelete(listClass.id)}
-                          className="text-red-600 focus:text-red-600"
-                        >
+                        <DropdownMenuItem onClick={() => confirmDelete(listClass.id)} className="text-red-600 focus:text-red-600">
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -262,23 +232,16 @@ export function ListClassList({ listClasses }: ListClassListProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will delete the list class. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This action will delete the list class. This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
-

@@ -1,28 +1,27 @@
-import { getWriterById } from "@/lib/writer"
-import { getRoles } from "@/lib/role"
-import { WriterForm } from "@/components/admin/akun/writer/writer-form"
-import { notFound } from "next/navigation"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Home } from "lucide-react"
+import { getWriterById } from '@/lib/writer';
+import { getRoles } from '@/lib/role';
+import { WriterForm } from '@/components/admin/akun/writer/writer-form';
+import { notFound } from 'next/navigation';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Home } from 'lucide-react';
 
+// Perbarui interface untuk Next.js 15
 interface EditWriterPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function EditWriterPage({ params }: EditWriterPageProps) {
-  const writer = await getWriterById(params.id)
-  const roles = await getRoles()
+  // Await params sebelum mengakses propertinya
+  const { id } = await params;
+
+  const writer = await getWriterById(id);
+  const roles = await getRoles();
 
   if (!writer) {
-    return notFound()
+    return notFound();
   }
 
   return (
@@ -55,6 +54,5 @@ export default async function EditWriterPage({ params }: EditWriterPageProps) {
       </div>
       <WriterForm writer={writer} roles={roles} />
     </div>
-  )
+  );
 }
-

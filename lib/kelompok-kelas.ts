@@ -46,13 +46,13 @@ export async function getStudentGroups() {
     })
 
     // Transform the data to match the StudentGroup interface
-    const formattedGroups = studentGroups.map((group) => ({
+    const formattedGroups = studentGroups.map((group: any) => ({
       ...group,
       course_types: {
         ...group.course_types,
         title: group.course_types.courses.title,
       },
-    }))
+    }));
 
     return { studentGroups: formattedGroups }
   } catch (error) {
@@ -144,11 +144,11 @@ export async function getCourseTypesForDropdown() {
     })
 
     // Transform the data to include the course title
-    const formattedCourseTypes = courseTypes.map((type) => ({
+    const formattedCourseTypes = courseTypes.map((type: any) => ({
       id: type.id,
       type: type.type,
       title: type.courses.title,
-    }))
+    }));
 
     return { courseTypes: formattedCourseTypes }
   } catch (error) {
@@ -356,11 +356,11 @@ export async function getStudentsInGroup(groupId: string) {
     }
 
     return {
-      students: group.course_students.map((cs) => ({
+      students: group.course_students.map((cs: any) => ({
         student_id: cs.student_id,
         ...cs.students,
       })),
-    }
+    };
   } catch (error) {
     console.error("Error fetching students in group:", error)
     return { error: "Failed to fetch students", students: [] }
@@ -477,8 +477,8 @@ export async function getAvailableStudents(groupId: string) {
     }
 
     // Filter out students already in the group
-    const enrolledStudentIds = group.course_students.map((cs) => cs.student_id)
-    const availableStudents = allStudents.filter((student) => !enrolledStudentIds.includes(student.id))
+    const enrolledStudentIds = group.course_students.map((cs: any) => cs.student_id);
+    const availableStudents = allStudents.filter((student: any) => !enrolledStudentIds.includes(student.id));
 
     return { students: availableStudents }
   } catch (error) {

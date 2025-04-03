@@ -1,71 +1,65 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
-import { Loader2, Copy, CheckCircle, AlertCircle } from "lucide-react"
-import { getTransactionById } from "@/lib/checkout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import Swal from "sweetalert2"
-// Remove this line: import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { Loader2, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { getTransactionById } from '@/lib/checkout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function PaymentInstructionsPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const transactionId = searchParams.get("id")
-  // Remove this line: const { toast } = useToast()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const transactionId = searchParams.get('id');
+  const { toast } = useToast();
 
-  const [transaction, setTransaction] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [transaction, setTransaction] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function loadTransaction() {
       if (!transactionId) {
-        setError("Transaksi tidak ditemukan")
-        setLoading(false)
-        return
+        setError('Transaksi tidak ditemukan');
+        setLoading(false);
+        return;
       }
 
       try {
-        const result = await getTransactionById(transactionId)
+        const result = await getTransactionById(transactionId);
         if (result.error) {
-          setError(result.error)
-          setLoading(false)
-          return
+          setError(result.error);
+          setLoading(false);
+          return;
         }
 
-        setTransaction(result.transaction)
+        setTransaction(result.transaction);
       } catch (err) {
-        console.error("Error loading transaction:", err)
-        setError("Gagal memuat data transaksi")
+        console.error('Error loading transaction:', err);
+        setError('Gagal memuat data transaksi');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadTransaction()
-  }, [transactionId])
+    loadTransaction();
+  }, [transactionId]);
 
   const handleCopyVA = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
+    navigator.clipboard.writeText(text);
+    setCopied(true);
 
-    Swal.fire({
-      icon: "success",
-      title: "Berhasil disalin",
-      text: "Nomor virtual account telah disalin ke clipboard",
-      timer: 2000,
-      showConfirmButton: false,
-      position: "top-end",
-      toast: true,
-      timerProgressBar: true,
-    })
+    toast({
+      title: 'Berhasil disalin',
+      description: 'Nomor virtual account telah disalin ke clipboard',
+      duration: 2000,
+    });
 
-    setTimeout(() => setCopied(false), 2000)
-  }
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return (
@@ -73,25 +67,25 @@ export default function PaymentInstructionsPage() {
         <Loader2 className="h-12 w-12 animate-spin text-[#4A90E2]" />
         <p className="mt-4 text-lg text-gray-600">Memuat instruksi pembayaran...</p>
       </div>
-    )
+    );
   }
 
   if (error || !transaction) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh]">
         <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="mt-4 text-lg text-gray-800 font-medium">{error || "Transaksi tidak ditemukan"}</p>
-        <Button className="mt-6" onClick={() => router.push("/kelas")}>
+        <p className="mt-4 text-lg text-gray-800 font-medium">{error || 'Transaksi tidak ditemukan'}</p>
+        <Button className="mt-6" onClick={() => router.push('/kelas')}>
           Kembali ke Daftar Kelas
         </Button>
       </div>
-    )
+    );
   }
 
   // This is a mock since we don't have the actual VA number from Midtrans in this example
   // In a real implementation, you would get this from the Midtrans response
-  const vaNumber = "12345678901"
-  const bankName = "BCA"
+  const vaNumber = '12345678901';
+  const bankName = 'BCA';
 
   return (
     <div className="container max-w-3xl py-12 px-4 md:px-6 mt-16">
@@ -103,13 +97,7 @@ export default function PaymentInstructionsPage() {
               <CardDescription>Kode Transaksi: {transaction.code}</CardDescription>
             </div>
             <div className="p-2 bg-white rounded-full">
-              <Image
-                src="/placeholder.svg?height=40&width=40"
-                alt="Bank Logo"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
+              <Image src="/placeholder.svg?height=40&width=40" alt="Bank Logo" width={40} height={40} className="object-contain" />
             </div>
           </div>
         </CardHeader>
@@ -128,9 +116,7 @@ export default function PaymentInstructionsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Pembayaran</span>
-                  <span className="font-bold text-lg">
-                    Rp {Number(transaction.final_price).toLocaleString("id-ID")}
-                  </span>
+                  <span className="font-bold text-lg">Rp {Number(transaction.final_price).toLocaleString('id-ID')}</span>
                 </div>
               </div>
             </div>
@@ -139,14 +125,9 @@ export default function PaymentInstructionsPage() {
               <h3 className="text-lg font-semibold mb-2">Virtual Account {bankName}</h3>
               <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
                 <div className="font-mono text-lg font-bold">{vaNumber}</div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopyVA(vaNumber)}
-                  className="flex items-center gap-1"
-                >
+                <Button variant="outline" size="sm" onClick={() => handleCopyVA(vaNumber)} className="flex items-center gap-1">
                   {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? "Disalin" : "Salin"}
+                  {copied ? 'Disalin' : 'Salin'}
                 </Button>
               </div>
             </div>
@@ -198,15 +179,12 @@ export default function PaymentInstructionsPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
-            Pembayaran akan diverifikasi secara otomatis. Harap selesaikan pembayaran sebelum 24 jam.
-          </div>
-          <Button className="w-full" variant="outline" onClick={() => router.push("/dashboard/courses")}>
+          <div className="text-sm text-muted-foreground text-center">Pembayaran akan diverifikasi secara otomatis. Harap selesaikan pembayaran sebelum 24 jam.</div>
+          <Button className="w-full" variant="outline" onClick={() => router.push('/dashboard/courses')}>
             Cek Status Pembayaran
           </Button>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
-

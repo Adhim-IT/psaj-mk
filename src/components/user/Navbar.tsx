@@ -1,127 +1,105 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
-import { ChevronDown, LogOut, Menu, Settings, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import NextImage from "next/image"
-import { useSession, signOut } from "next-auth/react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { ChevronDown, LogOut, Menu, Settings, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import NextImage from 'next/image';
+import { useSession, signOut } from 'next-auth/react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Define program items to ensure consistency between mobile and desktop
 const programItems = [
-  { title: "Online Bootcamp Intensive", href: "/program/online-bootcamp" },
-  { title: "Online Bootcamp Batch", href: "/program/batch-bootcamp" },
-  { title: "Online Short Class", href: "/program/short-class" },
-]
+  { title: 'Online Bootcamp Intensive', href: '/program/online-bootcamp' },
+  { title: 'Online Bootcamp Batch', href: '/program/batch-bootcamp' },
+  { title: 'Online Short Class', href: '/program/short-class' },
+];
 
 export default function Navbar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  // Replace the useState for isProgramOpen with a proper initialization
-  const [isProgramOpen, setIsProgramOpen] = useState(false)
-  const { data: session, status } = useSession()
-  const isAuthenticated = status === "authenticated"
-  const [userName, setUserName] = useState("")
-  const [userEmail, setUserEmail] = useState("")
-  const [userImage, setUserImage] = useState("")
-  const [scrolled, setScrolled] = useState(false)
-  const [imageError, setImageError] = useState(false)
-  const [profileData, setProfileData] = useState<any>(null)
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isProgramOpen, setIsProgramOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [userImage, setUserImage] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
 
-  // Fix the image error handling to be more robust
-  // Replace the testImageUrl function with this improved version:
-  const testImageUrl = (url: string) => {
-    if (typeof window === "undefined" || !url) return
-
-    const img = new window.Image()
-    img.onload = () => console.log("Image loaded successfully")
-    img.onerror = () => {
-      console.error("Image failed to load:", url)
-      setImageError(true)
-    }
-    img.src = url
-  }
-
-  // Replace the fetchProfileData function with this improved version:
+  // Fetch profile data
   const fetchProfileData = async () => {
-    if (!session?.user?.id) return
+    if (!session?.user?.id) return;
 
     try {
-      const response = await fetch("/api/dashboard/protfile/")
+      const response = await fetch('/api/dashboard/protfile/');
       if (response.ok) {
-        const data = await response.json()
-        setProfileData(data)
+        const data = await response.json();
+        setProfileData(data);
 
-        // Use a more reliable approach to set the image
-        if (data.data?.student?.profile_picture) {
-          setUserImage(data.data.student.profile_picture)
-        } else if (data.data?.mentor?.profile_picture) {
-          setUserImage(data.data.mentor.profile_picture)
-        } else if (data.data?.writer?.profile_picture) {
-          setUserImage(data.data.writer.profile_picture)
-        } else if (session.user.image) {
-          setUserImage(session.user.image)
+        if (data.data?.student?.profile_picture && typeof data.data.student.profile_picture === 'string') {
+          setUserImage(data.data.student.profile_picture);
+        } else if (data.data?.mentor?.profile_picture && typeof data.data.mentor.profile_picture === 'string') {
+          setUserImage(data.data.mentor.profile_picture);
+        } else if (data.data?.writer?.profile_picture && typeof data.data.writer.profile_picture === 'string') {
+          setUserImage(data.data.writer.profile_picture);
+        } else if (session.user.image && typeof session.user.image === 'string') {
+          setUserImage(session.user.image);
         }
       }
     } catch (error) {
-      console.error("Error fetching profile data:", error)
+      console.error('Error fetching profile data:', error);
     }
-  }
+  };
 
-  // Replace the useEffect for session with this improved version:
+  // Set user data from session
   useEffect(() => {
     if (isAuthenticated && session?.user) {
-      setUserName(session.user.name || "")
-      setUserEmail(session.user.email || "")
-      fetchProfileData()
-    }
-  }, [session, isAuthenticated])
+      setUserName(session.user.name || '');
+      setUserEmail(session.user.email || '');
 
+      // Set default image from session first
+      if (session.user.image && typeof session.user.image === 'string') {
+        setUserImage(session.user.image);
+      }
+
+      // Then fetch profile data which might override the image
+      fetchProfileData();
+    }
+  }, [session, isAuthenticated]);
+
+  // Handle scroll for navbar styling
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
+      setScrolled(window.scrollY > 10);
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const getLinkClass = (path: string) =>
-    pathname === path
-      ? "text-[#5596DF] font-semibold text-sm md:text-base"
-      : "text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-sm md:text-base"
+  const getLinkClass = (path: string) => (pathname === path ? 'text-[#5596DF] font-semibold text-sm md:text-base' : 'text-gray-600 hover:text-[#5596DF] transition-colors duration-200 text-sm md:text-base');
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/" })
-  }
+    signOut({ callbackUrl: '/' });
+  };
 
   const getUserInitials = () => {
-    if (!userName) return "TC"
+    if (!userName) return 'TC';
     return userName
-      .split(" ")
+      .split(' ')
       .map((name) => name[0])
-      .join("")
+      .join('')
       .toUpperCase()
-      .substring(0, 2)
-  }
-
-  const handleImageError = () => {
-    console.error("Error loading navbar image:", userImage)
-    setImageError(true)
-  }
-
-  const refreshPage = () => {
-    router.refresh()
-  }
+      .substring(0, 2);
+  };
 
   return (
-    <header
-      className={`w-full border-b border-black/10 bg-white/80 backdrop-blur-md fixed top-0 z-50 transition-all duration-300 ${scrolled ? "shadow-md h-14 md:h-16" : "h-16 md:h-18"}`}
-    >
+    <header className={`w-full border-b border-black/10 bg-white/80 backdrop-blur-md fixed top-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-md h-14 md:h-16' : 'h-16 md:h-18'}`}>
       <div className="w-full max-w-[1400px] px-4 md:px-8 lg:px-12 mx-auto flex h-full items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center">
@@ -130,7 +108,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center space-x-6 md:flex md:ml-6 lg:ml-10">
-          <Link href="/" className={getLinkClass("/")}>
+          <Link href="/" className={getLinkClass('/')}>
             Home
           </Link>
           <DropdownMenu modal={false}>
@@ -148,16 +126,16 @@ export default function Navbar() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link href="/kelas" className={getLinkClass("/kelas")}>
+          <Link href="/kelas" className={getLinkClass('/kelas')}>
             Kelas
           </Link>
-          <Link href="/event" className={getLinkClass("/event")}>
+          <Link href="/event" className={getLinkClass('/event')}>
             Event
           </Link>
-          <Link href="/artikel" className={getLinkClass("/artikel")}>
+          <Link href="/artikel" className={getLinkClass('/artikel')}>
             Artikel
           </Link>
-          <Link href="/mentor" className={getLinkClass("/mentor")}>
+          <Link href="/mentor" className={getLinkClass('/mentor')}>
             Mentor
           </Link>
         </nav>
@@ -167,25 +145,11 @@ export default function Navbar() {
           {isAuthenticated ? (
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 px-3 hover:bg-[#EBF3FC] hover:text-[#5596DF]"
-                >
+                <Button variant="ghost" className="flex items-center gap-2 px-3 hover:bg-[#EBF3FC] hover:text-[#5596DF]">
                   <div className="flex items-center gap-2">
-                    {/* Fixed aspect ratio for avatar */}
                     <Avatar className="h-7 w-7 border border-[#5596DF] overflow-hidden">
-                      <AvatarImage
-                        src={userImage || ""}
-                        alt={userName || "User"}
-                        className="h-full w-full object-cover"
-                        onError={() => {
-                          console.error("Failed to load avatar image:", userImage)
-                          setImageError(true)
-                        }}
-                      />
-                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF] text-xs font-medium">
-                        {getUserInitials()}
-                      </AvatarFallback>
+                      {typeof userImage === 'string' && userImage ? <AvatarImage src={userImage} alt={userName || 'User'} className="h-full w-full object-cover" onError={() => setImageError(true)} /> : null}
+                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF] text-xs font-medium">{getUserInitials()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start">
                       <span className="text-xs font-medium">{userName}</span>
@@ -208,10 +172,7 @@ export default function Navbar() {
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 text-red-500 focus:text-red-500"
-                >
+                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 text-red-500 focus:text-red-500">
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
                 </DropdownMenuItem>
@@ -219,16 +180,10 @@ export default function Navbar() {
             </DropdownMenu>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="rounded-md px-5 py-2 h-9 border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 hover:text-[#5596DF] hover:border-[#5596DF] transition-all duration-200 flex items-center justify-center"
-              >
+              <Link href="/login" className="rounded-md px-5 py-2 h-9 border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 hover:text-[#5596DF] hover:border-[#5596DF] transition-all duration-200 flex items-center justify-center">
                 Masuk
               </Link>
-              <Link
-                href="/register"
-                className="rounded-md bg-[#5596DF] px-5 py-2 h-9 text-sm text-white hover:bg-[#3E7BBF] transition-transform duration-200 transform hover:scale-105 flex items-center justify-center"
-              >
+              <Link href="/register" className="rounded-md bg-[#5596DF] px-5 py-2 h-9 text-sm text-white hover:bg-[#3E7BBF] transition-transform duration-200 transform hover:scale-105 flex items-center justify-center">
                 Daftar
               </Link>
             </>
@@ -238,17 +193,10 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden hover:bg-[#EBF3FC] hover:text-[#5596DF] transition-colors duration-200"
-              aria-label="Open menu"
-            >
+            <Button variant="ghost" size="icon" className="md:hidden hover:bg-[#EBF3FC] hover:text-[#5596DF] transition-colors duration-200" aria-label="Open menu">
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          {/* Fix the mobile menu to ensure it's properly responsive */}
-          {/* Update the SheetContent component to have better responsive behavior: */}
           <SheetContent side="right" className="w-[85vw] max-w-[300px] p-0 sm:max-w-sm">
             <SheetHeader className="border-b p-4">
               <SheetTitle className="text-left text-xl font-normal text-[#5596DF]">Menu</SheetTitle>
@@ -258,20 +206,9 @@ export default function Navbar() {
               {isAuthenticated && (
                 <div className="border-b p-4">
                   <div className="flex items-center gap-3">
-                    {/* Fixed aspect ratio for mobile avatar */}
                     <Avatar className="h-10 w-10 border border-[#5596DF] overflow-hidden">
-                      <AvatarImage
-                        src={userImage || ""}
-                        alt={userName || "User"}
-                        className="h-full w-full object-cover"
-                        onError={() => {
-                          console.error("Failed to load mobile avatar image:", userImage)
-                          setImageError(true)
-                        }}
-                      />
-                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF] text-sm font-medium">
-                        {getUserInitials()}
-                      </AvatarFallback>
+                      {typeof userImage === 'string' && userImage ? <AvatarImage src={userImage} alt={userName || 'User'} className="h-full w-full object-cover" onError={() => setImageError(true)} /> : null}
+                      <AvatarFallback className="bg-[#EBF3FC] text-[#5596DF] text-sm font-medium">{getUserInitials()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="font-medium">{userName}</span>
@@ -286,24 +223,13 @@ export default function Navbar() {
                   Home
                 </Link>
                 <div>
-                  <button
-                    className="flex w-full items-center justify-between py-3 text-base text-gray-700 hover:text-[#5596DF]"
-                    onClick={() => setIsProgramOpen(!isProgramOpen)}
-                    aria-expanded={isProgramOpen}
-                    aria-controls="program-submenu"
-                  >
+                  <button className="flex w-full items-center justify-between py-3 text-base text-gray-700 hover:text-[#5596DF]" onClick={() => setIsProgramOpen(!isProgramOpen)} aria-expanded={isProgramOpen} aria-controls="program-submenu">
                     Program
-                    <ChevronDown
-                      className={`h-5 w-5 transition-transform duration-200 ${isProgramOpen ? "rotate-180" : ""}`}
-                    />
+                    <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isProgramOpen ? 'rotate-180' : ''}`} />
                   </button>
-                  <div id="program-submenu" className={`ml-4 space-y-2 ${isProgramOpen ? "block" : "hidden"}`}>
+                  <div id="program-submenu" className={`ml-4 space-y-2 ${isProgramOpen ? 'block' : 'hidden'}`}>
                     {programItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="block py-2 text-base text-gray-700 hover:text-[#5596DF]"
-                      >
+                      <Link key={item.href} href={item.href} className="block py-2 text-base text-gray-700 hover:text-[#5596DF]">
                         {item.title}
                       </Link>
                     ))}
@@ -337,28 +263,19 @@ export default function Navbar() {
 
               <div className="border-t p-4 space-y-3">
                 {isAuthenticated ? (
-                  <Button
-                    onClick={handleSignOut}
-                    variant="outline"
-                    className="w-full rounded-md border-red-300 bg-white text-base text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-500 flex items-center justify-center gap-2"
-                  >
+                  <Button onClick={handleSignOut} variant="outline" className="w-full rounded-md border-red-300 bg-white text-base text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-500 flex items-center justify-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>
                 ) : (
                   <>
                     <Link href="/login" className="block w-full">
-                      <Button
-                        variant="outline"
-                        className="w-full rounded-md border-gray-300 bg-white text-base text-gray-700 hover:bg-gray-50 hover:text-[#5596DF] hover:border-[#5596DF]"
-                      >
+                      <Button variant="outline" className="w-full rounded-md border-gray-300 bg-white text-base text-gray-700 hover:bg-gray-50 hover:text-[#5596DF] hover:border-[#5596DF]">
                         Masuk
                       </Button>
                     </Link>
                     <Link href="/register" className="block w-full">
-                      <Button className="w-full rounded-md bg-[#5596DF] text-base text-white hover:bg-[#3E7BBF]">
-                        Daftar
-                      </Button>
+                      <Button className="w-full rounded-md bg-[#5596DF] text-base text-white hover:bg-[#3E7BBF]">Daftar</Button>
                     </Link>
                   </>
                 )}
@@ -368,6 +285,5 @@ export default function Navbar() {
         </Sheet>
       </div>
     </header>
-  )
+  );
 }
-

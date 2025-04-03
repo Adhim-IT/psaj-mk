@@ -131,7 +131,7 @@ export function EventRegistrationModal({ event, isOpen, onClose, onSubmit }: Reg
                         <>
                             <div className="flex justify-center mb-4">
                                 <div className="border p-4 rounded-lg">
-                                    <Image src="/qris-payment.png" alt="QRIS Payment" width={300} height={300} className="mx-auto" />
+                                    <Image src="/images/qris-payment.jpeg" alt="QRIS Payment" width={300} height={300} className="mx-auto" />
                                 </div>
                             </div>
                             <p className="text-center font-medium mb-4">Silahkan Lakukan Pembayaran, dengan scan QR diatas</p>

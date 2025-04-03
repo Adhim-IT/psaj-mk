@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/rich-text-editor';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Upload, Calendar, Tag, FileText, Clock, CreditCard, MessageSquare, CheckCircle } from 'lucide-react';
 import { createEvent, updateEvent } from '@/lib/list-event';
@@ -63,7 +63,6 @@ export function EventForm({ initialData, mentors, isEditing }: EventFormProps) {
   const today = new Date();
   today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
   const minDate = today.toISOString().slice(0, 16);
-
   const {
     register,
     handleSubmit,
@@ -248,15 +247,6 @@ export function EventForm({ initialData, mentors, isEditing }: EventFormProps) {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="description" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
-                  Description
-                </Label>
-                <Textarea id="description" {...register('description')} className="mt-1.5" rows={4} placeholder="Enter event description" />
-                {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>}
-              </div>
-
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="start_date" className="flex items-center gap-2">
@@ -305,7 +295,33 @@ export function EventForm({ initialData, mentors, isEditing }: EventFormProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 pt-4 border-t">
+          <div className="space-y-4 pt-4">
+            <Label htmlFor="description" className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Description
+            </Label>
+            <div
+              className="mt-2 border rounded-md overflow-hidden"
+              style={{
+                height: '400px',
+                maxWidth: '100%',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'auto',
+                  wordWrap: 'break-word',
+                }}
+              >
+                <RichTextEditor value={watch('description') || ''} onChange={(value) => setValue('description', value)} placeholder="Enter event description" />
+              </div>
+            </div>
+            {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>}
+          </div>
+
+          <div className="flex items-center gap-4 pt-6 mt-2 border-t">
             <Button type="button" variant="outline" onClick={() => router.push('/admin/dashboard/event/list')} className="px-6">
               Cancel
             </Button>

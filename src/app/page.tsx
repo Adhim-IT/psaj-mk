@@ -35,7 +35,7 @@ export default function Home() {
       <Navbar />
       <main className="min-h-screen overflow-hidden">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-[#4A90E2] to-[#3178c6] text-white relative overflow-hidden mt-20">
+        <section className="bg-gradient-to-br from-[#4A90E2] to-[#3178c6] text-white relative overflow-hidden mt-18">
           {/* Animated background elements */}
           <div className="absolute -right-20 -top-20 w-72 h-72 sm:w-96 sm:h-96 bg-blue-300/20 rounded-full animate-pulse"></div>
           <div className="absolute left-1/4 bottom-0 w-40 h-40 sm:w-64 sm:h-64 bg-blue-300/10 rounded-full animate-bounce"></div>
@@ -60,7 +60,7 @@ export default function Home() {
                 </div>
                 <div className="flex flex-wrap gap-3 sm:gap-4">
                   <Link
-                    href="#courses"
+                    href="/kelas"
                     className="inline-flex items-center bg-white text-[#4A90E2] px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-sm sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 group"
                   >
                     Lihat Kursus

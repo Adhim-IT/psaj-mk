@@ -43,20 +43,14 @@ export default function Home() {
 
           <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 sm:gap-8 xl:gap-12">
-              <div
-                className={`space-y-6 sm:space-y-8 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-              >
+              <div className={`space-y-6 sm:space-y-8 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
                 <div>
-                  <span className="inline-block px-3 sm:px-4 py-1 bg-white/20 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 backdrop-blur-sm mt-10">
-                    Platform Belajar IT #1 di Indonesia
-                  </span>
+                  <span className="inline-block px-3 sm:px-4 py-1 bg-white/20 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 backdrop-blur-sm mt-10">Platform Belajar IT #1 di Indonesia</span>
                   <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold leading-tight">
                     Belajar IT Jadi <br className="hidden md:block" />
                     <span className="text-yellow-300">Mudah & Seru!</span> 🚀
                   </h1>
-                  <p className="text-lg sm:text-xl md:text-2xl mt-4 sm:mt-6 text-blue-100">
-                    Belajar di TeenCode, Jadi Jago IT!
-                  </p>
+                  <p className="text-lg sm:text-xl md:text-2xl mt-4 sm:mt-6 text-blue-100">Belajar di TeenCode, Jadi Jago IT!</p>
                 </div>
                 <div className="flex flex-wrap gap-3 sm:gap-4">
                   <Link
@@ -66,10 +60,7 @@ export default function Home() {
                     Lihat Kursus
                     <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <Link
-                    href="#about"
-                    className="inline-flex items-center bg-transparent border-2 border-white/70 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium hover:bg-white/10 transition-all duration-300 text-sm sm:text-lg"
-                  >
+                  <Link href="#about" className="inline-flex items-center bg-transparent border-2 border-white/70 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium hover:bg-white/10 transition-all duration-300 text-sm sm:text-lg">
                     Tentang Kami
                   </Link>
                 </div>
@@ -83,19 +74,10 @@ export default function Home() {
                   <span className="text-sm sm:text-base">Dipercaya oleh 10,000+ pelajar di Indonesia</span>
                 </div>
               </div>
-              <div
-                className={`md:mt-20 relative z-10 flex justify-center lg:justify-end transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-              >
+              <div className={`md:mt-20 relative z-10 flex justify-center lg:justify-end transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
                 <div className="relative w-full max-w-xs sm:max-w-md lg:max-w-xl xl:max-w-2xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur-3xl opacity-30 -z-10 transform -rotate-6"></div>
-                  <Image
-                    src="/images/hero-img.png"
-                    width={600}
-                    height={600}
-                    alt="Student with laptop"
-                    className="object-contain drop-shadow-2xl"
-                    priority
-                  />
+                  <Image src="/images/hero-img.png" width={600} height={600} alt="Student with laptop" className="object-contain drop-shadow-2xl" priority />
                 </div>
               </div>
             </div>
@@ -138,7 +120,7 @@ export default function Home() {
         <AboutSection />
 
         {/* Courses Section */}
-        <CoursePopular maxCourses={1} />
+        <CoursePopular maxCourses={3} />
 
         {/* Testimonials */}
         <section className="py-24 bg-white">
@@ -152,25 +134,22 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
-                  name: "Budi Santoso",
-                  role: "Siswa SMA",
-                  quote:
-                    "TeenCode membantu saya memahami dasar-dasar pemrograman dengan cara yang menyenangkan. Sekarang saya bisa membuat website sendiri!",
-                  avatar: "/images/testi/budi.jpg",
+                  name: 'Budi Santoso',
+                  role: 'Siswa SMA',
+                  quote: 'TeenCode membantu saya memahami dasar-dasar pemrograman dengan cara yang menyenangkan. Sekarang saya bisa membuat website sendiri!',
+                  avatar: '/images/testi/budi.jpg',
                 },
                 {
-                  name: "Siti Rahma",
-                  role: "Mahasiswa Teknik",
-                  quote:
-                    "Mentor-mentor di TeenCode sangat membantu dan selalu siap menjawab pertanyaan. Materi kursusnya juga up-to-date dengan teknologi terbaru.",
-                  avatar: "/images/testi/siti.jpg",
+                  name: 'Siti Rahma',
+                  role: 'Mahasiswa Teknik',
+                  quote: 'Mentor-mentor di TeenCode sangat membantu dan selalu siap menjawab pertanyaan. Materi kursusnya juga up-to-date dengan teknologi terbaru.',
+                  avatar: '/images/testi/siti.jpg',
                 },
                 {
-                  name: "Andi Wijaya",
-                  role: "Fresh Graduate",
-                  quote:
-                    "Berkat sertifikat dari TeenCode, saya berhasil mendapatkan pekerjaan pertama saya sebagai web developer di startup teknologi.",
-                  avatar: "/images/testi/andi.jpg",
+                  name: 'Andi Wijaya',
+                  role: 'Fresh Graduate',
+                  quote: 'Berkat sertifikat dari TeenCode, saya berhasil mendapatkan pekerjaan pertama saya sebagai web developer di startup teknologi.',
+                  avatar: '/images/testi/andi.jpg',
                 },
               ].map((testimonial, index) => (
                 <div key={index} className="bg-gray-50 p-8 rounded-2xl hover:shadow-lg transition-shadow">
@@ -182,13 +161,7 @@ export default function Home() {
                     </div>
                     <p className="text-gray-700 flex-grow">"{testimonial.quote}"</p>
                     <div className="flex items-center mt-6 pt-6 border-t border-gray-200">
-                      <Image
-                        src={testimonial.avatar || "/placeholder.svg"}
-                        width={48}
-                        height={48}
-                        alt={testimonial.name}
-                        className="rounded-full"
-                      />
+                      <Image src={testimonial.avatar || '/placeholder.svg'} width={48} height={48} alt={testimonial.name} className="rounded-full" />
                       <div className="ml-4">
                         <h4 className="font-semibold">{testimonial.name}</h4>
                         <p className="text-gray-500 text-sm">{testimonial.role}</p>
@@ -206,6 +179,6 @@ export default function Home() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
 

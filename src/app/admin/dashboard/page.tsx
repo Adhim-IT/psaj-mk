@@ -28,14 +28,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all">
-            <option>Hari Ini</option>
-            <option>Minggu Ini</option>
-            <option>Bulan Ini</option>
-            <option>Tahun Ini</option>
-          </select>
-        </div>
+        
       </div>
 
       <Suspense fallback={<Loading />}>

@@ -106,16 +106,6 @@ const navItems: NavItem[] = [
       { title: "Student", href: "/admin/dashboard/akun/student" },
     ],
   },
-  {
-    title: "Manajemen FAQ",
-    href: "/dashboard/faq",
-    icon: CircleHelp,
-    roles: ["Admin"], // Only Admin can see this
-    submenu: [
-      { title: "Kategori", href: "/admin/dashboard/faq/kategori" },
-      { title: "FAQ", href: "/admin/dashboard/faq/list" },
-    ],
-  },
 ]
 
 export function AdminSidebar() {

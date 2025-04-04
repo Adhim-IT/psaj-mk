@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-
 import { Home } from 'lucide-react';
 import { getCourseTransactions } from '@/lib/course-transaksi-admin';
 import { TransactionTable } from '@/components/admin/transaksi/kelas/transaction-table';
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Kelola transaksi kelas di platform Anda',
 };
 
-// Perbarui interface untuk Next.js 15
+// Updated interface for Next.js 15
 interface PageProps {
   params: Promise<{}>;
   searchParams: Promise<{
@@ -25,17 +24,15 @@ interface PageProps {
 }
 
 export default async function TransaksiKelasPage({ searchParams }: PageProps) {
-  // Await searchParams sebelum mengakses propertinya
-  const searchParamsData = await searchParams;
-
   // Parse and validate search params
+  const resolvedSearchParams = await searchParams;
   const filters = courseTransactionFilterSchema.parse({
-    status: searchParamsData.status,
-    course_id: searchParamsData.course_id,
-    student_id: searchParamsData.student_id,
-    search: searchParamsData.search,
-    page: searchParamsData.page ? Number.parseInt(searchParamsData.page) : 1,
-    limit: searchParamsData.limit ? Number.parseInt(searchParamsData.limit) : 10,
+    status: resolvedSearchParams.status || undefined,
+    course_id: resolvedSearchParams.course_id || undefined,
+    student_id: resolvedSearchParams.student_id || undefined,
+    search: resolvedSearchParams.search || undefined,
+    page: resolvedSearchParams.page ? Number.parseInt(resolvedSearchParams.page) : 1,
+    limit: resolvedSearchParams.limit ? Number.parseInt(resolvedSearchParams.limit) : 10,
   });
 
   const { data: transactions, meta } = await getCourseTransactions(filters);
@@ -66,8 +63,7 @@ export default async function TransaksiKelasPage({ searchParams }: PageProps) {
         <p className="text-muted-foreground">Kelola semua transaksi kelas di platform Anda</p>
       </div>
 
-      {/* Gunakan type assertion untuk mengatasi error tipe */}
-      <TransactionTable transactions={transactions as any} meta={meta} />
+      <TransactionTable transactions={transactions} meta={meta} />
     </div>
   );
 }

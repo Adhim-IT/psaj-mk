@@ -58,7 +58,7 @@ async function CourseDetailContent({ slug }: { slug: string }) {
         id: course.mentors.id || listClass.mentor_id,
         name: course.mentors.name || 'Mentor',
         profile_picture: course.mentors.profile_picture || null,
-        specialization: course.mentors.specialization || "",
+        specialization: course.mentors.specialization || '',
       };
     }
 
@@ -87,6 +87,10 @@ async function CourseDetailContent({ slug }: { slug: string }) {
     } catch (courseTypesError) {
       console.error('Error mengambil tipe kursus:', courseTypesError);
     }
+
+    // Pastikan syllabus hanya untuk course ini
+    // Syllabus sudah difilter di backend berdasarkan course_id
+    // Jika tidak ada syllabus, akan menampilkan pesan kosong di komponen
 
     // Buat objek kursus dengan data lengkap
     const transformedCourse: ListClass = {

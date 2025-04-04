@@ -1,34 +1,34 @@
-"use client"
+'use client';
 
-import { useSession, signOut } from "next-auth/react"
-import Image from "next/image"
-import Link from "next/link"
-import { Star, ArrowRight, Users, BookOpen, Award } from "lucide-react"
-import { useState, useEffect } from "react"
-import CoursePopular from "@/src/components/user/kelas/Populer-course"
-import AboutSection from "@/components/user/About"
-import Navbar from "../components/user/Navbar"
-import Footer from "../components/user/Footer"
-import UpcomingEvents from "@/components/user/event/upcoming-events"
-import MentorHomepage from "@/components/user/mentor/mentor-homepage"
+import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Star, ArrowRight, Users, BookOpen, Award } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import CoursePopular from '@/src/components/user/kelas/Populer-course';
+import AboutSection from '@/components/user/About';
+import Navbar from '../components/user/Navbar';
+import Footer from '../components/user/Footer';
+import UpcomingEvents from '@/components/user/event/upcoming-events';
+import MentorHomepage from '@/components/user/mentor/mentor-homepage';
 
 export default function Home() {
-  const { data: session, status } = useSession()
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    const hadPreviousSession = typeof window !== "undefined" && localStorage.getItem("previouslyLoggedIn") === "false"
+    const hadPreviousSession = typeof window !== 'undefined' && localStorage.getItem('previouslyLoggedIn') === 'false';
 
-    if (status === "authenticated") {
-      localStorage.setItem("previouslyLoggedIn", "true")
-    } else if (status === "unauthenticated" && hadPreviousSession) {
-      signOut({ callbackUrl: "/login" })
+    if (status === 'authenticated') {
+      localStorage.setItem('previouslyLoggedIn', 'true');
+    } else if (status === 'unauthenticated' && hadPreviousSession) {
+      signOut({ callbackUrl: '/login' });
     }
-  }, [status])
-  const [isVisible, setIsVisible] = useState(false)
+  }, [status]);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true)
-  }, [])
+    setIsVisible(true);
+  }, []);
 
   return (
     <div>
@@ -181,4 +181,3 @@ export default function Home() {
     </div>
   );
 }
-

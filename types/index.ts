@@ -33,9 +33,10 @@ export interface Category {
 }
 
 export interface SyllabusItem {
-  id: string
-  title: string
-  sort: number
+  id: string;
+  // course_id: string;
+  title: string;
+  sort: number;
 }
 
 export interface Transaction {

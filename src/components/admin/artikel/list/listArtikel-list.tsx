@@ -99,8 +99,8 @@ export function ListArticleList({ listArticles }: ListArticleListProps) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search articles..." className="pl-8 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
-        <Button asChild>
-          <Link href="/admin/dashboard/artikel/list/create" className="flex items-center gap-2">
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/admin/dashboard/artikel/list/create" className="flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Add New Article
           </Link>
@@ -108,98 +108,100 @@ export function ListArticleList({ listArticles }: ListArticleListProps) {
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Thumbnail</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead className="hidden md:table-cell">Categories</TableHead>
-              <TableHead className="hidden md:table-cell">Tags</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredArticles.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  {searchQuery ? 'No articles found matching your search.' : 'No articles found. Create your first article.'}
-                </TableCell>
+                <TableHead className="w-[80px]">Thumbnail</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead className="hidden md:table-cell">Categories</TableHead>
+                <TableHead className="hidden md:table-cell">Tags</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredArticles.map((article) => (
-                <TableRow key={article.id}>
-                  <TableCell>
-                    <div className="relative h-12 w-20 overflow-hidden rounded-md">
-                      <Image
-                        src={getValidImageUrl(article.thumbnail) || '/placeholder.svg'}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                        unoptimized={true}
-                        onError={(e) => {
-                          // If image fails to load, replace with placeholder
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null; // Prevent infinite loop
-                          target.src = '/placeholder.svg?height=48&width=80';
-                        }}
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div>{article.title}</div>
-                    <div className="text-sm text-muted-foreground mt-1 hidden md:block">{article.content.length > 60 ? `${article.content.substring(0, 60).replace(/<[^>]*>/g, '')}...` : article.content.replace(/<[^>]*>/g, '')}</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex flex-wrap gap-1">
-                      {article.categories && article.categories.length > 0 ? (
-                        article.categories.map((category) => (
-                          <Badge key={category.id} variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                            {category.name}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground text-sm">No categories</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex flex-wrap gap-1">
-                      {article.tags && article.tags.length > 0 ? (
-                        article.tags.map((tag) => (
-                          <Badge key={tag.id} variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-                            {tag.name}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground text-sm">No tags</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/artikel/list/edit/${article.id}`)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => confirmDelete(article.id)} className="text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {filteredArticles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? 'No articles found matching your search.' : 'No articles found. Create your first article.'}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredArticles.map((article) => (
+                  <TableRow key={article.id}>
+                    <TableCell>
+                      <div className="relative h-12 w-20 overflow-hidden rounded-md">
+                        <Image
+                          src={getValidImageUrl(article.thumbnail) || '/placeholder.svg'}
+                          alt={article.title}
+                          fill
+                          className="object-cover"
+                          unoptimized={true}
+                          onError={(e) => {
+                            // If image fails to load, replace with placeholder
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; // Prevent infinite loop
+                            target.src = '/placeholder.svg?height=48&width=80';
+                          }}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <div>{article.title}</div>
+                      <div className="text-sm text-muted-foreground mt-1 hidden md:block">{article.content.length > 60 ? `${article.content.substring(0, 60).replace(/<[^>]*>/g, '')}...` : article.content.replace(/<[^>]*>/g, '')}</div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="flex flex-wrap gap-1">
+                        {article.categories && article.categories.length > 0 ? (
+                          article.categories.map((category) => (
+                            <Badge key={category.id} variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                              {category.name}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No categories</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="flex flex-wrap gap-1">
+                        {article.tags && article.tags.length > 0 ? (
+                          article.tags.map((tag) => (
+                            <Badge key={tag.id} variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+                              {tag.name}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No tags</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/artikel/list/edit/${article.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => confirmDelete(article.id)} className="text-red-600 focus:text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

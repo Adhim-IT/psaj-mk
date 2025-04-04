@@ -51,80 +51,82 @@ export function PromoCodeList({ promoCodes }: PromoCodeListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="relative w-64">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input type="text" placeholder="Search promo codes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 h-9" />
+          <Input type="text" placeholder="Search promo codes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 h-9 w-full" />
         </div>
-        <Button asChild>
-          <Link href="/admin/dashboard/transaksi/code/create">
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/admin/dashboard/transaksi/code/create" className="flex items-center justify-center gap-2">
             <Plus className="mr-2 h-4 w-4" /> Add New Promo Code
           </Link>
         </Button>
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Discount Type</TableHead>
-              <TableHead>Discount</TableHead>
-              <TableHead>Valid Until</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPromoCodes.length > 0 ? (
-              filteredPromoCodes.map((promoCode) => (
-                <TableRow key={promoCode.id}>
-                  <TableCell className="font-medium">{promoCode.code}</TableCell>
-                  <TableCell>{promoCode.discount_type === 'fixed' ? 'Nominal' : 'Persentase'}</TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Discount Type</TableHead>
+                <TableHead>Discount</TableHead>
+                <TableHead>Valid Until</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPromoCodes.length > 0 ? (
+                filteredPromoCodes.map((promoCode) => (
+                  <TableRow key={promoCode.id}>
+                    <TableCell className="font-medium">{promoCode.code}</TableCell>
+                    <TableCell>{promoCode.discount_type === 'fixed' ? 'Nominal' : 'Persentase'}</TableCell>
 
-                  <TableCell>{promoCode.discount_type === 'percentage' ? `${promoCode.discount}%` : `Rp ${promoCode.discount.toLocaleString('id-ID')}`}</TableCell>
+                    <TableCell>{promoCode.discount_type === 'percentage' ? `${promoCode.discount}%` : `Rp ${promoCode.discount.toLocaleString('id-ID')}`}</TableCell>
 
-                  <TableCell>{new Date(promoCode.valid_until).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Badge variant={promoCode.is_used ? 'secondary' : 'default'}>{promoCode.is_used ? 'Used' : 'Available'}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/transaksi/code/edit/${promoCode.id}`)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setPromoCodeToDelete(promoCode.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <TableCell>{new Date(promoCode.valid_until).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Badge variant={promoCode.is_used ? 'secondary' : 'default'}>{promoCode.is_used ? 'Used' : 'Available'}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/transaksi/code/edit/${promoCode.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setPromoCodeToDelete(promoCode.id);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No promo codes found.
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No promo codes found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

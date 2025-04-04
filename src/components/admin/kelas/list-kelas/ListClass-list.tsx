@@ -110,8 +110,8 @@ export function ListClassList({ listClasses }: ListClassListProps) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search list classes..." className="pl-8 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
-        <Button asChild>
-          <Link href="/admin/dashboard/kelas/list/create" className="flex items-center gap-2">
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/admin/dashboard/kelas/list/create" className="flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Add New List Class
           </Link>
@@ -119,113 +119,115 @@ export function ListClassList({ listClasses }: ListClassListProps) {
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Thumbnail</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead className="hidden md:table-cell">Level</TableHead>
-              <TableHead className="hidden md:table-cell">Meetings</TableHead>
-              <TableHead className="hidden md:table-cell">Jumlah Siswa</TableHead>
-              <TableHead className="hidden md:table-cell">Status</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredListClasses.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  {searchQuery ? 'No list classes found matching your search.' : 'No list classes found. Create your first list class.'}
-                </TableCell>
+                <TableHead className="w-[80px]">Thumbnail</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead className="hidden md:table-cell">Level</TableHead>
+                <TableHead className="hidden md:table-cell">Meetings</TableHead>
+                <TableHead className="hidden md:table-cell">Jumlah Siswa</TableHead>
+                <TableHead className="hidden md:table-cell">Status</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredListClasses.map((listClass) => (
-                <TableRow key={listClass.id}>
-                  <TableCell>
-                    <div className="relative h-12 w-20 overflow-hidden rounded-md">
-                      <Image
-                        src={getValidImageUrl(listClass.thumbnail) || '/placeholder.svg'}
-                        alt={listClass.title}
-                        fill
-                        className="object-cover"
-                        unoptimized={true}
-                        onError={(e) => {
-                          console.error('Error loading thumbnail:', listClass.thumbnail);
-                          // If image fails to load, replace with placeholder
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null; // Prevent infinite loop
-                          target.src = '/placeholder.svg?height=48&width=80';
-                        }}
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div>
-                      {listClass.title}
-                      {listClass.is_popular && (
-                        <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                          Popular
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1 hidden md:block">{listClass.description.length > 60 ? `${listClass.description.substring(0, 60)}...` : listClass.description}</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge variant="outline" className={getLevelBadgeColor(listClass.level)}>
-                      {listClass.level}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {listClass.meetings} {listClass.meetings === 1 ? 'meeting' : 'meetings'}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{listClass.transactions?.length ?? 0}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {listClass.is_active ? (
-                      <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-                        Inactive
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/kelas/list/edit/${listClass.id}`)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            const videoId = extractYouTubeId(listClass.trailer);
-                            if (videoId) {
-                              window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-                            }
-                          }}
-                        >
-                          <Youtube className="mr-2 h-4 w-4" />
-                          Watch Trailer
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => confirmDelete(listClass.id)} className="text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {filteredListClasses.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? 'No list classes found matching your search.' : 'No list classes found. Create your first list class.'}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredListClasses.map((listClass) => (
+                  <TableRow key={listClass.id}>
+                    <TableCell>
+                      <div className="relative h-12 w-20 overflow-hidden rounded-md">
+                        <Image
+                          src={getValidImageUrl(listClass.thumbnail) || '/placeholder.svg'}
+                          alt={listClass.title}
+                          fill
+                          className="object-cover"
+                          unoptimized={true}
+                          onError={(e) => {
+                            console.error('Error loading thumbnail:', listClass.thumbnail);
+                            // If image fails to load, replace with placeholder
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; // Prevent infinite loop
+                            target.src = '/placeholder.svg?height=48&width=80';
+                          }}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <div>
+                        {listClass.title}
+                        {listClass.is_popular && (
+                          <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                            Popular
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1 hidden md:block">{listClass.description.length > 60 ? `${listClass.description.substring(0, 60)}...` : listClass.description}</div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Badge variant="outline" className={getLevelBadgeColor(listClass.level)}>
+                        {listClass.level}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {listClass.meetings} {listClass.meetings === 1 ? 'meeting' : 'meetings'}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{listClass.transactions?.length ?? 0}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {listClass.is_active ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+                          Inactive
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/kelas/list/edit/${listClass.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const videoId = extractYouTubeId(listClass.trailer);
+                              if (videoId) {
+                                window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                              }
+                            }}
+                          >
+                            <Youtube className="mr-2 h-4 w-4" />
+                            Watch Trailer
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => confirmDelete(listClass.id)} className="text-red-600 focus:text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

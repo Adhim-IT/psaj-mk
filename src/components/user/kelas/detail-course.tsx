@@ -188,11 +188,10 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
                         </div>
                       ))
                     ) : (
-                      <div className="flex gap-4 items-start p-4 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-colors duration-200">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5596DF] text-white font-bold text-sm">1</div>
-                        <div>
-                          <p className="font-bold text-gray-800">LARAVEL 11</p>
-                        </div>
+                      <div className="flex flex-col items-center justify-center py-8 px-4 bg-blue-50/30 rounded-xl text-center">
+                        <BookOpen className="w-12 h-12 text-gray-400 mb-3" />
+                        <p className="text-gray-600 font-medium">Belum ada silabus tersedia untuk kelas ini</p>
+                        <p className="text-gray-500 text-sm mt-1">Silahkan hubungi admin untuk informasi lebih lanjut</p>
                       </div>
                     )}
                   </div>
@@ -235,14 +234,9 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
                         </div>
                       ))
                     ) : (
-                      <div className="bg-blue-50/50 rounded-xl p-5 hover:shadow-md transition-all duration-200 border border-transparent hover:border-blue-100">
-                        <div className="mb-3">
-                          <div className="w-20 h-20 bg-green-300 rounded-xl flex items-center justify-center text-gray-800 font-bold">V</div>
-                        </div>
-                        <h3 className="text-gray-800 font-semibold text-lg mb-3">Visual Studio Code</h3>
-                        <Button variant="default" className="bg-[#5596DF] hover:bg-[#4a89dc] text-white rounded-full px-6 transition-colors duration-200">
-                          Download
-                        </Button>
+                      <div className="col-span-full flex flex-col items-center justify-center py-8 px-4 bg-blue-50/30 rounded-xl text-center">
+                        <BarChart3 className="w-12 h-12 text-gray-400 mb-3" />
+                        <p className="text-gray-600 font-medium">Belum ada tools tersedia untuk kelas ini</p>
                       </div>
                     )}
                   </div>

@@ -78,13 +78,13 @@ export function EventList({ events, onDelete }: EventListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search events..." className="pl-8 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
-        <Button asChild>
-          <Link href="/admin/dashboard/event/list/create" className="flex items-center gap-2">
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/admin/dashboard/event/list/create" className="flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Add New Event
           </Link>
@@ -92,86 +92,88 @@ export function EventList({ events, onDelete }: EventListProps) {
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Thumbnail</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Mentor</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredEvents.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                  No events found. Create your first event.
-                </TableCell>
+                <TableHead>Thumbnail</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Mentor</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredEvents.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>
-                    {event.thumbnail ? (
-                      <img
-                        src={event.thumbnail || '/placeholder.svg'}
-                        alt={event.title}
-                        className="h-14 w-20 object-cover rounded-md"
-                        onError={(e) => {
-                          console.error('Error loading image:', e);
-                          e.currentTarget.src = '/placeholder.svg?height=56&width=80';
-                          e.currentTarget.onerror = null; // Prevent infinite loop
-                        }}
-                      />
-                    ) : (
-                      <div className="h-14 w-20 bg-muted flex items-center justify-center rounded-md">
-                        <span className="text-xs text-muted-foreground">No image</span>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>{event.mentors?.name}</TableCell>
-                  <TableCell>
-                    {new Date(event.start_date).toLocaleDateString()} - {new Date(event.end_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(event.price)}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        event.is_active ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/10'
-                      }`}
-                    >
-                      {event.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/event/list/edit/${event.id}`)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openDeleteDialog(event.id)} className="text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {filteredEvents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                    No events found. Create your first event.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredEvents.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell>
+                      {event.thumbnail ? (
+                        <img
+                          src={event.thumbnail || '/placeholder.svg'}
+                          alt={event.title}
+                          className="h-14 w-20 object-cover rounded-md"
+                          onError={(e) => {
+                            console.error('Error loading image:', e);
+                            e.currentTarget.src = '/placeholder.svg?height=56&width=80';
+                            e.currentTarget.onerror = null; // Prevent infinite loop
+                          }}
+                        />
+                      ) : (
+                        <div className="h-14 w-20 bg-muted flex items-center justify-center rounded-md">
+                          <span className="text-xs text-muted-foreground">No image</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{event.title}</TableCell>
+                    <TableCell>{event.mentors?.name}</TableCell>
+                    <TableCell>
+                      {new Date(event.start_date).toLocaleDateString()} - {new Date(event.end_date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(event.price)}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          event.is_active ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/10'
+                        }`}
+                      >
+                        {event.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/event/list/edit/${event.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openDeleteDialog(event.id)} className="text-red-600 focus:text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Alert Dialog for Delete Confirmation */}

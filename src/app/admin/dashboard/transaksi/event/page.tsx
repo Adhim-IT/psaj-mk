@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Kelola transaksi event di platform Anda',
 };
 
-// Perbarui interface untuk Next.js 15
+// Updated interface for Next.js 15
 interface PageProps {
   params: Promise<{}>;
   searchParams: Promise<{
@@ -24,17 +24,15 @@ interface PageProps {
 }
 
 export default async function TransaksiEventPage({ searchParams }: PageProps) {
-  // Await searchParams sebelum mengakses propertinya
-  const searchParamsData = await searchParams;
-
   // Parse and validate search params
+  const resolvedSearchParams = await searchParams;
   const filters = eventRegistrantFilterSchema.parse({
-    status: searchParamsData.status,
-    event_id: searchParamsData.event_id,
-    student_id: searchParamsData.student_id,
-    search: searchParamsData.search,
-    page: searchParamsData.page ? Number.parseInt(searchParamsData.page) : 1,
-    limit: searchParamsData.limit ? Number.parseInt(searchParamsData.limit) : 10,
+    status: resolvedSearchParams.status || undefined,
+    event_id: resolvedSearchParams.event_id || undefined,
+    student_id: resolvedSearchParams.student_id || undefined,
+    search: resolvedSearchParams.search || undefined,
+    page: resolvedSearchParams.page ? Number.parseInt(resolvedSearchParams.page) : 1,
+    limit: resolvedSearchParams.limit ? Number.parseInt(resolvedSearchParams.limit) : 10,
   });
 
   const { data: registrants, meta } = await getEventRegistrants(filters);

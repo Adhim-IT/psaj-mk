@@ -18,9 +18,7 @@ export default async function RegisterPage() {
       {/* Left side - Content and imagery */}
       <div className="w-full lg:w-1/2 bg-[#3182CE] text-white p-4 sm:p-6 md:p-8 flex flex-col justify-center">
         <div className="max-w-xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4">
-          <div className="inline-block bg-white/20 rounded-full px-3 py-1 text-xs sm:text-sm backdrop-blur-sm">
-            Platform Belajar IT #1 di Indonesia
-          </div>
+          <div className="inline-block bg-white/20 rounded-full px-3 py-1 text-xs sm:text-sm backdrop-blur-sm">Platform Belajar IT #1 di Indonesia</div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
             Belajar IT Jadi <span className="text-[#FACC15]">Mudah & Seru!</span>
@@ -48,11 +46,7 @@ export default async function RegisterPage() {
 
           {/* Hide image on small mobile, show on larger screens */}
           <div className="hidden sm:block pt-4 sm:pt-6">
-            <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-ujdNj88Q9KYwQL2K4XytPUDvN7P9VW.png"
-              alt="TeenCode Learning Platform"
-              className="rounded-lg shadow-lg max-w-full h-auto object-cover opacity-90"
-            />
+            <img src="/images/img-login.png" alt="TeenCode Learning Platform" className="rounded-lg shadow-lg max-w-full h-auto object-cover opacity-90" />
           </div>
         </div>
       </div>
@@ -64,6 +58,6 @@ export default async function RegisterPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

@@ -48,7 +48,7 @@ export default async function LoginPage() {
           {/* Hide image on small mobile, show on larger screens */}
           <div className="hidden sm:block pt-4 sm:pt-6">
             <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-ujdNj88Q9KYwQL2K4XytPUDvN7P9VW.png"
+              src="images/img-login.png"
               alt="TeenCode Learning Platform"
               className="rounded-lg shadow-lg max-w-full h-auto object-cover opacity-90"
             />

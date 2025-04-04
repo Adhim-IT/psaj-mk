@@ -1,103 +1,84 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import Swal from "sweetalert2"
-import { deleteCourseCategory } from "@/lib/ketagori-kelas"
-import { Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import Swal from 'sweetalert2';
+import { deleteCourseCategory } from '@/lib/ketagori-kelas';
+import { Edit, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react';
 
 interface CourseCategory {
-  id: string
-  name: string
-  slug: string | null
+  id: string;
+  name: string;
+  slug: string | null;
 }
 
 interface CourseCategoryListProps {
-  CourseCategory: CourseCategory[]
+  CourseCategory: CourseCategory[];
 }
 
 export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) {
-  const router = useRouter()
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [courseCategoryToDelete, setCourseCategoryToDelete] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [courseCategoryToDelete, setCourseCategoryToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleDelete = async () => {
-    if (!courseCategoryToDelete) return
+    if (!courseCategoryToDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      const result = await deleteCourseCategory(courseCategoryToDelete)
+      const result = await deleteCourseCategory(courseCategoryToDelete);
 
       if (result.success) {
         Swal.fire({
-          icon: "success",
-          title: "Course category deleted",
-          text: "The course category has been deleted successfully.",
-        })
+          icon: 'success',
+          title: 'Course category deleted',
+          text: 'The course category has been deleted successfully.',
+        });
       } else {
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: typeof result.error === "string" ? result.error : "Failed to delete course category.",
-        })
+          icon: 'error',
+          title: 'Error',
+          text: typeof result.error === 'string' ? result.error : 'Failed to delete course category.',
+        });
       }
     } catch (error) {
       Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An unexpected error occurred. Please try again.",
-      })
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred. Please try again.',
+      });
     } finally {
-      setIsDeleting(false)
-      setIsDeleteDialogOpen(false)
-      setCourseCategoryToDelete(null)
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setCourseCategoryToDelete(null);
     }
-  }
+  };
 
   const confirmDelete = (id: string) => {
-    setCourseCategoryToDelete(id)
-    setIsDeleteDialogOpen(true)
-  }
+    setCourseCategoryToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
 
   // Filter categories based on search query
-  const filteredCategories = CourseCategory.filter(
-    (category) =>
-      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (category.slug && category.slug.toLowerCase().includes(searchQuery.toLowerCase())),
-  )
+  const filteredCategories = CourseCategory.filter((category) => category.name.toLowerCase().includes(searchQuery.toLowerCase()) || (category.slug && category.slug.toLowerCase().includes(searchQuery.toLowerCase())));
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search categories..."
-            className="pl-8 w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <Input type="search" placeholder="Search categories..." className="pl-8 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
-        <Button asChild>
-          <Link href="/admin/dashboard/kelas/kategori/create" className="flex items-center gap-2">
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/admin/dashboard/kelas/kategori/create" className="flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Add New Category
           </Link>
@@ -105,81 +86,69 @@ export function CourseCategoryList({ CourseCategory }: CourseCategoryListProps) 
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden md:table-cell">Slug</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCategories.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                  {searchQuery
-                    ? "No categories found matching your search."
-                    : "No course categories found. Create your first category."}
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead className="hidden md:table-cell">Slug</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredCategories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="hidden md:table-cell">{category.slug || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/admin/dashboard/kelas/kategori/edit/${category.id}`)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => confirmDelete(category.id)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {filteredCategories.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? 'No categories found matching your search.' : 'No course categories found. Create your first category.'}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredCategories.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="hidden md:table-cell">{category.slug || '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/kelas/kategori/edit/${category.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => confirmDelete(category.id)} className="text-red-600 focus:text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will delete the course category. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This action will delete the course category. This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
-

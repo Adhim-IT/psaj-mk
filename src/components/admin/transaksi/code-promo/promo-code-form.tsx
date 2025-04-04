@@ -82,17 +82,15 @@ export function PromoCodeForm({ initialData, isEditing }: PromoCodeFormProps) {
       <div className="space-y-4">
         <div>
           <Label htmlFor="code">Promo Code</Label>
-          <Input id="code" {...register("code")} className="mt-1" placeholder="Enter promo code" />
+          <Input id="code" {...register('code')} className="mt-1" placeholder="Enter promo code" />
           {errors.code && <p className="mt-1 text-sm text-red-500">{errors.code.message}</p>}
         </div>
 
         <div>
+         
           <Label htmlFor="discount_type">Discount Type</Label>
-          <Select
-            onValueChange={(value) => setValue("discount_type", value as "percentage" | "fixed")}
-            defaultValue={watch("discount_type")}
-          >
-            <SelectTrigger className="mt-1">
+          <Select onValueChange={(value) => setValue('discount_type', value as 'percentage' | 'fixed')} defaultValue={watch('discount_type')}>
+            <SelectTrigger id="discount_type" className="mt-1">
               <SelectValue placeholder="Select discount type" />
             </SelectTrigger>
             <SelectContent>
@@ -100,42 +98,37 @@ export function PromoCodeForm({ initialData, isEditing }: PromoCodeFormProps) {
               <SelectItem value="fixed">Nominal</SelectItem>
             </SelectContent>
           </Select>
+
           {errors.discount_type && <p className="mt-1 text-sm text-red-500">{errors.discount_type.message}</p>}
         </div>
 
         <div>
           <Label htmlFor="discount">Discount</Label>
-          <Input
-            id="discount"
-            type="number"
-            {...register("discount", { valueAsNumber: true })}
-            className="mt-1"
-            placeholder="Enter discount value"
-          />
+          <Input id="discount" type="number" {...register('discount', { valueAsNumber: true })} className="mt-1" placeholder="Enter discount value" />
           {errors.discount && <p className="mt-1 text-sm text-red-500">{errors.discount.message}</p>}
         </div>
 
         <div>
           <Label htmlFor="valid_until">Valid Until</Label>
-          <Input id="valid_until" type="datetime-local" {...register("valid_until")} className="mt-1" />
+          <Input id="valid_until" type="datetime-local" {...register('valid_until')} className="mt-1" />
           {errors.valid_until && <p className="mt-1 text-sm text-red-500">{errors.valid_until.message}</p>}
         </div>
 
         <div className="flex items-center space-x-2">
-          <Switch id="is_used" checked={watch("is_used")} onCheckedChange={(checked) => setValue("is_used", checked)} />
+          <Switch id="is_used" checked={watch('is_used')} onCheckedChange={(checked) => setValue('is_used', checked)} />
           <Label htmlFor="is_used">Is Used</Label>
         </div>
       </div>
 
       <div className="flex justify-end space-x-4">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/dashboard/transaksi/promo-code")}>
+        <Button type="button" variant="outline" onClick={() => router.push('/admin/dashboard/transaksi/promo-code')}>
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : isEditing ? "Update Promo Code" : "Create Promo Code"}
+          {isSubmitting ? 'Saving...' : isEditing ? 'Update Promo Code' : 'Create Promo Code'}
         </Button>
       </div>
     </form>
-  )
+  );
 }
 

@@ -30,6 +30,9 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
   const privateTypes = allTypes.filter((type) => type.type === 'private');
   const groupTypes = allTypes.filter((type) => type.type === 'group');
 
+  // Get unique course IDs to create tabs
+  const uniqueCourseIds = [...new Set(allTypes.map((type) => type.course_id))];
+
   const handleSelectCourseType = (courseType: CourseType) => {
     if (onSelectCourseType) {
       onSelectCourseType(courseType);
@@ -114,6 +117,9 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
     );
   };
 
+  // Filter displayed course types based on selected tab
+  const displayedCourseTypes = selectedTab === 'all' ? allTypes : allTypes.filter((type) => type.type === selectedTab);
+
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white py-16 px-4">
       <div className="container max-w-6xl mx-auto">
@@ -125,12 +131,31 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
         <div className="space-y-8">
           <div className="flex justify-center">
             <div className="bg-gray-100 p-1 rounded-xl w-full max-w-md">
-              <div className="bg-white text-[#4A90E2] shadow-sm rounded-lg p-2 text-center font-medium">Semua</div>
+              <div className="grid grid-cols-4 gap-1">
+                <div className={`cursor-pointer rounded-lg p-2 text-center font-medium transition-all ${selectedTab === 'all' ? 'bg-white text-[#4A90E2] shadow-sm' : 'hover:bg-gray-200'}`} onClick={() => setSelectedTab('all')}>
+                  Semua
+                </div>
+                <div className={`cursor-pointer rounded-lg p-2 text-center font-medium transition-all ${selectedTab === 'batch' ? 'bg-white text-[#4A90E2] shadow-sm' : 'hover:bg-gray-200'}`} onClick={() => setSelectedTab('batch')}>
+                  Batch
+                </div>
+                <div className={`cursor-pointer rounded-lg p-2 text-center font-medium transition-all ${selectedTab === 'private' ? 'bg-white text-[#4A90E2] shadow-sm' : 'hover:bg-gray-200'}`} onClick={() => setSelectedTab('private')}>
+                  Private
+                </div>
+                <div className={`cursor-pointer rounded-lg p-2 text-center font-medium transition-all ${selectedTab === 'group' ? 'bg-white text-[#4A90E2] shadow-sm' : 'hover:bg-gray-200'}`} onClick={() => setSelectedTab('group')}>
+                  Group
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{allTypes.map((courseType) => renderCourseTypeCard(courseType))}</div>
+            {displayedCourseTypes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{displayedCourseTypes.map((courseType) => renderCourseTypeCard(courseType))}</div>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-gray-500">Tidak ada tipe kelas yang tersedia untuk kategori ini.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

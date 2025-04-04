@@ -10,7 +10,7 @@ import {
   getRecentActivity,
   getRegistrationDataByYear,
   getRevenueStats,
-  
+
   getMonthlyRevenueData,
 } from "@/lib/dashboard"
 import { Suspense } from "react"

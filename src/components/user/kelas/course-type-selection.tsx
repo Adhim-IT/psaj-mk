@@ -1,152 +1,139 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { CalendarDays, Users, User, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Users, UserRound } from 'lucide-react';
-
-interface CourseType {
-  id: number;
-  name: string;
-  type: string;
-  is_active: boolean;
-  end_date?: string;
-}
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CourseType } from '@/types';
 
 interface CourseTypeSelectionProps {
   courseTypes: CourseType[];
-  onSelectCourseType: (courseType: CourseType) => void;
+  onSelectCourseType?: (courseType: CourseType) => void;
 }
 
-export default function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseTypeSelectionProps) {
-  const [activeTab, setActiveTab] = useState<string>('all');
+export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseTypeSelectionProps) {
+  const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState<string>('all');
 
-  // Filter course types by active status and end date
-  const currentDate = new Date();
-  const allTypes = courseTypes.filter((type) => type.is_active && (!type.end_date || new Date(type.end_date) >= currentDate));
+  // Function to check if a course type is expired
+  const isExpired = (courseType: CourseType) => {
+    if (!courseType.end_date) return false;
+    const endDate = new Date(courseType.end_date);
+    const today = new Date();
+    return endDate < today;
+  };
 
-  // Filter by course type
+  // Filter course types by type and exclude expired ones
+  const allTypes = courseTypes.filter((type) => type.is_active && !isExpired(type));
   const batchTypes = allTypes.filter((type) => type.type === 'batch');
   const privateTypes = allTypes.filter((type) => type.type === 'private');
   const groupTypes = allTypes.filter((type) => type.type === 'group');
 
-  // Helper function to render course type buttons
-  const renderCourseTypeButtons = (types: CourseType[]) => {
-    if (types.length === 0) {
-      return <p className="text-muted-foreground py-2">No courses available</p>;
+  const handleSelectCourseType = (courseType: CourseType) => {
+    if (onSelectCourseType) {
+      onSelectCourseType(courseType);
+    }
+
+    // Navigate to checkout page with the selected course type
+    router.push(`/checkout?course=${courseType.slug}`);
+  };
+
+  // Function to render price with discount
+  const renderPrice = (courseType: CourseType) => {
+    if (!courseType.is_discount || !courseType.discount) {
+      return (
+        <div className="mt-2">
+          <span className="text-2xl font-bold text-[#4A90E2]">Rp {courseType.normal_price.toLocaleString('id-ID')}</span>
+        </div>
+      );
+    }
+
+    let discountedPrice = courseType.normal_price;
+    if (courseType.discount_type === 'percentage') {
+      discountedPrice = courseType.normal_price - (courseType.normal_price * courseType.discount) / 100;
+    } else {
+      discountedPrice = courseType.normal_price - courseType.discount;
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {types.map((type) => (
-          <Button key={type.id} variant="outline" className="h-auto py-3 px-4 justify-start text-left" onClick={() => onSelectCourseType(type)}>
-            <span className="truncate">{type.name}</span>
-            {type.end_date && <span className="text-xs text-muted-foreground block mt-1">Available until: {new Date(type.end_date).toLocaleDateString()}</span>}
-          </Button>
-        ))}
+      <div className="mt-2">
+        <span className="text-2xl font-bold text-[#4A90E2]">Rp {discountedPrice.toLocaleString('id-ID')}</span>
+        <span className="ml-2 text-sm line-through text-muted-foreground">Rp {courseType.normal_price.toLocaleString('id-ID')}</span>
       </div>
     );
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'batch':
-        return <Calendar className="h-4 w-4 mr-2" />;
-      case 'private':
-        return <UserRound className="h-4 w-4 mr-2" />;
-      case 'group':
-        return <Users className="h-4 w-4 mr-2" />;
-      default:
-        return null;
-    }
+  // Function to render course type card
+  const renderCourseTypeCard = (courseType: CourseType) => {
+    const typeIcon = courseType.type === 'batch' ? <Users className="h-5 w-5" /> : courseType.type === 'private' ? <User className="h-5 w-5" /> : <Users className="h-5 w-5" />;
+
+    const typeLabel = courseType.type === 'batch' ? 'Batch' : courseType.type === 'private' ? 'Private' : 'Group';
+
+    return (
+      <Card key={courseType.id} className="overflow-hidden transition-all duration-200 hover:shadow-lg border-[#E5E7EB] group min-h-[380px] flex flex-col">
+        <CardHeader className="pb-2 bg-gradient-to-r from-[#F9FAFB] to-[#F3F4F6]">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-full bg-[#EBF5FF] text-[#4A90E2] shadow-sm">{typeIcon}</div>
+            <div>
+              <CardTitle className="text-lg font-semibold text-gray-800">{typeLabel} Class</CardTitle>
+              {courseType.batch_number && <CardDescription className="text-sm font-medium text-gray-600">Batch {courseType.batch_number}</CardDescription>}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6 pb-4 flex-grow">
+          {renderPrice(courseType)}
+
+          <div className="mt-4 space-y-2">
+            {courseType.start_date && courseType.end_date && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-[#F9FAFB] p-2 rounded-md">
+                <CalendarDays className="h-4 w-4 text-[#4A90E2]" />
+                <span>
+                  {new Date(courseType.start_date).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}{' '}
+                  -{' '}
+                  {new Date(courseType.end_date).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter className="pt-4 pb-6">
+          <Button className="w-full bg-[#4A90E2] hover:bg-[#3A7BC8] transition-all duration-300 shadow-sm group-hover:shadow-md" onClick={() => handleSelectCourseType(courseType)}>
+            Pilih Kelas <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </CardFooter>
+      </Card>
+    );
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <h2 className="text-2xl font-bold mb-6">Select a Course Type</h2>
+    <div className="bg-gradient-to-b from-gray-50 to-white py-16 px-4">
+      <div className="container max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Pilih Tipe Kelas</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">Pilih tipe kelas yang sesuai dengan kebutuhan belajar Anda</p>
+        </div>
 
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="batch" className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              Batch
-            </TabsTrigger>
-            <TabsTrigger value="private" className="flex items-center">
-              <UserRound className="h-4 w-4 mr-2" />
-              Private
-            </TabsTrigger>
-            <TabsTrigger value="group" className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              Group
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-8">
+          <div className="flex justify-center">
+            <div className="bg-gray-100 p-1 rounded-xl w-full max-w-md">
+              <div className="bg-white text-[#4A90E2] shadow-sm rounded-lg p-2 text-center font-medium">Semua</div>
+            </div>
+          </div>
 
-          <TabsContent value="all">
-            {allTypes.length === 0 ? (
-              <p className="text-muted-foreground py-2">No courses available</p>
-            ) : (
-              <div className="space-y-6">
-                {batchTypes.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-medium mb-3 flex items-center">
-                      <Calendar className="h-5 w-5 mr-2" />
-                      Batch Courses
-                    </h3>
-                    {renderCourseTypeButtons(batchTypes)}
-                  </div>
-                )}
-
-                {privateTypes.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-medium mb-3 flex items-center">
-                      <UserRound className="h-5 w-5 mr-2" />
-                      Private Courses
-                    </h3>
-                    {renderCourseTypeButtons(privateTypes)}
-                  </div>
-                )}
-
-                {groupTypes.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-medium mb-3 flex items-center">
-                      <Users className="h-5 w-5 mr-2" />
-                      Group Courses
-                    </h3>
-                    {renderCourseTypeButtons(groupTypes)}
-                  </div>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="batch">
-            <h3 className="text-lg font-medium mb-3 flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              Batch Courses
-            </h3>
-            {renderCourseTypeButtons(batchTypes)}
-          </TabsContent>
-
-          <TabsContent value="private">
-            <h3 className="text-lg font-medium mb-3 flex items-center">
-              <UserRound className="h-5 w-5 mr-2" />
-              Private Courses
-            </h3>
-            {renderCourseTypeButtons(privateTypes)}
-          </TabsContent>
-
-          <TabsContent value="group">
-            <h3 className="text-lg font-medium mb-3 flex items-center">
-              <Users className="h-5 w-5 mr-2" />
-              Group Courses
-            </h3>
-            {renderCourseTypeButtons(groupTypes)}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+          <div className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{allTypes.map((courseType) => renderCourseTypeCard(courseType))}</div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

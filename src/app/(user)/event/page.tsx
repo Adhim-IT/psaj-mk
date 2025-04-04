@@ -1,7 +1,7 @@
 import { getEvents } from "@/lib/list-event"
 import ListEventsPage from "@/components/user/event/list-event"
 import { Suspense } from "react"
-import { ChevronRight, Calendar, Bell } from "lucide-react"
+import { ChevronRight, Calendar, Bell } from 'lucide-react'
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -52,6 +52,10 @@ const NoEventsMessage = () => (
 
 export default async function EventsPage() {
   const response = await getEvents()
+  
+  // Untuk debugging
+  console.log("Response dari getEvents:", response);
+  
 
   // Filter out past events
   const currentDate = new Date()
@@ -59,22 +63,29 @@ export default async function EventsPage() {
 
   const upcomingEvents = response.success
     ? response.data.filter((event: any) => {
-        // Assuming event.date is a string in a format like "YYYY-MM-DD"
-        const eventDate = new Date(event.date)
+        // PERBAIKAN: Menggunakan start_date bukan date
+        // Pastikan event.start_date ada
+        if (!event.start_date) {
+          console.log("Event tanpa start_date:", event);
+          return false;
+        }
+        
+        // Konversi ke Date object
+        const eventDate = new Date(event.start_date)
         eventDate.setHours(0, 0, 0, 0) // Set to beginning of event day
 
         // Keep events that are today or in the future
         return eventDate >= currentDate
       })
     : []
+    
+  console.log("Jumlah upcoming events setelah filter:", upcomingEvents.length);
 
   return (
     <>
       <PageHeader title="Events" />
       <main className="py-12">
         <div className="container mx-auto px-4 max-w-7xl">
-          
-
           <Suspense
             fallback={
               <div className="flex justify-center py-12">
@@ -90,7 +101,7 @@ export default async function EventsPage() {
               )
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500">Failed to load events. Please try again later.</p>
+                <p className="text-gray-500">Gagal memuat event. Silakan coba lagi nanti.</p>
               </div>
             )}
           </Suspense>
@@ -99,4 +110,3 @@ export default async function EventsPage() {
     </>
   )
 }
-

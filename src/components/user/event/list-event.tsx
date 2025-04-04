@@ -60,8 +60,8 @@ export default function ListEventsPage({ events, maxEvents }: { events: Event[];
   return (
     <>
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-[#4A90E2] to-[#5A5AE2] bg-clip-text text-transparent">Upcoming Events</h1>
-        <p className="text-gray-600 mt-4 text-lg">Join our events and workshops to enhance your skills and connect with experts</p>
+        <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-[#4A90E2] to-[#5596DF] bg-clip-text text-transparent leading-tight">Events Mendatang</h2>
+        <p className="text-gray-600 mt-6 text-lg px-4">Ikuti acara dan lokakarya kami untuk meningkatkan keterampilan Anda dan terhubung dengan para ahli</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

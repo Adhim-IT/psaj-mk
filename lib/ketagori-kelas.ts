@@ -1,14 +1,14 @@
-"use server"
+'use server';
 
-import { prisma } from "@/lib/prisma"
-import { revalidatePath } from "next/cache"
-import { v4 as uuidv4 } from "uuid"
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+import { v4 as uuidv4 } from 'uuid';
 
 // Buat file baru untuk skema
 export type CourseCategoryFormData = {
-  name: string
-  slug: string
-}
+  name: string;
+  slug: string;
+};
 
 // Ambil semua kategori kursus
 export async function getCourseCategories() {
@@ -18,13 +18,13 @@ export async function getCourseCategories() {
         deleted_at: null,
       },
       orderBy: {
-        created_at: "desc",
+        created_at: 'desc',
       },
-    })
-    return { categories }
+    });
+    return { categories };
   } catch (error) {
-    console.error("Terjadi kesalahan saat mengambil kategori kursus:", error)
-    return { error: "Gagal mengambil kategori kursus" }
+    console.error('Terjadi kesalahan saat mengambil kategori kursus:', error);
+    return { error: 'Gagal mengambil kategori kursus' };
   }
 }
 
@@ -33,16 +33,16 @@ export async function getCourseCategoryById(id: string) {
   try {
     const category = await prisma.course_categories.findUnique({
       where: { id },
-    })
+    });
 
     if (!category) {
-      return { error: "Kategori kursus tidak ditemukan" }
+      return { error: 'Kategori kursus tidak ditemukan' };
     }
 
-    return { category }
+    return { category };
   } catch (error) {
-    console.error("Terjadi kesalahan saat mengambil kategori kursus:", error)
-    return { error: "Gagal mengambil kategori kursus" }
+    console.error('Terjadi kesalahan saat mengambil kategori kursus:', error);
+    return { error: 'Gagal mengambil kategori kursus' };
   }
 }
 
@@ -51,7 +51,7 @@ export async function createCourseCategory(data: CourseCategoryFormData) {
   try {
     // Validasi data
     if (!data.name || !data.slug) {
-      return { error: "Harap isi semua bidang yang diperlukan" }
+      return { error: 'Harap isi semua bidang yang diperlukan' };
     }
 
     const category = await prisma.course_categories.create({
@@ -62,13 +62,13 @@ export async function createCourseCategory(data: CourseCategoryFormData) {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    })
+    });
 
-    revalidatePath("/admin/dashboard/course/categories")
-    return { success: true, category }
+    revalidatePath('/admin/dashboard/kelas/kategori');
+    return { success: true, category };
   } catch (error) {
-    console.error("Terjadi kesalahan saat membuat kategori kursus:", error)
-    return { error: "Gagal membuat kategori kursus" }
+    console.error('Terjadi kesalahan saat membuat kategori kursus:', error);
+    return { error: 'Gagal membuat kategori kursus' };
   }
 }
 
@@ -77,7 +77,7 @@ export async function updateCourseCategory(id: string, data: CourseCategoryFormD
   try {
     // Validasi data
     if (!data.name || !data.slug) {
-      return { error: "Harap isi semua bidang yang diperlukan" }
+      return { error: 'Harap isi semua bidang yang diperlukan' };
     }
 
     const category = await prisma.course_categories.update({
@@ -87,13 +87,13 @@ export async function updateCourseCategory(id: string, data: CourseCategoryFormD
         slug: data.slug,
         updated_at: new Date(),
       },
-    })
+    });
 
-    revalidatePath("/admin/dashboard/course/categories")
-    return { success: true, category }
+    revalidatePath('/admin/dashboard/kelas/kategori');
+    return { success: true, category };
   } catch (error) {
-    console.error("Terjadi kesalahan saat memperbarui kategori kursus:", error)
-    return { error: "Gagal memperbarui kategori kursus" }
+    console.error('Terjadi kesalahan saat memperbarui kategori kursus:', error);
+    return { error: 'Gagal memperbarui kategori kursus' };
   }
 }
 
@@ -105,13 +105,13 @@ export async function deleteCourseCategory(id: string) {
       data: {
         deleted_at: new Date(),
       },
-    })
+    });
 
-    revalidatePath("/admin/dashboard/course/categories")
-    return { success: true }
+    revalidatePath('/admin/dashboard/kelas/kategori');
+    return { success: true };
   } catch (error) {
-    console.error("Terjadi kesalahan saat menghapus kategori kursus:", error)
-    return { error: "Gagal menghapus kategori kursus" }
+    console.error('Terjadi kesalahan saat menghapus kategori kursus:', error);
+    return { error: 'Gagal menghapus kategori kursus' };
   }
 }
 
@@ -120,13 +120,12 @@ export async function hardDeleteCourseCategory(id: string) {
   try {
     await prisma.course_categories.delete({
       where: { id },
-    })
+    });
 
-    revalidatePath("/admin/dashboard/course/categories")
-    return { success: true }
+    revalidatePath('/admin/dashboard/kelas/kategori');
+    return { success: true };
   } catch (error) {
-    console.error("Terjadi kesalahan saat menghapus kategori kursus secara permanen:", error)
-    return { error: "Gagal menghapus kategori kursus secara permanen" }
+    console.error('Terjadi kesalahan saat menghapus kategori kursus secara permanen:', error);
+    return { error: 'Gagal menghapus kategori kursus secara permanen' };
   }
 }
-

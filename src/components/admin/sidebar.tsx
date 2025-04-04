@@ -184,7 +184,7 @@ export function AdminSidebar() {
   return (
     <Sidebar className="border-r shadow-sm md:w-64 transition-transform duration-300 ease-in-out z-50">
       <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+        <Link href="/dashboard/admin" className="flex items-center gap-2 font-semibold">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-[#5596DF] to-[#5596DF] text-white shadow-md">
             <Cube className="h-5 w-5" />
           </div>

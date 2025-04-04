@@ -1,20 +1,20 @@
-"use server"
+'use server';
 
-import { revalidatePath } from "next/cache"
-import prisma from "@/lib/prisma"
-import { promoCodeSchema } from "@/lib/zod"
-import type { PromoCodeFormData } from "@/types"
+import { revalidatePath } from 'next/cache';
+import prisma from '@/lib/prisma';
+import { promoCodeSchema } from '@/lib/zod';
+import type { PromoCodeFormData } from '@/types';
 
 export async function getPromoCodes() {
   try {
     const promoCodes = await prisma.promo_codes.findMany({
       where: { deleted_at: null },
-      orderBy: { created_at: "desc" },
-    })
-    return { success: true, data: promoCodes }
+      orderBy: { created_at: 'desc' },
+    });
+    return { success: true, data: promoCodes };
   } catch (error) {
-    console.error("Failed to fetch promo codes:", error)
-    return { success: false, error: "Failed to fetch promo codes" }
+    console.error('Failed to fetch promo codes:', error);
+    return { success: false, error: 'Failed to fetch promo codes', data: [] };
   }
 }
 
@@ -22,20 +22,20 @@ export async function getPromoCodeById(id: number) {
   try {
     const promoCode = await prisma.promo_codes.findUnique({
       where: { id },
-    })
+    });
     if (!promoCode) {
-      return { success: false, error: "Promo code not found" }
+      return { success: false, error: 'Promo code not found', data: null };
     }
-    return { success: true, data: promoCode }
+    return { success: true, data: promoCode };
   } catch (error) {
-    console.error("Failed to fetch promo code:", error)
-    return { success: false, error: "Failed to fetch promo code" }
+    console.error('Failed to fetch promo code:', error);
+    return { success: false, error: 'Failed to fetch promo code', data: null };
   }
 }
 
 export async function createPromoCode(data: PromoCodeFormData) {
   try {
-    const validatedData = promoCodeSchema.parse(data)
+    const validatedData = promoCodeSchema.parse(data);
     const promoCode = await prisma.promo_codes.create({
       data: {
         code: validatedData.code,
@@ -46,18 +46,18 @@ export async function createPromoCode(data: PromoCodeFormData) {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    })
-    revalidatePath("/admin/dashboard/transaksi/promo-code")
-    return { success: true, data: promoCode }
+    });
+    revalidatePath('/admin/dashboard/transaksi/code');
+    return { success: true, data: promoCode };
   } catch (error) {
-    console.error("Failed to create promo code:", error)
-    return { success: false, error: "Failed to create promo code" }
+    console.error('Failed to create promo code:', error);
+    return { success: false, error: 'Failed to create promo code', data: null };
   }
 }
 
 export async function updatePromoCode(id: number, data: PromoCodeFormData) {
   try {
-    const validatedData = promoCodeSchema.parse(data)
+    const validatedData = promoCodeSchema.parse(data);
     const updatedPromoCode = await prisma.promo_codes.update({
       where: { id },
       data: {
@@ -68,12 +68,12 @@ export async function updatePromoCode(id: number, data: PromoCodeFormData) {
         is_used: validatedData.is_used,
         updated_at: new Date(),
       },
-    })
-    revalidatePath("/admin/dashboard/transaksi/promo-code")
-    return { success: true, data: updatedPromoCode }
+    });
+    revalidatePath('/admin/dashboard/transaksi/code');
+    return { success: true, data: updatedPromoCode };
   } catch (error) {
-    console.error("Failed to update promo code:", error)
-    return { success: false, error: "Failed to update promo code" }
+    console.error('Failed to update promo code:', error);
+    return { success: false, error: 'Failed to update promo code', data: null };
   }
 }
 
@@ -82,12 +82,12 @@ export async function deletePromoCode(id: number) {
     await prisma.promo_codes.update({
       where: { id },
       data: { deleted_at: new Date() },
-    })
-    revalidatePath("/admin/dashboard/transaksi/promo-code")
-    return { success: true }
+    });
+    revalidatePath('/admin/dashboard/transaksi/code');
+    return { success: true };
   } catch (error) {
-    console.error("Failed to delete promo code:", error)
-    return { success: false, error: "Failed to delete promo code" }
+    console.error('Failed to delete promo code:', error);
+    return { success: false, error: 'Failed to delete promo code' };
   }
 }
 
@@ -98,19 +98,19 @@ export async function validatePromoCode(code: string) {
         code: code,
         deleted_at: null,
         valid_until: {
-          gte: new Date(), 
+          gte: new Date(),
         },
-        is_used: false, 
+        is_used: false,
       },
-    })
+    });
 
     if (!promoCode) {
-      return { success: false, error: "Kode promo tidak valid atau sudah kadaluarsa" }
+      return { success: false, error: 'Kode promo tidak valid atau sudah kadaluarsa', data: null };
     }
 
-    return { success: true, data: promoCode }
+    return { success: true, data: promoCode };
   } catch (error) {
-    console.error("Failed to validate promo code:", error)
-    return { success: false, error: "Gagal memvalidasi kode promo" }
+    console.error('Failed to validate promo code:', error);
+    return { success: false, error: 'Gagal memvalidasi kode promo', data: null };
   }
 }

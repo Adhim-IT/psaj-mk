@@ -144,6 +144,7 @@ export default function CheckoutPage() {
     }
   };
 
+  // Update the handleCheckout function to support credit card payments
   const handleCheckout = async () => {
     if (!courseType) return;
 
@@ -172,7 +173,41 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      // STEP 1: Minta token Midtrans dari server
+      console.log('🚀 Starting checkout process');
+      console.log('📦 Course type data:', courseType);
+
+      // STEP 1: Create transaction in database first
+      console.log('🔄 Creating transaction in database');
+      const saveResponse = await initiateCheckout({
+        courseType,
+        promoCode: promoApplied ? promoCode : undefined,
+        promoDiscountType,
+        promoDiscount,
+      });
+
+      if (saveResponse.error) {
+        // Check if the error is about already purchasing the class
+        if (saveResponse.error.includes('sudah membeli kelas ini')) {
+          Swal.fire({
+            title: 'Informasi',
+            text: 'Anda sudah membeli kelas ini. Anda akan dialihkan ke dashboard.',
+            icon: 'info',
+            confirmButtonColor: '#4A90E2',
+            confirmButtonText: 'Lihat Dashboard',
+          }).then(() => {
+            router.push('/dashboard');
+          });
+          return;
+        } else {
+          // Handle other errors
+          throw new Error(saveResponse.error);
+        }
+      }
+
+      console.log('✅ Transaction created:', saveResponse);
+
+      // STEP 2: Minta token Midtrans dari server
+      console.log('🔄 Requesting Midtrans token from server');
       const response = await fetch('/api/midtrans/create-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -185,48 +220,22 @@ export default function CheckoutPage() {
       });
 
       const data = await response.json();
+      console.log('✅ Server response:', data);
 
       if (!response.ok || data.error) {
         throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
       }
 
-      // STEP 2: Tampilkan Midtrans Snap
+      // STEP 3: Tampilkan Midtrans Snap
+      console.log('🔄 Opening Midtrans Snap payment popup with token:', data.token);
       window.snap?.pay(data.token, {
         onSuccess: async (result: any) => {
           console.log('✅ Payment success:', result);
 
-          // STEP 3: Simpan transaksi ke database setelah sukses
-          const saveResponse = await initiateCheckout({
-            courseType,
-            promoCode: promoApplied ? promoCode : undefined,
-            promoDiscountType,
-            promoDiscount,
-          });
-
-          if (saveResponse.error) {
-            // Check if the error is about already purchasing the class
-            if (saveResponse.error.includes('sudah membeli kelas ini')) {
-              Swal.fire({
-                title: 'Informasi',
-                text: 'Anda sudah membeli kelas ini. Anda akan dialihkan ke dashboard.',
-                icon: 'info',
-                confirmButtonColor: '#4A90E2',
-                confirmButtonText: 'Lihat Dashboard',
-              }).then(() => {
-                router.push('/dashboard');
-              });
-              return;
-            } else {
-              // Handle other errors
-              Swal.fire({
-                title: 'Error',
-                text: saveResponse.error,
-                icon: 'error',
-                confirmButtonColor: '#4A90E2',
-              });
-              setProcessingPayment(false);
-              return;
-            }
+          // Immediately mark transaction as paid for credit card payments
+          if (result.payment_type === 'credit_card') {
+            console.log('💳 Credit card payment successful, updating status');
+            // You could add an API endpoint to manually mark as paid, but for now we'll rely on the webhook
           }
 
           // Redirect ke halaman sukses
@@ -234,7 +243,7 @@ export default function CheckoutPage() {
         },
         onPending: (result: any) => {
           console.log('⏳ Payment pending:', result);
-          router.push(`/checkout/payment?id=${result.order_id}`);
+          router.push(`/checkout/success?id=${saveResponse.transactionId}`);
         },
         onError: (result: any) => {
           console.error('❌ Payment error:', result);
@@ -256,7 +265,7 @@ export default function CheckoutPage() {
         },
       });
     } catch (err) {
-      console.error('Checkout error:', err);
+      console.error('❌ Checkout error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan saat memproses pembayaran';
       setError(errorMessage);
       Swal.fire({

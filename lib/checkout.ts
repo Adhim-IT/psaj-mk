@@ -2,7 +2,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { createMidtransTransaction } from '@/lib/midtrans';
 import type { CourseTypeTransaction } from '@/types';
 import type { course_transactions_type } from '@prisma/client';
 
@@ -14,10 +13,12 @@ interface CheckoutData {
 }
 
 export async function initiateCheckout(data: CheckoutData) {
-  console.log('Input Checkout Data:', data);
+  console.log('🚀 Input Checkout Data:', data);
   const user = await getCurrentUser();
+  console.log('👤 Current user:', user);
 
   if (!user || !user.studentId) {
+    console.log('❌ User not authenticated');
     return { error: 'Anda harus login terlebih dahulu', redirectUrl: '/login?redirect=/checkout' };
   }
 
@@ -30,6 +31,7 @@ export async function initiateCheckout(data: CheckoutData) {
   });
 
   if (existingTransaction) {
+    console.log('⚠️ User already has a transaction for this course:', existingTransaction);
     return { error: 'Anda sudah membeli kelas ini.' };
   }
 
@@ -51,6 +53,7 @@ export async function initiateCheckout(data: CheckoutData) {
 
     // Apply promo code if provided
     if (promoCode) {
+      console.log('🔍 Checking promo code:', promoCode);
       const promoCodeData = await prisma.promo_codes.findFirst({
         where: {
           code: promoCode,
@@ -63,19 +66,30 @@ export async function initiateCheckout(data: CheckoutData) {
       });
 
       if (promoCodeData) {
+        console.log('✅ Valid promo code found:', promoCodeData);
         if (promoCodeData.discount_type === 'percentage') {
           voucherDiscount = (courseType.normal_price * promoCodeData.discount) / 100;
         } else {
           voucherDiscount = promoCodeData.discount;
         }
+      } else {
+        console.log('⚠️ No valid promo code found');
       }
     }
 
     // Calculate final price
     const finalPrice = Math.max(courseType.normal_price - discount - voucherDiscount, 0);
+    console.log('💰 Price calculation:', {
+      normalPrice: courseType.normal_price,
+      discount,
+      voucherDiscount,
+      finalPrice,
+    });
 
     // Create transaction code
     const transactionCode = `TRX-${Date.now()}`;
+    console.log('🏷️ Generated transaction code:', transactionCode);
+    console.log('Creating transaction in DB...');
 
     // Create transaction in database
     const transaction = await prisma.course_transactions.create({
@@ -94,37 +108,24 @@ export async function initiateCheckout(data: CheckoutData) {
         updated_at: new Date(),
       },
     });
-
-    // Create Midtrans transaction
-    const midtransResponse = await createMidtransTransaction({
-      orderId: transaction.code,
-      amount: Number(finalPrice),
-      customerName: user.name || 'Student',
-      customerEmail: user.email,
-      description: `Pembayaran kelas ${courseType.course_title || 'Course'}`,
-    });
+    console.log('✅ Transaction created:', transaction.code, transaction.id);
 
     // Mark promo code as used if applicable
     if (promoCode && voucherDiscount > 0) {
+      console.log('📝 Marking promo code as used:', promoCode);
       await prisma.promo_codes.updateMany({
         where: { code: promoCode },
         data: { is_used: true, updated_at: new Date() },
       });
+      console.log('✅ Promo code marked as used');
     }
 
     return {
       success: true,
       transactionId: transaction.id,
-      paymentUrl: midtransResponse.va_numbers ? null : midtransResponse.redirect_url,
-      bankTransfer: midtransResponse.va_numbers
-        ? {
-            bank: midtransResponse.va_numbers[0].bank,
-            vaNumber: midtransResponse.va_numbers[0].va_number,
-          }
-        : null,
     };
   } catch (error) {
-    console.error('Checkout error:', error);
+    console.error('❌ Checkout error:', error);
     return { error: 'Gagal memproses pembayaran' };
   }
 }

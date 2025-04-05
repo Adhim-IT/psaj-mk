@@ -3,8 +3,90 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { getMidtransConfig } from '@/lib/midtrans';
 
+async function getMidtransToken(params: any) {
+  const { serverKey } = await getMidtransConfig();
+  const auth = Buffer.from(`${serverKey}:`).toString('base64');
+  const snapResponse = await fetch('https://app.sandbox.midtrans.com/snap/v1/transactions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${auth}`,
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!snapResponse.ok) {
+    const errorData = await snapResponse.json();
+    console.error('❌ Midtrans error:', errorData);
+    throw new Error('Gagal membuat token pembayaran');
+  }
+
+  const snapData = await snapResponse.json();
+  console.log('✅ Midtrans Snap token created:', snapData);
+  return snapData;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
+    console.log('📦 Request body:', body);
+
+    if (body.retryPayment && body.transactionId && body.transactionCode) {
+      console.log('🔄 Retrying payment for existing transaction:', body.transactionCode);
+
+      const transaction = await prisma.course_transactions.findUnique({
+        where: { id: body.transactionId },
+        include: {
+          courses: {
+            select: {
+              title: true,
+            },
+          },
+          students: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!transaction || transaction.status !== 'unpaid') {
+        return NextResponse.json({ error: 'Transaksi tidak ditemukan atau sudah dibayar' }, { status: 404 });
+      }
+
+      const midtransParams = {
+        transaction_details: {
+          order_id: transaction.code,
+          gross_amount: Number(transaction.final_price),
+        },
+        credit_card: {
+          secure: true,
+        },
+        customer_details: {
+          first_name: transaction.student_id,
+        },
+        item_details: [
+          {
+            id: transaction.course_id,
+            price: Number(transaction.final_price),
+            quantity: 1,
+            name: transaction.course_id,
+          },
+        ],
+        enabled_payments: ['credit_card', 'bca_va', 'bni_va', 'bri_va', 'permata_va', 'mandiri_va', 'other_va', 'gopay', 'shopeepay', 'qris'],
+        callbacks: {
+          finish: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?id=${transaction.id}`,
+        },
+      };
+
+      const snapData = await getMidtransToken(midtransParams);
+      return NextResponse.json({
+        token: snapData.token,
+        transactionCode: transaction.code,
+        redirectUrl: snapData.redirect_url,
+      });
+    }
+
     const user = await getCurrentUser();
     console.log('👤 Current user:', user);
 
@@ -13,8 +95,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Anda harus login terlebih dahulu' }, { status: 401 });
     }
 
-    const body = await req.json();
-    console.log('📦 Request body:', body);
     const { courseType, promoCode, transactionCode } = body;
 
     if (!courseType || !courseType.id) {
@@ -113,7 +193,7 @@ export async function POST(req: NextRequest) {
         ],
         enabled_payments: ['credit_card', 'bca_va', 'bni_va', 'bri_va', 'permata_va', 'mandiri_va', 'other_va', 'gopay', 'shopeepay', 'qris'],
         callbacks: {
-          finish: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
+          finish: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?id=${body.transactionId}`,
         },
       }),
     });

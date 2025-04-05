@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import type { courseTransactionFilterSchema } from "@/lib/zod"
 import type { z } from "zod"
+import type { CourseTransactionStatus } from '@/types';
 
 type Filters = z.infer<typeof courseTransactionFilterSchema>
 
@@ -141,3 +142,16 @@ export async function deleteCourseTransaction({ id }: { id: string }) {
   }
 }
 
+export async function updateCourseTransactionStatus(id: string, status: CourseTransactionStatus) {
+  try {
+    await prisma.course_transactions.update({
+      where: { id },
+      data: { status: status, updated_at: new Date() },
+    });
+    revalidatePath('/admin/transaksi/kelas');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating course transaction status:', error);
+    return { success: false, error: 'Failed to update course transaction status' };
+  }
+}

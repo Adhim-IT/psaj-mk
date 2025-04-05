@@ -1,11 +1,11 @@
 'use client';
 
 import type React from 'react';
-
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, Filter } from 'lucide-react';
+import { Eye, Filter, CheckCircle, Trash2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CourseTransactionStatus } from '@/types';
+import { updateCourseTransactionStatus, deleteCourseTransaction } from '@/lib/course-transaksi-admin';
 
 interface TransactionTableProps {
   transactions: any[];
@@ -30,6 +31,7 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<string>(searchParams.get('status') || '');
   const [search, setSearch] = useState<string>(searchParams.get('search') || '');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleStatusChange = (value: string) => {
     setStatus(value);
@@ -87,6 +89,68 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
     }).format(price);
   };
 
+  const handleUpdateStatus = async (id: string, status: CourseTransactionStatus) => {
+    Swal.fire({
+      title: 'Konfirmasi Update Status',
+      text: `Apakah Anda yakin ingin mengubah status transaksi ini menjadi "${status}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Update!',
+      cancelButtonText: 'Batal',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setIsUpdating(true);
+        try {
+          const updateResult = await updateCourseTransactionStatus(id, status);
+          if (updateResult.success) {
+            Swal.fire('Berhasil!', 'Status transaksi telah diupdate.', 'success');
+            router.refresh();
+          } else {
+            Swal.fire('Error!', updateResult.error || 'Gagal mengupdate status transaksi.', 'error');
+          }
+        } catch (error) {
+          console.error('Error updating transaction status:', error);
+          Swal.fire('Error!', 'Gagal mengupdate status transaksi.', 'error');
+        } finally {
+          setIsUpdating(false);
+        }
+      }
+    });
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    Swal.fire({
+      title: 'Konfirmasi Hapus Transaksi',
+      text: 'Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setIsUpdating(true);
+        try {
+          const deleteResult = await deleteCourseTransaction({ id });
+          if (deleteResult.success) {
+            Swal.fire('Berhasil!', 'Transaksi telah dihapus.', 'success');
+            router.refresh();
+          } else {
+            Swal.fire('Error!', deleteResult.error || 'Gagal menghapus transaksi.', 'error');
+          }
+        } catch (error) {
+          console.error('Error deleting transaction:', error);
+          Swal.fire('Error!', 'Gagal menghapus transaksi.', 'error');
+        } finally {
+          setIsUpdating(false);
+        }
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -98,6 +162,7 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
         </form>
         <Select value={status} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-full sm:w-[180px]">
+            <Filter className="h-4 w-4 mr-1" />
             <SelectValue placeholder="Filter Status" />
           </SelectTrigger>
           <SelectContent>
@@ -142,12 +207,26 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
                     <TableCell>{formatDate(transaction.created_at)}</TableCell>
                     <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/admin/dashboard/transaksi/kelas/${transaction.id}`}>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Detail
-                        </Button>
-                      </Link>
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/admin/dashboard/transaksi/kelas/${transaction.id}`}>
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4 mr-2" />
+                            Detail
+                          </Button>
+                        </Link>
+                        {transaction.status === CourseTransactionStatus.UNPAID && (
+                          <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-50" onClick={() => handleUpdateStatus(transaction.id, CourseTransactionStatus.PAID)} disabled={isUpdating}>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Set as Paid
+                          </Button>
+                        )}
+                        {transaction.status === CourseTransactionStatus.FAILED && (
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteTransaction(transaction.id)} disabled={isUpdating}>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -157,41 +236,39 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
         </div>
       </div>
 
-      {meta.totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              href={`/admin/dashboard/transaksi/kelas?${new URLSearchParams({
+                ...Object.fromEntries(searchParams),
+                page: String(Math.max(1, meta.page - 1)),
+              })}`}
+            />
+          </PaginationItem>
+          {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((page) => (
+            <PaginationItem key={page}>
+              <PaginationLink
                 href={`/admin/dashboard/transaksi/kelas?${new URLSearchParams({
                   ...Object.fromEntries(searchParams),
-                  page: String(Math.max(1, meta.page - 1)),
+                  page: String(page),
                 })}`}
-              />
+                isActive={page === meta.page}
+              >
+                {page}
+              </PaginationLink>
             </PaginationItem>
-            {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  href={`/admin/dashboard/transaksi/kelas?${new URLSearchParams({
-                    ...Object.fromEntries(searchParams),
-                    page: String(page),
-                  })}`}
-                  isActive={page === meta.page}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                href={`/admin/dashboard/transaksi/kelas?${new URLSearchParams({
-                  ...Object.fromEntries(searchParams),
-                  page: String(Math.min(meta.totalPages, meta.page + 1)),
-                })}`}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              href={`/admin/dashboard/transaksi/kelas?${new URLSearchParams({
+                ...Object.fromEntries(searchParams),
+                page: String(Math.min(meta.totalPages, meta.page + 1)),
+              })}`}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }

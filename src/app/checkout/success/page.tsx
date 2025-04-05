@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { getTransactionById } from '@/lib/checkout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,6 +76,55 @@ export default function CheckoutSuccessPage() {
     setLoading(true);
     setPollingCount(0); // Reset polling count
     checkTransactionStatus();
+  };
+
+  // Add this function to handle payment retry
+  const handleRetryPayment = async (transactionId: string, transactionCode: string) => {
+    try {
+      setLoading(true);
+
+      // Request a new Midtrans token for the existing transaction
+      const response = await fetch('/api/midtrans/create-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionId,
+          transactionCode,
+          retryPayment: true,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
+      }
+
+      // Open Midtrans payment popup
+      window.snap?.pay(data.token, {
+        onSuccess: (result: any) => {
+          console.log('✅ Payment success:', result);
+          window.location.reload();
+        },
+        onPending: (result: any) => {
+          console.log('⏳ Payment pending:', result);
+          window.location.reload();
+        },
+        onError: (result: any) => {
+          console.error('❌ Payment error:', result);
+          setError('Terjadi kesalahan saat memproses pembayaran');
+        },
+        onClose: () => {
+          console.log('⚠️ Customer closed the popup');
+          setError('Pembayaran dibatalkan');
+        },
+      });
+    } catch (err) {
+      console.error('Error retrying payment:', err);
+      setError('Gagal memuat ulang pembayaran');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderContent = () => {
@@ -160,6 +209,15 @@ export default function CheckoutSuccessPage() {
               <div className="flex justify-center">
                 <Button onClick={handleManualCheck} className="bg-amber-500 hover:bg-amber-600">
                   Periksa Status Pembayaran
+                </Button>
+              </div>
+            )}
+
+            {transaction.status === 'unpaid' && (
+              <div className="mt-6">
+                <Button onClick={() => handleRetryPayment(transaction.id, transaction.code)} className="w-full bg-[#5596DF] hover:bg-blue-700 text-white" disabled={loading}>
+                  <CreditCard className="mr-2 h-5 w-5" />
+                  Lanjutkan Pembayaran
                 </Button>
               </div>
             )}

@@ -144,6 +144,77 @@ export default function CheckoutPage() {
     }
   };
 
+  // Function to open Midtrans payment popup
+  const openMidtransPopup = async (transactionId: string, transactionCode: string) => {
+    if (!window.snap) {
+      Swal.fire({
+        title: 'Checkout gagal',
+        text: 'Sistem pembayaran belum siap. Silakan coba lagi.',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
+      return;
+    }
+
+    try {
+      // Request Midtrans token for the existing transaction
+      const response = await fetch('/api/midtrans/create-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionId,
+          transactionCode,
+          retryPayment: true,
+          courseType: courseType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
+      }
+
+      // Open Midtrans Snap popup
+      window.snap?.pay(data.token, {
+        onSuccess: async (result: any) => {
+          console.log('✅ Payment success:', result);
+          router.push(`/checkout/success?id=${transactionId}`);
+        },
+        onPending: (result: any) => {
+          console.log('⏳ Payment pending:', result);
+          router.push(`/checkout/success?id=${transactionId}`);
+        },
+        onError: (result: any) => {
+          console.error('❌ Payment error:', result);
+          Swal.fire({
+            title: 'Pembayaran gagal',
+            text: 'Terjadi kesalahan saat memproses pembayaran',
+            icon: 'error',
+            confirmButtonColor: '#4A90E2',
+          });
+        },
+        onClose: () => {
+          console.log('⚠️ Customer closed the popup');
+          Swal.fire({
+            title: 'Pembayaran dibatalkan',
+            text: 'Anda menutup halaman pembayaran sebelum menyelesaikan transaksi',
+            icon: 'warning',
+            confirmButtonColor: '#4A90E2',
+          });
+        },
+      });
+    } catch (err) {
+      console.error('❌ Error opening Midtrans popup:', err);
+      Swal.fire({
+        title: 'Checkout gagal',
+        text: err instanceof Error ? err.message : 'Terjadi kesalahan saat memproses pembayaran',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
+    }
+  };
+
   // Update the handleCheckout function to support credit card payments
   const handleCheckout = async () => {
     if (!courseType) return;
@@ -197,6 +268,12 @@ export default function CheckoutPage() {
           }).then(() => {
             router.push('/dashboard');
           });
+          return;
+        }
+        // Check if the error is about having an existing unpaid transaction
+        else if (saveResponse.error.includes('transaksi yang belum selesai') && saveResponse.existingTransactionId && saveResponse.existingTransactionCode) {
+          // Directly open Midtrans popup for the existing transaction
+          await openMidtransPopup(saveResponse.existingTransactionId, saveResponse.existingTransactionCode);
           return;
         } else {
           // Handle other errors

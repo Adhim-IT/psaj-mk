@@ -1,21 +1,46 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { useActionState } from "react"
-import { signUpCredentials } from "@/lib/Register"
-import { Eye, EyeOff } from "lucide-react"
-import Link from "next/link"
+import { useState, useEffect } from 'react';
+import { useActionState } from 'react';
+import { signUpCredentials } from '@/lib/Register';
+import { Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
-import { Input } from "@/components/ui/input"
-import { RegisterButton } from "./button"
+import { Input } from '@/components/ui/input';
+import { RegisterButton } from './button';
 
 const RegisterForm = () => {
-  const [state, formAction, isPending] = useActionState(signUpCredentials, null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState(signUpCredentials, null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword)
-  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword)
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
+
+  useEffect(() => {
+    if (state?.status === 'error') {
+      Swal.fire({
+        title: 'Error!',
+        text: state.message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3182CE',
+      });
+    } else if (state?.status === 'success') {
+      Swal.fire({
+        title: 'Berhasil!',
+        text: state.message,
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3182CE',
+      }).then(() => {
+        router.push('/login');
+      });
+    }
+  }, [state, router]);
 
   return (
     <div className="w-full mx-auto">
@@ -140,7 +165,6 @@ const RegisterForm = () => {
       </div>
     </div>
   );
-}
+};
 
-export default RegisterForm
-
+export default RegisterForm;

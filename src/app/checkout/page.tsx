@@ -206,7 +206,7 @@ export default function CheckoutPage() {
 
       console.log('✅ Transaction created:', saveResponse);
 
-      // STEP 2: Minta token Midtrans dari server
+      // STEP 2: Request Midtrans token from server using the SAME transaction ID
       console.log('🔄 Requesting Midtrans token from server');
       const response = await fetch('/api/midtrans/create-token', {
         method: 'POST',
@@ -216,6 +216,8 @@ export default function CheckoutPage() {
           promoCode: promoApplied ? promoCode : undefined,
           promoDiscountType,
           promoDiscount,
+          transactionId: saveResponse.transactionId,
+          transactionCode: saveResponse.transactionCode, // Pass the transaction code from initiateCheckout
         }),
       });
 
@@ -226,7 +228,7 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
       }
 
-      // STEP 3: Tampilkan Midtrans Snap
+      // STEP 3: Show Midtrans Snap
       console.log('🔄 Opening Midtrans Snap payment popup with token:', data.token);
       window.snap?.pay(data.token, {
         onSuccess: async (result: any) => {
@@ -238,7 +240,7 @@ export default function CheckoutPage() {
             // You could add an API endpoint to manually mark as paid, but for now we'll rely on the webhook
           }
 
-          // Redirect ke halaman sukses
+          // Redirect to success page
           router.push(`/checkout/success?id=${saveResponse.transactionId}`);
         },
         onPending: (result: any) => {

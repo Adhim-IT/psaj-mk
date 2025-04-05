@@ -15,11 +15,17 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     console.log('📦 Request body:', body);
-    const { courseType, promoCode } = body;
+    const { courseType, promoCode, transactionCode } = body;
 
     if (!courseType || !courseType.id) {
       console.log('❌ Invalid course type data');
       return NextResponse.json({ error: 'Data kelas tidak valid' }, { status: 400 });
+    }
+
+    // Ensure we have a transaction code from the request
+    if (!transactionCode) {
+      console.log('❌ Missing transaction code');
+      return NextResponse.json({ error: 'Kode transaksi tidak ditemukan' }, { status: 400 });
     }
 
     // Calculate prices
@@ -70,9 +76,8 @@ export async function POST(req: NextRequest) {
       finalPrice,
     });
 
-    // Create transaction code
-    const transactionCode = `TRX-${Date.now()}`;
-    console.log('🏷️ Generated transaction code:', transactionCode);
+    // Use the transaction code from the request instead of generating a new one
+    console.log('🏷️ Using transaction code from request:', transactionCode);
 
     // Get Midtrans configuration
     const { serverKey } = await getMidtransConfig();
@@ -88,7 +93,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         transaction_details: {
-          order_id: transactionCode,
+          order_id: transactionCode, // Use the transaction code from the request
           gross_amount: finalPrice,
         },
         credit_card: {
@@ -124,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       token: snapData.token,
-      transactionCode,
+      transactionCode, // Return the same transaction code
       redirectUrl: snapData.redirect_url,
     });
   } catch (error) {

@@ -123,6 +123,7 @@ export async function initiateCheckout(data: CheckoutData) {
     return {
       success: true,
       transactionId: transaction.id,
+      transactionCode: transaction.code, // Return the transaction code as well
     };
   } catch (error) {
     console.error('❌ Checkout error:', error);

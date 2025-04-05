@@ -64,7 +64,7 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
       case CourseTransactionStatus.UNPAID:
         return <Badge variant="secondary">Belum Dibayar</Badge>;
       case CourseTransactionStatus.FAILED:
-        return <Badge variant="destructive">Gagal</Badge>;
+        return <Badge className="bg-red-500 text-white font-bold rounded-full px-4 py-1">Gagal</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }

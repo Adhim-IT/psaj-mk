@@ -75,11 +75,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <h3 className="text-lg font-semibold mb-4">Program</h3>
             <ul className="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-              <li>
-                <Link href="/program/offline-bootcamp" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Offline Bootcamp Intensive
-                </Link>
-              </li>
+             
               <li>
                 <Link href="/program/online-bootcamp" className="text-gray-600 hover:text-blue-500 transition-colors">
                   Online Bootcamp Intensive
@@ -95,11 +91,7 @@ export default function Footer() {
                   Online Short Class
                 </Link>
               </li>
-              <li>
-                <Link href="/program/bootcamp-request" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Bootcamp by Request
-                </Link>
-              </li>
+             
             </ul>
           </div>
         </div>

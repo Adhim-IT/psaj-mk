@@ -1,26 +1,45 @@
-"use client"
+'use client';
 
-import { signInCredentials } from "@/lib/login"
-import { useActionState } from "react"
-import { LoginButton } from "./button"
-import { Eye, EyeOff } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { signInCredentials } from '@/lib/login';
+import { useActionState } from 'react';
+import { LoginButton } from './button';
+import { Eye, EyeOff } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import Swal from 'sweetalert2';
 
 const LoginForm = () => {
-  const [state, formAction, isPending] = useActionState(signInCredentials, null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [isClient, setIsClient] = useState(false)
+  const [state, formAction, isPending] = useActionState(signInCredentials, null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // This helps prevent hydration errors by ensuring the component
   // only fully renders on the client side
   useEffect(() => {
-    setIsClient(true)
-  }, [])
+    setIsClient(true);
+  }, []);
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword)
+  // Handle success and error messages with SweetAlert
+  useEffect(() => {
+    if (state?.status === 'success') {
+      Swal.fire({
+        title: 'Berhasil!',
+        text: state.message,
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3182CE',
+      }).then(() => {
+        // Redirect after SweetAlert is closed
+        if (state.redirectUrl) {
+          window.location.href = state.redirectUrl;
+        }
+      });
+    }
+  }, [state]);
+
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   if (!isClient) {
     return (
@@ -30,19 +49,19 @@ const LoginForm = () => {
           <div className="h-4 w-48 bg-gray-200 rounded mx-auto"></div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="w-full mx-auto">
       <div className="text-center mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Bergabung Sekarang</h1>
-        <p className="text-sm sm:text-base text-gray-600">Mulai perjalanan belajar IT Anda dengan TeenCode</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Masuk ke Akun</h1>
+        <p className="text-sm sm:text-base text-gray-600">Lanjutkan perjalanan belajar IT Anda dengan TeenCode</p>
       </div>
 
       <form action={formAction} className="space-y-3 sm:space-y-4">
         {/* Display general error message when both credentials are wrong */}
-        {state?.message && (
+        {state?.message && state.status === 'error' && (
           <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800 py-2">
             <AlertDescription className="text-sm font-medium">{state.message}</AlertDescription>
           </Alert>
@@ -83,7 +102,7 @@ const LoginForm = () => {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="Buat password Anda"
+              placeholder="Masukkan password Anda"
               className="w-full h-10 sm:h-12 px-3 sm:px-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-gray-200 focus:border-[#3182CE] focus:ring-[#3182CE] pr-10 transition-all duration-200"
               autoComplete="current-password"
               suppressHydrationWarning
@@ -121,7 +140,6 @@ const LoginForm = () => {
       </div>
     </div>
   );
-}
+};
 
-export default LoginForm
-
+export default LoginForm;

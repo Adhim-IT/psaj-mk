@@ -1,20 +1,61 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Users, User, ChevronRight } from 'lucide-react';
+import { CalendarDays, Users, User, ChevronRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getCourseTypesByCourseId } from '@/lib/course-types';
 import type { CourseType } from '@/types';
 
 interface CourseTypeSelectionProps {
   courseTypes: CourseType[];
+  courseId?: string;
   onSelectCourseType?: (courseType: CourseType) => void;
 }
 
-export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseTypeSelectionProps) {
+export function CourseTypeSelection({ courseTypes: initialCourseTypes, courseId, onSelectCourseType }: CourseTypeSelectionProps) {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<string>('all');
+  const [courseTypes, setCourseTypes] = useState<CourseType[]>(initialCourseTypes);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Function to refresh course types data
+  const refreshCourseTypes = async () => {
+    if (!courseId) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { courseTypes: freshTypes, error: typesError } = await getCourseTypesByCourseId(courseId);
+
+      if (typesError) {
+        setError(typesError);
+        console.error('Error refreshing course types:', typesError);
+      } else if (freshTypes && freshTypes.length > 0) {
+        setCourseTypes(freshTypes);
+        console.log(`Refreshed ${freshTypes.length} course types successfully`);
+      } else {
+        setCourseTypes([]);
+        console.log('No course types found after refresh');
+      }
+    } catch (error) {
+      setError('Failed to refresh course types');
+      console.error('Error in refreshCourseTypes:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Refresh data on initial load if courseId is provided
+  useEffect(() => {
+    if (courseId) {
+      refreshCourseTypes();
+    }
+  }, [courseId]);
 
   // Function to check if a course type is expired
   const isExpired = (courseType: CourseType) => {
@@ -29,9 +70,6 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
   const batchTypes = allTypes.filter((type) => type.type === 'batch');
   const privateTypes = allTypes.filter((type) => type.type === 'private');
   const groupTypes = allTypes.filter((type) => type.type === 'group');
-
-  // Get unique course IDs to create tabs
-  const uniqueCourseIds = [...new Set(allTypes.map((type) => type.course_id))];
 
   const handleSelectCourseType = (courseType: CourseType) => {
     if (onSelectCourseType) {
@@ -117,14 +155,48 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
     );
   };
 
+  // Function to render skeleton cards during loading
+  const renderSkeletonCards = () => {
+    return Array(3)
+      .fill(0)
+      .map((_, index) => (
+        <Card key={`skeleton-${index}`} className="overflow-hidden border-[#E5E7EB] min-h-[380px] flex flex-col">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 pb-4 flex-grow">
+            <Skeleton className="h-8 w-36 mb-6" />
+            <Skeleton className="h-16 w-full rounded-md" />
+          </CardContent>
+          <CardFooter className="pt-4 pb-6">
+            <Skeleton className="h-10 w-full" />
+          </CardFooter>
+        </Card>
+      ));
+  };
+
   // Filter displayed course types based on selected tab
-  const displayedCourseTypes = selectedTab === 'all' ? allTypes : allTypes.filter((type) => type.type === selectedTab);
+  const displayedCourseTypes = selectedTab === 'all' ? allTypes : selectedTab === 'batch' ? batchTypes : selectedTab === 'private' ? privateTypes : groupTypes;
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white py-16 px-4">
       <div className="container max-w-6xl mx-auto">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Pilih Tipe Kelas</h2>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h2 className="text-3xl font-bold text-gray-900">Pilih Tipe Kelas</h2>
+            {courseId && (
+              <Button variant="ghost" size="sm" className="rounded-full" onClick={refreshCourseTypes} disabled={isLoading}>
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="sr-only">Refresh</span>
+              </Button>
+            )}
+          </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">Pilih tipe kelas yang sesuai dengan kebutuhan belajar Anda</p>
         </div>
 
@@ -149,12 +221,41 @@ export function CourseTypeSelection({ courseTypes, onSelectCourseType }: CourseT
           </div>
 
           <div className="mt-6">
-            {displayedCourseTypes.length > 0 ? (
+            {error && (
+              <div className="text-center py-10">
+                <p className="text-red-500">{error}</p>
+                <Button variant="outline" className="mt-4" onClick={refreshCourseTypes} disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Mencoba ulang...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Coba lagi
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {!error && isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{renderSkeletonCards()}</div>
+            ) : !error && displayedCourseTypes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{displayedCourseTypes.map((courseType) => renderCourseTypeCard(courseType))}</div>
             ) : (
-              <div className="text-center py-10">
-                <p className="text-gray-500">Tidak ada tipe kelas yang tersedia untuk kategori ini.</p>
-              </div>
+              !error && (
+                <div className="text-center py-10">
+                  <p className="text-gray-500">Tidak ada tipe kelas yang tersedia untuk kategori ini.</p>
+                  {courseId && (
+                    <Button variant="outline" className="mt-4" onClick={refreshCourseTypes} disabled={isLoading}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Refresh
+                    </Button>
+                  )}
+                </div>
+              )
             )}
           </div>
         </div>

@@ -13,9 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Define program items to ensure consistency between mobile and desktop
 const programItems = [
-  { title: 'Online Bootcamp Intensive', href: '/program/online-bootcamp' },
-  { title: 'Online Bootcamp Batch', href: '/program/batch-bootcamp' },
-  { title: 'Online Short Class', href: '/program/short-class' },
+  { title: 'Online Private', href: '/program/online-bootcamp' },
+  { title: 'Online Batch', href: '/program/batch-bootcamp' },
+  { title: 'Online Group', href: '/program/group-class' },
 ];
 
 export default function Navbar() {

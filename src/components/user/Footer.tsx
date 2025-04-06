@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { Instagram, Youtube } from "lucide-react"
+import Link from 'next/link';
+import { Instagram, Youtube } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -13,9 +13,9 @@ export default function Footer() {
             </div>
             <div className="text-sm">Teen Code Academy</div>
             <p className="text-sm text-gray-600 mt-4">
-              Jl. DI Panjaitan No.128
+              JL. KALIBENER, PURWANEGARA,
               <br />
-              PURWOKERTO SELATAN KAB.
+              PURWOKERTO TIMUR KAB.
               <br />
               BANYUMAS JAWA TENGAH.
             </p>
@@ -75,23 +75,21 @@ export default function Footer() {
           <div className="md:col-span-2">
             <h3 className="text-lg font-semibold mb-4">Program</h3>
             <ul className="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-             
               <li>
                 <Link href="/program/online-bootcamp" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Online Bootcamp Intensive
+                  Online Private
                 </Link>
               </li>
               <li>
                 <Link href="/program/batch-bootcamp" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Online Bootcamp Batch
+                  Online Batch
                 </Link>
               </li>
               <li>
-                <Link href="/program/short-class" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Online Short Class
+                <Link href="/program/group-class" className="text-gray-600 hover:text-blue-500 transition-colors">
+                  Online Group
                 </Link>
               </li>
-             
             </ul>
           </div>
         </div>
@@ -109,4 +107,3 @@ export default function Footer() {
     </footer>
   );
 }
-

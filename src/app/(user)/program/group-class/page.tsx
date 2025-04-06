@@ -12,9 +12,9 @@ export default function OnlineBootcamp() {
         <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center ">
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-[#5596DF] to-[#41C5E9] bg-clip-text text-transparent md:max-w-2xl">Online Private</h1>
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-[#5596DF] to-[#41C5E9] bg-clip-text text-transparent md:max-w-2xl">Online Group</h1>
               <p className="text-lg text-muted-foreground max-w-xl">
-                Program Online Private merupakan program TeenCode dimana peserta belajar secara privat one-on-one dengan mentor. Kelas bersifat online sehingga bisa diikuti peserta dari mana saja dan kapan saja.
+                Program Online Group merupakan program TeenCode dimana peserta belajar dalam kelompok kecil dengan mentor. Kelas bersifat online sehingga bisa diikuti peserta dari mana saja dan kapan saja.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -43,7 +43,7 @@ export default function OnlineBootcamp() {
               <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-100 rounded-full blur-2xl opacity-80"></div>
 
               <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <Image src="/images/program/online-boocamp.png" width={600} height={500} alt="Student learning online" className="w-full h-auto" priority />
+                <Image src="/images/program/online-short.png" width={600} height={500} alt="Student learning online" className="w-full h-auto" priority />
 
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
                   <div className="h-3 w-3 bg-green-500 rounded-full pulse-animation"></div>

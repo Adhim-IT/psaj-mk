@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Star, Calendar, BookOpen, PlayCircle, Clock, BarChart3 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Star, Calendar, BookOpen, PlayCircle, Clock, BarChart3, RefreshCw } from 'lucide-react';
 import type { ListClass, Mentor, CourseType } from '@/types';
 import { RichTextContent } from '@/components/rich-text-content';
+import { getCourseTypesByCourseId } from '@/lib/course-types';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,10 +32,44 @@ interface DetailCourseProps {
   courseTypes?: CourseType[];
 }
 
-export default function DetailCourse({ course, mentor, courseTypes = [] }: DetailCourseProps) {
+export default function DetailCourse({ course, mentor, courseTypes: initialCourseTypes = [] }: DetailCourseProps) {
   const [selectedCourseType, setSelectedCourseType] = useState<CourseType | null>(null);
+  const [courseTypes, setCourseTypes] = useState<CourseType[]>(initialCourseTypes);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const courseTypeRef = useRef<HTMLDivElement>(null);
   const mentorImage = mentor?.profile_picture && typeof mentor.profile_picture === 'string' ? mentor.profile_picture : '/images/mentor.png';
+
+  // Function to refresh course types
+  const refreshCourseTypes = async () => {
+    if (!course?.id) return;
+
+    setIsRefreshing(true);
+    try {
+      console.log(`Refreshing course types for course ID: ${course.id}`);
+      const { courseTypes: freshTypes, error } = await getCourseTypesByCourseId(course.id);
+
+      if (error) {
+        console.error('Error refreshing course types:', error);
+      } else if (freshTypes && freshTypes.length > 0) {
+        console.log(`Refreshed ${freshTypes.length} course types successfully`);
+        setCourseTypes(freshTypes);
+      } else {
+        console.log('No course types found after refresh');
+        setCourseTypes([]);
+      }
+    } catch (error) {
+      console.error('Error in refreshCourseTypes:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Refresh course types on initial load
+  useEffect(() => {
+    if (initialCourseTypes.length === 0 && course?.id) {
+      refreshCourseTypes();
+    }
+  }, [course?.id]);
 
   // Function to extract YouTube video ID from URL
   const getYoutubeVideoId = (url: string) => {
@@ -351,11 +386,16 @@ export default function DetailCourse({ course, mentor, courseTypes = [] }: Detai
       </div>
 
       {/* Course Type Selection Section */}
-      {courseTypes.length > 0 && (
-        <div ref={courseTypeRef}>
-          <CourseTypeSelection courseTypes={courseTypes} onSelectCourseType={handleSelectCourseType} />
+      <div ref={courseTypeRef}>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          {isRefreshing && (
+            <div className="fixed bottom-4 right-4 bg-white p-3 rounded-full shadow-lg z-50">
+              <RefreshCw className="h-6 w-6 animate-spin text-[#5596DF]" />
+            </div>
+          )}
         </div>
-      )}
+        <CourseTypeSelection courseTypes={courseTypes} courseId={course.id} onSelectCourseType={handleSelectCourseType} />
+      </div>
     </div>
   );
 }

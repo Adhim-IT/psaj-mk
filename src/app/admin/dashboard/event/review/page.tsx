@@ -4,19 +4,39 @@ import { Skeleton } from '@/components/ui/skeleton';
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
-// Function to fetch event reviews directly from Prisma
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getEventReviews() {
   try {
+    console.log('Fetching event reviews...');
     const reviews = await prisma.event_reviews.findMany({
       include: {
-        events: true,
-        students: true,
+        events: {
+          select: {
+            id: true,
+            title: true,
+            thumbnail: true,
+            slug: true,
+          },
+        },
+        students: {
+          select: {
+            id: true,
+            name: true,
+            profile_picture: true,
+          },
+        },
       },
       orderBy: {
         created_at: 'desc',
       },
     });
 
+    console.log(`Found ${reviews.length} event reviews`);
+
+    // Properly serialize the data to avoid date serialization issues
     return reviews.map((review) => ({
       ...review,
       created_at: review.created_at ? review.created_at.toISOString() : null,
@@ -31,11 +51,13 @@ async function getEventReviews() {
 export default async function EventReviewPage() {
   const eventReviews = await getEventReviews();
 
-  // Function to approve review
+  console.log(`Rendering page with ${eventReviews.length} event reviews`);
+
   async function approveReview(id: string) {
     'use server';
 
     try {
+      console.log(`Approving review with ID: ${id}`);
       await prisma.event_reviews.update({
         where: { id },
         data: {
@@ -44,7 +66,7 @@ export default async function EventReviewPage() {
         },
       });
 
-      revalidatePath('/admin/dashboard/event/review');
+      revalidatePath('/admin/dashboard/event/review', 'page');
       return { success: true };
     } catch (error) {
       console.error('Error approving review:', error);
@@ -52,16 +74,16 @@ export default async function EventReviewPage() {
     }
   }
 
-  // Function to delete review
   async function deleteReview(id: string) {
     'use server';
 
     try {
+      console.log(`Deleting review with ID: ${id}`);
       await prisma.event_reviews.delete({
         where: { id },
       });
 
-      revalidatePath('/admin/dashboard/event/review');
+      revalidatePath('/admin/dashboard/event/review' , 'page');
       return { success: true };
     } catch (error) {
       console.error('Error deleting review:', error);
@@ -72,6 +94,9 @@ export default async function EventReviewPage() {
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Event Reviews Management</h1>
+      <div className="mb-4 text-sm text-muted-foreground">
+        {eventReviews.length === 0 ? 'No reviews found. Reviews will appear here once students submit them.' : `Showing ${eventReviews.length} event reviews. Approve reviews to make them visible on the event page.`}
+      </div>
       <Suspense fallback={<EventReviewSkeleton />}>
         <EventReviewList initialData={eventReviews} onApprove={approveReview} onDelete={deleteReview} />
       </Suspense>
@@ -79,7 +104,6 @@ export default async function EventReviewPage() {
   );
 }
 
-// Skeleton Loading State
 function EventReviewSkeleton() {
   return (
     <div className="space-y-4">
@@ -87,12 +111,7 @@ function EventReviewSkeleton() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-64" />
       </div>
-      <div className="overflow-hidden rounded-md border">
-        <Skeleton className="h-12 w-full" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
+      <Skeleton className="h-[400px] w-full" />
       <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-64" />
         <Skeleton className="h-10 w-64" />

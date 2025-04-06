@@ -1,7 +1,8 @@
-"use server"
-import { prisma } from "@/lib/prisma"
-import { getCurrentUser } from "@/lib/auth"
-import { v4 as uuidv4 } from "uuid"
+'use server';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
+import { v4 as uuidv4 } from 'uuid';
+import { revalidatePath } from 'next/cache';
 
 export async function getComments() {
   try {
@@ -17,19 +18,19 @@ export async function getComments() {
         },
       },
       orderBy: {
-        created_at: "desc",
+        created_at: 'desc',
       },
-    })
+    });
     const formattedComments = comments.map((comment: any) => ({
       ...comment,
       created_at: comment.created_at ? comment.created_at.toISOString() : null,
       updated_at: comment.updated_at ? comment.updated_at.toISOString() : null,
-    }))
+    }));
 
-    return { comments: formattedComments }
+    return { comments: formattedComments };
   } catch (error) {
-    console.error("Error fetching comments:", error)
-    return { error: "Failed to fetch comments" }
+    console.error('Error fetching comments:', error);
+    return { error: 'Failed to fetch comments' };
   }
 }
 
@@ -38,29 +39,32 @@ export async function deleteComment(id: string): Promise<{ success: boolean; err
     await prisma.article_comments.update({
       where: { id },
       data: { deleted_at: new Date() },
-    })
+    });
 
-    return { success: true }
+    // Revalidate the comments page
+    revalidatePath('/admin/dashboard/artikel/komentar', 'page');
+
+    return { success: true };
   } catch (error) {
-    console.error("Error deleting comment:", error)
-    return { success: false, error: "Failed to delete comment" }
+    console.error('Error deleting comment:', error);
+    return { success: false, error: 'Failed to delete comment' };
   }
 }
 
-export async function updateCommentStatus(
-  id: string,
-  isApproved: boolean,
-): Promise<{ success: boolean; error?: string }> {
+export async function updateCommentStatus(id: string, isApproved: boolean): Promise<{ success: boolean; error?: string }> {
   try {
     await prisma.article_comments.update({
       where: { id },
       data: { is_approved: isApproved },
-    })
+    });
 
-    return { success: true }
+    // Revalidate the comments page
+    revalidatePath('/admin/dashboard/artikel/komentar', 'page');
+
+    return { success: true };
   } catch (error) {
-    console.error("Error updating comment status:", error)
-    return { success: false, error: "Failed to update comment status" }
+    console.error('Error updating comment status:', error);
+    return { success: false, error: 'Failed to update comment status' };
   }
 }
 
@@ -88,14 +92,14 @@ export async function getCommentsByArticleId(articleId: string) {
             deleted_at: null,
           },
           orderBy: {
-            created_at: "asc", // Replies sorted by oldest first
+            created_at: 'asc', // Replies sorted by oldest first
           },
         },
       },
       orderBy: {
-        created_at: "desc", // Parent comments sorted by newest first
+        created_at: 'desc', // Parent comments sorted by newest first
       },
-    })
+    });
 
     // Format dates for parent comments and their replies
     const formattedComments = parentComments.map((comment: any) => ({
@@ -107,12 +111,12 @@ export async function getCommentsByArticleId(articleId: string) {
         created_at: reply.created_at ? reply.created_at.toISOString() : null,
         updated_at: reply.updated_at ? reply.updated_at.toISOString() : null,
       })),
-    }))
+    }));
 
-    return { comments: formattedComments }
+    return { comments: formattedComments };
   } catch (error) {
-    console.error("Error fetching comments for article:", error)
-    return { error: "Failed to fetch comments for this article" }
+    console.error('Error fetching comments for article:', error);
+    return { error: 'Failed to fetch comments for this article' };
   }
 }
 
@@ -142,14 +146,14 @@ export async function getApprovedCommentsByArticleId(articleId: string) {
             deleted_at: null,
           },
           orderBy: {
-            created_at: "asc", // Replies sorted by oldest first
+            created_at: 'asc', // Replies sorted by oldest first
           },
         },
       },
       orderBy: {
-        created_at: "desc", // Parent comments sorted by newest first
+        created_at: 'desc', // Parent comments sorted by newest first
       },
-    })
+    });
 
     // Format dates for parent comments and their replies
     const formattedComments = parentComments.map((comment: any) => ({
@@ -161,45 +165,45 @@ export async function getApprovedCommentsByArticleId(articleId: string) {
         created_at: reply.created_at ? reply.created_at.toISOString() : null,
         updated_at: reply.updated_at ? reply.updated_at.toISOString() : null,
       })),
-    }))
+    }));
 
-    return { comments: formattedComments }
+    return { comments: formattedComments };
   } catch (error) {
-    console.error("Error fetching approved comments for article:", error)
-    return { error: "Failed to fetch comments for this article" }
+    console.error('Error fetching approved comments for article:', error);
+    return { error: 'Failed to fetch comments for this article' };
   }
 }
 
 /**
  * Create a new comment for an article
  */
-export async function createComment(data: {
-  article_id: string
-  content: string
-}) {
+export async function createComment(data: { article_id: string; content: string }) {
   try {
     // Get the current authenticated user
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
 
     if (!user) {
       return {
         success: false,
-        message: "You must be logged in to comment",
-      }
+        message: 'You must be logged in to comment',
+      };
     }
 
     const comment = await prisma.article_comments.create({
       data: {
         id: uuidv4(),
         article_id: data.article_id,
-        name: user.name || "Anonymous",
+        name: user.name || 'Anonymous',
         email: user.email,
         comment: data.content,
         is_approved: false, // Comments need approval by default
         created_at: new Date(),
         updated_at: new Date(),
       },
-    })
+    });
+
+    // Revalidate the comments page
+    revalidatePath('/admin/dashboard/artikel/komentar', 'page');
 
     return {
       success: true,
@@ -208,45 +212,41 @@ export async function createComment(data: {
         created_at: comment.created_at ? comment.created_at.toISOString() : null,
         updated_at: comment.updated_at ? comment.updated_at.toISOString() : null,
       },
-    }
+    };
   } catch (error) {
-    console.error("Error creating comment:", error)
+    console.error('Error creating comment:', error);
     return {
       success: false,
-      message: "Failed to create comment",
-    }
+      message: 'Failed to create comment',
+    };
   }
 }
 
 /**
  * Reply to an existing comment
  */
-export async function replyToComment(data: {
-  article_id: string
-  parent_id: string
-  content: string
-}) {
+export async function replyToComment(data: { article_id: string; parent_id: string; content: string }) {
   try {
     // Get the current authenticated user
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
 
     if (!user) {
       return {
         success: false,
-        message: "You must be logged in to reply to a comment",
-      }
+        message: 'You must be logged in to reply to a comment',
+      };
     }
 
     // Check if parent comment exists
     const parentComment = await prisma.article_comments.findUnique({
       where: { id: data.parent_id },
-    })
+    });
 
     if (!parentComment) {
       return {
         success: false,
-        message: "Parent comment not found",
-      }
+        message: 'Parent comment not found',
+      };
     }
 
     const reply = await prisma.article_comments.create({
@@ -254,14 +254,17 @@ export async function replyToComment(data: {
         id: uuidv4(),
         article_id: data.article_id,
         parent_id: data.parent_id,
-        name: user.name || "Anonymous",
+        name: user.name || 'Anonymous',
         email: user.email,
         comment: data.content,
         is_approved: false, // Replies also need approval
         created_at: new Date(),
         updated_at: new Date(),
       },
-    })
+    });
+
+    // Revalidate the comments page
+    revalidatePath('/admin/dashboard/artikel/komentar' , 'page');
 
     return {
       success: true,
@@ -270,13 +273,12 @@ export async function replyToComment(data: {
         created_at: reply.created_at ? reply.created_at.toISOString() : null,
         updated_at: reply.updated_at ? reply.updated_at.toISOString() : null,
       },
-    }
+    };
   } catch (error) {
-    console.error("Error replying to comment:", error)
+    console.error('Error replying to comment:', error);
     return {
       success: false,
-      message: "Failed to reply to comment",
-    }
+      message: 'Failed to reply to comment',
+    };
   }
 }
-

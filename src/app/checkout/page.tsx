@@ -18,7 +18,6 @@ import Script from 'next/script';
 import Navbar from '@/components/user/Navbar';
 import Footer from '@/components/user/Footer';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 
 // Deklarasi tipe untuk Midtrans Snap
 declare global {
@@ -34,7 +33,6 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const courseTypeSlug = searchParams.get('course');
   const { data: session, status } = useSession();
-  const { toast } = useToast();
 
   const [courseType, setCourseType] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +45,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [midtransLoaded, setMidtransLoaded] = useState(false);
+  const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
 
   // Cek session dari client-side
   useEffect(() => {
@@ -157,6 +156,9 @@ export default function CheckoutPage() {
     }
 
     try {
+      // Store the current transaction ID
+      setCurrentTransactionId(transactionId);
+
       // Request Midtrans token for the existing transaction
       const response = await fetch('/api/midtrans/create-token', {
         method: 'POST',
@@ -175,7 +177,7 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
       }
 
-      // Open Midtrans Snap popup
+      // Open Midtrans Snap popup with modified options
       window.snap?.pay(data.token, {
         onSuccess: async (result: any) => {
           console.log('✅ Payment success:', result);
@@ -196,13 +198,19 @@ export default function CheckoutPage() {
         },
         onClose: () => {
           console.log('⚠️ Customer closed the popup');
+          // Don't redirect or show alert when user closes the popup
+          // Just reset the processing state
+          setProcessingPayment(false);
+
+          // Optionally show a small toast notification
           Swal.fire({
-            title: 'Pembayaran dibatalkan',
-            text: 'Anda menutup halaman pembayaran sebelum menyelesaikan transaksi',
-            icon: 'warning',
+            title: 'Pembayaran ditunda',
+            text: 'Anda dapat melanjutkan pembayaran kapan saja',
+            icon: 'info',
             confirmButtonColor: '#4A90E2',
           });
         },
+        skipOrderSummary: true,
       });
     } catch (err) {
       console.error('❌ Error opening Midtrans popup:', err);
@@ -212,6 +220,7 @@ export default function CheckoutPage() {
         icon: 'error',
         confirmButtonColor: '#4A90E2',
       });
+      setProcessingPayment(false);
     }
   };
 
@@ -272,8 +281,113 @@ export default function CheckoutPage() {
         }
         // Check if the error is about having an existing unpaid transaction
         else if (saveResponse.error.includes('transaksi yang belum selesai') && saveResponse.existingTransactionId && saveResponse.existingTransactionCode) {
-          // Directly open Midtrans popup for the existing transaction
-          await openMidtransPopup(saveResponse.existingTransactionId, saveResponse.existingTransactionCode);
+          // Ask user if they want to continue with existing transaction or create a new one
+          const result = await Swal.fire({
+            title: 'Transaksi Ditemukan',
+            text: 'Anda memiliki transaksi yang belum selesai. Lanjutkan transaksi yang ada atau buat baru?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4A90E2',
+            cancelButtonColor: '#718096',
+            confirmButtonText: 'Lanjutkan yang Ada',
+            cancelButtonText: 'Buat Baru',
+          });
+
+          if (result.isConfirmed) {
+            // Continue with existing transaction
+            await openMidtransPopup(saveResponse.existingTransactionId, saveResponse.existingTransactionCode);
+          } else {
+            // Show confirmation about deleting previous transaction
+            const confirmDelete = await Swal.fire({
+              title: 'Konfirmasi',
+              text: 'Transaksi sebelumnya akan dihapus dan transaksi baru akan dibuat. Lanjutkan?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#dc2626',
+              cancelButtonColor: '#718096',
+              confirmButtonText: 'Ya, Hapus & Buat Baru',
+              cancelButtonText: 'Batal',
+            });
+
+            if (!confirmDelete.isConfirmed) {
+              setProcessingPayment(false);
+              return;
+            }
+
+            // Force create a new transaction by adding forceNew=true parameter
+            const newResponse = await initiateCheckout({
+              courseType,
+              promoCode: promoApplied ? promoCode : undefined,
+              promoDiscountType,
+              promoDiscount,
+              forceNew: true, // Add this parameter
+            });
+
+            if (newResponse.error) {
+              throw new Error(newResponse.error);
+            }
+
+            // Store the current transaction ID
+            setCurrentTransactionId(newResponse.transactionId ? newResponse.transactionId : null);
+
+            // Continue with the new transaction
+            const response = await fetch('/api/midtrans/create-token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                courseType,
+                promoCode: promoApplied ? promoCode : undefined,
+                promoDiscountType,
+                promoDiscount,
+                transactionId: newResponse.transactionId,
+                transactionCode: newResponse.transactionCode,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+              throw new Error(data.error || 'Gagal mendapatkan token pembayaran');
+            }
+
+            window.snap?.pay(data.token, {
+              onSuccess: async (result: any) => {
+                console.log('✅ Payment success:', result);
+                router.push(`/checkout/success?id=${newResponse.transactionId}`);
+              },
+              onPending: (result: any) => {
+                console.log('⏳ Payment pending:', result);
+                router.push(`/checkout/success?id=${newResponse.transactionId}`);
+              },
+              onError: (result: any) => {
+                console.error('❌ Payment error:', result);
+                Swal.fire({
+                  title: 'Pembayaran gagal',
+                  text: 'Terjadi kesalahan saat memproses pembayaran',
+                  icon: 'error',
+                  confirmButtonColor: '#4A90E2',
+                });
+                setProcessingPayment(false);
+              },
+              onClose: () => {
+                console.log('⚠️ Customer closed the popup');
+                // Don't redirect or show alert when user closes the popup
+                // Just reset the processing state
+                setProcessingPayment(false);
+
+                // Optionally show a small toast notification
+                Swal.fire({
+                  title: 'Pembayaran ditunda',
+                  text: 'Anda dapat melanjutkan pembayaran kapan saja',
+                  icon: 'info',
+                  confirmButtonColor: '#4A90E2',
+                });
+              },
+              skipOrderSummary: true,
+            });
+
+            return;
+          }
           return;
         } else {
           // Handle other errors
@@ -282,6 +396,9 @@ export default function CheckoutPage() {
       }
 
       console.log('✅ Transaction created:', saveResponse);
+
+      // Store the current transaction ID
+      setCurrentTransactionId(saveResponse.transactionId ? saveResponse.transactionId : null);
 
       // STEP 2: Request Midtrans token from server using the SAME transaction ID
       console.log('🔄 Requesting Midtrans token from server');
@@ -314,7 +431,6 @@ export default function CheckoutPage() {
           // Immediately mark transaction as paid for credit card payments
           if (result.payment_type === 'credit_card') {
             console.log('💳 Credit card payment successful, updating status');
-            // You could add an API endpoint to manually mark as paid, but for now we'll rely on the webhook
           }
 
           // Redirect to success page
@@ -332,16 +448,23 @@ export default function CheckoutPage() {
             icon: 'error',
             confirmButtonColor: '#4A90E2',
           });
+          setProcessingPayment(false);
         },
         onClose: () => {
           console.log('⚠️ Customer closed the popup');
+          // Don't redirect or show alert when user closes the popup
+          // Just reset the processing state
+          setProcessingPayment(false);
+
+          // Optionally show a small toast notification
           Swal.fire({
-            title: 'Pembayaran dibatalkan',
-            text: 'Anda menutup halaman pembayaran sebelum menyelesaikan transaksi',
-            icon: 'warning',
+            title: 'Pembayaran ditunda',
+            text: 'Anda dapat melanjutkan pembayaran kapan saja',
+            icon: 'info',
             confirmButtonColor: '#4A90E2',
           });
         },
+        skipOrderSummary: true,
       });
     } catch (err) {
       console.error('❌ Checkout error:', err);
@@ -353,7 +476,46 @@ export default function CheckoutPage() {
         icon: 'error',
         confirmButtonColor: '#4A90E2',
       });
-    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  // Function to resume payment for the current transaction
+  const resumePayment = async () => {
+    if (!currentTransactionId) {
+      Swal.fire({
+        title: 'Tidak ada transaksi aktif',
+        text: 'Silakan mulai checkout baru',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
+      return;
+    }
+
+    setProcessingPayment(true);
+
+    try {
+      // Get transaction details from the server
+      const response = await fetch(`/api/transaction/${currentTransactionId}`, {
+        method: 'GET',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Gagal mendapatkan data transaksi');
+      }
+
+      // Open Midtrans popup with the transaction
+      await openMidtransPopup(currentTransactionId, data.transactionCode);
+    } catch (err) {
+      console.error('Error resuming payment:', err);
+      Swal.fire({
+        title: 'Gagal melanjutkan pembayaran',
+        text: 'Silakan coba lagi atau mulai checkout baru',
+        icon: 'error',
+        confirmButtonColor: '#4A90E2',
+      });
       setProcessingPayment(false);
     }
   };
@@ -471,6 +633,21 @@ export default function CheckoutPage() {
           </div>
         )}
 
+        {/* Show resume payment button if there's a current transaction */}
+        {currentTransactionId && !processingPayment && (
+          <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <p className="text-blue-700 flex items-center text-sm md:text-base mb-4 md:mb-0">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <span>Anda memiliki transaksi yang belum selesai. Lanjutkan pembayaran atau mulai checkout baru.</span>
+              </p>
+              <Button className="bg-[#5596DF] hover:bg-blue-700 text-white" onClick={resumePayment}>
+                <CreditCard className="mr-2 h-4 w-4" /> Lanjutkan Pembayaran
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Order Summary */}
           <div className="space-y-6">
@@ -561,7 +738,7 @@ export default function CheckoutPage() {
                     </Button>
                   </div>
                   {promoApplied && (
-                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm flex items-start">
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-start">
                       <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium">Kode promo berhasil diterapkan!</p>

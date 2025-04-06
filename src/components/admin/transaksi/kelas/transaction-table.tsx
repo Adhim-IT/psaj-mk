@@ -4,7 +4,7 @@ import type React from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, Filter, CheckCircle, Trash2 } from 'lucide-react';
+import { Eye, Filter, CheckCircle, Trash2, MoreVertical, ChevronDown } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CourseTransactionStatus } from '@/types';
 import { updateCourseTransactionStatus, deleteCourseTransaction } from '@/lib/course-transaksi-admin';
 
@@ -214,18 +215,28 @@ export function TransactionTable({ transactions, meta }: TransactionTableProps) 
                             Detail
                           </Button>
                         </Link>
-                        {transaction.status === CourseTransactionStatus.UNPAID && (
-                          <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-50" onClick={() => handleUpdateStatus(transaction.id, CourseTransactionStatus.PAID)} disabled={isUpdating}>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Set as Paid
-                          </Button>
-                        )}
-                        {transaction.status === CourseTransactionStatus.FAILED && (
-                          <Button size="sm" variant="destructive" onClick={() => handleDeleteTransaction(transaction.id)} disabled={isUpdating}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        )}
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline">
+                              <MoreVertical className="h-4 w-4 mr-2" />
+                              Aksi
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {transaction.status === CourseTransactionStatus.UNPAID && (
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(transaction.id, CourseTransactionStatus.PAID)}>
+                                <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                                <span>Set as Paid</span>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => handleDeleteTransaction(transaction.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              <span>Hapus Permanen</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>

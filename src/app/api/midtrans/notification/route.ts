@@ -214,3 +214,19 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/*
+Important: Make sure the Midtrans notification handler properly sets transaction status to "failed"
+when receiving a transaction_status of "deny", "cancel", or "expire" from Midtrans.
+
+Example implementation:
+if (transactionStatus === 'deny' || transactionStatus === 'cancel' || transactionStatus === 'expire') {
+  await prisma.course_transactions.update({
+    where: { id: transactionId },
+    data: {
+      status: 'failed',
+      updated_at: new Date(),
+    },
+  });
+}
+*/

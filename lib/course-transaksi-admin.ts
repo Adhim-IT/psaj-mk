@@ -127,18 +127,15 @@ export async function getCourseTransactionById(id: string) {
 
 export async function deleteCourseTransaction({ id }: { id: string }) {
   try {
-    await prisma.course_transactions.update({
+    await prisma.course_transactions.delete({
       where: { id },
-      data: {
-        deleted_at: new Date(),
-      },
-    })
+    });
 
-    revalidatePath("/admin/transaksi/kelas")
-    return { success: true }
+    revalidatePath('/admin/transaksi/kelas');
+    return { success: true };
   } catch (error) {
-    console.error("Error deleting course transaction:", error)
-    return { success: false, error: "Failed to delete course transaction" }
+    console.error('Error deleting course transaction:', error);
+    return { success: false, error: 'Failed to delete course transaction' };
   }
 }
 

@@ -1,104 +1,81 @@
 import Link from 'next/link';
-import { Instagram, Youtube } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-white text-gray-800 py-8 border-t">
+    <footer className="bg-white text-gray-800 py-12 border-t">
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           {/* Logo and Address Section */}
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center space-x-2">
-              <img src="/images/logo/logo-teencode.png" alt="Logo" width={120} height={120} />
+          <div className="flex flex-col space-y-5">
+            <div className="flex items-center">
+              <img src="/images/logo/logo-teencode.png" alt="Logo" width={140} height={140} className="h-auto" />
             </div>
-            <div className="text-sm">Teen Code Academy</div>
-            <p className="text-sm text-gray-600 mt-4">
+            <div className="text-base font-medium">Teen Code Academy</div>
+            <p className="text-sm text-gray-600 leading-relaxed">
               JL. KALIBENER, PURWANEGARA,
               <br />
               PURWOKERTO TIMUR KAB.
               <br />
               BANYUMAS JAWA TENGAH.
             </p>
-            <div className="flex space-x-2 mt-2">
-              <Link href="#" aria-label="YouTube" className="bg-red-600 text-white p-1 rounded">
-                <Youtube size={16} />
-              </Link>
-              <Link href="#" aria-label="TikTok" className="bg-black text-white p-1 rounded">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-                </svg>
-              </Link>
-              <Link href="#" aria-label="Instagram" className="bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white p-1 rounded">
-                <Instagram size={16} />
-              </Link>
-              <Link href="#" aria-label="Twitter/X" className="bg-black text-white p-1 rounded">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
+            <div className="mt-3">
+              <Link
+                href="https://www.instagram.com/teen.codee?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                aria-label="Instagram"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white hover:shadow-lg transition-all duration-300"
+              >
+                <Instagram size={20} />
               </Link>
             </div>
           </div>
 
           {/* Tautan Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Tautan</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/kelas" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Kelas
-                </Link>
-              </li>
-              <li>
-                <Link href="/artikel" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Artikel
-                </Link>
-              </li>
-              <li>
-                <Link href="/mentor" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Mentor
-                </Link>
-              </li>
-              <li>
-                <Link href="/event" className="text-gray-600 hover:text-blue-500 transition-colors">
-                  Event
-                </Link>
-              </li>
+            <h3 className="text-lg font-semibold mb-5 relative after:content-[''] after:absolute after:w-10 after:h-1 after:bg-blue-500 after:left-0 after:bottom-0 after:-mb-2">Tautan</h3>
+            <ul className="space-y-3 mt-6">
+              {['Home', 'Kelas', 'Artikel', 'Mentor', 'Event'].map((item) => (
+                <li key={item}>
+                  <Link href={`/${item === 'Home' ? '' : item.toLowerCase()}`} className="text-gray-600 hover:text-blue-500 transition-colors duration-300 flex items-center">
+                    <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full mr-2 opacity-0 transform -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></span>
+                    {item}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Program Section */}
           <div className="md:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">Program</h3>
-            <ul className="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-              <li>
-                <Link href="/program/online-bootcamp" className="text-gray-600 hover:text-blue-500 transition-colors">
+            <h3 className="text-lg font-semibold mb-5 relative after:content-[''] after:absolute after:w-10 after:h-1 after:bg-blue-500 after:left-0 after:bottom-0 after:-mb-2">Program</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+              <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-all duration-300">
+                <Link href="/program/online-bootcamp" className="text-gray-700 hover:text-blue-500 transition-colors font-medium block">
                   Online Private
                 </Link>
-              </li>
-              <li>
-                <Link href="/program/batch-bootcamp" className="text-gray-600 hover:text-blue-500 transition-colors">
+                <p className="text-xs text-gray-500 mt-1">Belajar secara private dengan mentor</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-all duration-300">
+                <Link href="/program/batch-bootcamp" className="text-gray-700 hover:text-blue-500 transition-colors font-medium block">
                   Online Batch
                 </Link>
-              </li>
-              <li>
-                <Link href="/program/group-class" className="text-gray-600 hover:text-blue-500 transition-colors">
+                <p className="text-xs text-gray-500 mt-1">Belajar dalam batch dengan jadwal tertentu</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-all duration-300">
+                <Link href="/program/group-class" className="text-gray-700 hover:text-blue-500 transition-colors font-medium block">
                   Online Group
                 </Link>
-              </li>
-            </ul>
+                <p className="text-xs text-gray-500 mt-1">Belajar dalam kelompok kecil</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Copyright Section */}
-        <div className="border-t border-gray-200 pt-4 text-center text-sm text-gray-600">
-          <p>
+        <div className="border-t border-gray-200 pt-6 text-center">
+          <p className="text-sm text-gray-600">
             © {new Date().getFullYear()} Dilesin, All Rights Reserved. Design By{' '}
-            <Link href="https://teencode.id" className="text-blue-500 hover:underline">
+            <Link href="https://teencode.id" className="text-blue-500 hover:text-blue-700 transition-colors font-medium">
               TeenCode
             </Link>
           </p>
